@@ -20,3 +20,14 @@ jobs:
         tag: "latest"
         message: "Latest release"
         force_push_tag: true
+    - name: Docker log-in
+      env:
+        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+      run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
+    - name: Push latest Docker image to Docker Hub
+      run: docker push islasgeci/bycatch:latest
+    - name: Push SHA tag to Docker Hub
+      run: |
+        docker tag islasgeci/bycatch:latest islasgeci/bycatch:${GITHUB_SHA:0:4}
+        docker push islasgeci/bycatch:${GITHUB_SHA:0:4}
