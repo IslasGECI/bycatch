@@ -14,11 +14,7 @@ get_trips <- function(data) {
     fieldLon  = "longitude",
     fieldLat  = "latitude"
   )
-  colony <- dataGroup |>
-    dplyr::summarise(
-      Longitude = dplyr::first(lon_colony),
-      Latitude  = dplyr::first(lat_colony)
-    )
+  colony <- get_colony(data)
   trips <- track2KBA::tripSplit(
     dataGroup  = dataGroup,
     colony     = colony,
