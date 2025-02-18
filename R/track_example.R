@@ -1,3 +1,10 @@
+get_summary_of_trips <- function(gps_data) {
+  trips <- get_trips(gps_data)
+  colony <- get_colony(gps_data)
+  sumTrips <- track2KBA::tripSummary(trips = trips, colony = colony)
+  return(sumTrips)
+}
+
 get_trips <- function(data) {
   dataGroup <- track2KBA::formatFields(
     dataGroup = data,
@@ -21,4 +28,11 @@ get_trips <- function(data) {
     rmNonTrip  = TRUE
   )
   return(trips)
+}
+get_colony <- function(gps_data) {
+  gps_data |>
+    dplyr::summarise(
+      Longitude = dplyr::first(lon_colony),
+      Latitude  = dplyr::first(lat_colony)
+    )
 }
