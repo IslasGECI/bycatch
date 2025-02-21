@@ -6,5 +6,8 @@ describe("Write trips summary", {
     testtools::if_exist_remove(output_path)
     write_trips_summary(options)
     expect_true(testtools::exist_output_file(output_path))
+    obtained <- readr::read_csv(output_path)
+    expected_columns <- c("tripID", "n_locs", "departure", "return", "duration", "total_dist")
+    expect_true(all(expected_columns %in% colnames(obtained)))
   })
 })
