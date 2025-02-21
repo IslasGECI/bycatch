@@ -6,7 +6,7 @@ describe("Get trips from GECI data", {
   })
   it("Calculate foraging trips list", {
     obtained <- get_summary_of_trips(gps_data)
-    expected_columns <- c("tripID", "n_locs", "departure", "return", "duration", "total_dist")
-    expect_true(all(expected_columns %in% colnames(obtained)))
+    expected_rows <- 121
+    expect_equal(nrow(obtained), expected_rows)
   })
 })
