@@ -5,6 +5,6 @@ describe("Write trips summary", {
     options <- list("data_path" = gps_path, "output_path" = output_path)
     testtools::if_exist_remove(file_path)
     write_trips_summary(options)
-    expect_true(exist_output_file(output_path))
+    expect_true(testtools::exist_output_file(output_path))
   })
 })
