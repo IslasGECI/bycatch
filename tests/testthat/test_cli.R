@@ -9,5 +9,6 @@ describe("Write trips summary", {
     obtained <- readr::read_csv(output_path)
     expected_columns <- c("tripID", "n_locs", "departure", "return", "duration", "total_dist")
     expect_true(all(expected_columns %in% colnames(obtained)))
+    testtools::if_exist_remove(output_path)
   })
 })
