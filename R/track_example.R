@@ -19,7 +19,7 @@ get_trips <- function(data) {
     dataGroup  = dataGroup,
     colony     = colony,
     innerBuff  = 3, # kilometers
-    returnBuff = 11,
+    returnBuff = 9,
     duration   = 1, # hours
     rmNonTrip  = TRUE
   )
