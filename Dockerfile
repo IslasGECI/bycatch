@@ -8,3 +8,4 @@ RUN apt update && apt install --yes \
     netcdf-bin
 
 RUN R -e "remotes::install_github('BirdLifeInternational/track2kba')"
+RUN R -e "remotes::install_github('IslasGECI/testtools', ref='latest')"
