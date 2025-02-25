@@ -22,7 +22,7 @@ describe("Write trips geographic points", {
     write_trips(options)
     expect_true(testtools::exist_output_file(output_path))
     obtained <- readr::read_csv(output_path)
-    expected_columns <- c("tripID", "latitude", "longitude")
+    expected_columns <- c("tripID", "Latitude", "Longitude")
     expect_true(all(expected_columns %in% colnames(obtained)))
     testtools::if_exist_remove(output_path)
   })
