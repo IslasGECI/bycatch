@@ -12,3 +12,18 @@ describe("Write trips summary", {
     testtools::if_exist_remove(output_path)
   })
 })
+
+describe("Write trips geographic points", {
+  it("write_trips", {
+    gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv"
+    output_path <- "/workdir/tests/trips_geographic_points.csv"
+    options <- list("data_path" = gps_path, "output_path" = output_path)
+    testtools::if_exist_remove(output_path)
+    write_trips(options)
+    expect_true(testtools::exist_output_file(output_path))
+    obtained <- readr::read_csv(output_path)
+    expected_columns <- c("tripID", "latitude", "longitude")
+    expect_true(all(expected_columns %in% colnames(obtained)))
+    testtools::if_exist_remove(output_path)
+  })
+})
