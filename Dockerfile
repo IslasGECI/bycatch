@@ -7,5 +7,6 @@ RUN apt update && apt install --yes \
     libudunits2-dev \
     netcdf-bin
 
+RUN R -e "remotes::install_github('r-quantities/units')"
 RUN R -e "remotes::install_github('BirdLifeInternational/track2kba')"
 RUN R -e "remotes::install_github('IslasGECI/testtools')"
