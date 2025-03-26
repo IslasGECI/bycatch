@@ -2,7 +2,7 @@ get_summary_of_trips <- function(gps_data) {
   colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   trips <- get_trips(gps_data, config_content)
-  colony <- get_colony(trips@data)
+  colony <- config_content$colony
   sumTrips <- track2KBA::tripSummary(trips = trips, colony = colony)
   return(sumTrips)
 }
