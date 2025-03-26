@@ -28,3 +28,8 @@ describe("Write trips geographic points", {
     testtools::if_exist_remove(output_path)
   })
 })
+describe("Define domain specific options", {
+  obtained_options <- get_domain_specific_options()
+  expected_options <- c("data_path", "config_path", "output_path")
+  expect_true(all(expected_options %in% names(obtained_options)))
+})
