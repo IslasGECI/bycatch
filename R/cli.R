@@ -1,8 +1,4 @@
 write_trips_summary <- function(options) {
-  options[["config_path"]] <- "/workdir/tests/data/trips_config.json"
-  xxwrite_trips_summary(options)
-}
-xxwrite_trips_summary <- function(options) {
   config_content <- read_config(options[["config_path"]])
   readr::read_csv(options[["data_path"]], show_col_types = TRUE) |>
     get_summary_of_trips(config_content) |>

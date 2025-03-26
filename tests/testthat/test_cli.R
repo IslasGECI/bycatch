@@ -6,7 +6,7 @@ describe("Write trips summary", {
     output_path <- "/workdir/tests/trips_summary.csv"
     options <- list("data_path" = gps_path, "config_path" = config_path, "output_path" = output_path)
     testtools::if_exist_remove(output_path)
-    xxwrite_trips_summary(options)
+    write_trips_summary(options)
     expect_true(testtools::exist_output_file(output_path))
     obtained <- readr::read_csv(output_path, show_col_types = FALSE)
     expected_columns <- c("tripID", "n_locs", "departure", "return", "duration", "total_dist")
