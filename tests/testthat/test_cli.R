@@ -4,7 +4,7 @@ config_path <- "/workdir/tests/data/trips_config.json"
 describe("Write trips summary", {
   it("write_trips_cummary", {
     output_path <- "/workdir/tests/trips_summary.csv"
-    options <- list("data_path" = gps_path, "config_path" = config_path, "output_path" = output_path)
+    options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
     testtools::if_exist_remove(output_path)
     write_trips_summary(options)
     expect_true(testtools::exist_output_file(output_path))
@@ -18,7 +18,7 @@ describe("Write trips summary", {
 describe("Write trips geographic points", {
   it("write_trips", {
     output_path <- "/workdir/tests/trips_geographic_points.csv"
-    options <- list("data_path" = gps_path, "config_path" = config_path, "output_path" = output_path)
+    options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
     testtools::if_exist_remove(output_path)
     write_trips(options)
     expect_true(testtools::exist_output_file(output_path))
@@ -30,6 +30,6 @@ describe("Write trips geographic points", {
 })
 describe("Define domain specific options", {
   obtained_options <- get_domain_specific_options()
-  expected_options <- c("data_path", "config_path", "output_path")
+  expected_options <- c("data-path", "config-path", "output-path")
   expect_true(all(expected_options %in% names(obtained_options)))
 })
