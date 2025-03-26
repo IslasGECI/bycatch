@@ -27,12 +27,3 @@ get_trips <- function(data, config_content) {
   )
   return(trips)
 }
-
-
-get_colony <- function(gps_data) {
-  gps_data |>
-    dplyr::summarise(
-      Longitude = dplyr::first(lon_colony),
-      Latitude  = dplyr::first(lat_colony)
-    )
-}
