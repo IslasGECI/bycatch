@@ -1,6 +1,6 @@
 get_summary_of_trips <- function(gps_data) {
   trips <- get_trips(gps_data)
-  colony <- get_colony(gps_data)
+  colony <- get_colony(trips@data)
   sumTrips <- track2KBA::tripSummary(trips = trips, colony = colony)
   return(sumTrips)
 }
