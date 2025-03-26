@@ -10,4 +10,5 @@ RUN apt update && apt install --yes \
 RUN R -e "remotes::install_github('r-quantities/units')"
 RUN R -e "remotes::install_github('BirdLifeInternational/track2kba')"
 RUN R -e "remotes::install_github('IslasGECI/testtools')"
+RUN R -e "remotes::install_github('IslasGECI/optparse', ref='latest')"
 RUN R -e "install.packages('rjson', repos='http://cran.rstudio.com')"
