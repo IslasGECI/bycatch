@@ -2,6 +2,8 @@ describe("Get trips from GECI data", {
   gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv", show_col_types = FALSE)
   it("Calculate trips ids", {
     obtained <- get_trips(gps_data)
+    print(obtained)
+    print(str(obtained))
     expect_true("tripID" %in% colnames(obtained@data))
   })
   it("Calculate foraging trips list", {
