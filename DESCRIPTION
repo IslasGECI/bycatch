@@ -15,10 +15,13 @@ Imports:
     readr,
     tidyverse,
     track2KBA,
+    geci.optparse,
+    rjson,
+    tibble,
 LazyData: true
 License: AGPL-3.0-or-later
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.2.1
+RoxygenNote: 7.3.2
 Suggests:
     testtools,
 Remotes:
