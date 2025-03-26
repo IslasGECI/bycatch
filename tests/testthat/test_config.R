@@ -6,6 +6,9 @@ describe("read configuration file", {
     expect_true(all(expected_keys %in% names(obtained)))
   })
   it("colony structure", {
-    expect_true(tibble::is_tibble(obtained$colony))
+    obtained_colony <- obtained$colony
+    expect_true(tibble::is_tibble(obtained_colony))
+    expected_keys <- c("Latitude", "Longitude")
+    expect_true(all(expected_keys %in% colnames(obtained_colony)))
   })
 })
