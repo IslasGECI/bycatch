@@ -29,12 +29,6 @@ xxget_trips <- function(data, config_content) {
 }
 
 
-get_trips <- function(data) {
-  colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
-  config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
-  xxget_trips(data, config_content)
-}
-
 get_colony <- function(gps_data) {
   gps_data |>
     dplyr::summarise(
