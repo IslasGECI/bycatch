@@ -5,8 +5,6 @@ get_summary_of_trips <- function(gps_data) {
   return(sumTrips)
 }
 
-colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
-config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
 xxget_trips <- function(data, config_content) {
   dataGroup <- track2KBA::formatFields(
     dataGroup = data,
@@ -30,25 +28,11 @@ xxget_trips <- function(data, config_content) {
 
 
 get_trips <- function(data) {
-  dataGroup <- track2KBA::formatFields(
-    dataGroup = data,
-    fieldID   = "track_id",
-    fieldDate = "date_gmt",
-    fieldTime = "time",
-    fieldLon  = "longitude",
-    fieldLat  = "latitude"
-  )
-  colony <- get_colony(data)
-  trips <- track2KBA::tripSplit(
-    dataGroup  = dataGroup,
-    colony     = colony,
-    innerBuff  = 3, # kilometers
-    returnBuff = 10,
-    duration   = 1, # hours
-    rmNonTrip  = TRUE
-  )
-  return(trips)
+  colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
+  config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
+  xxget_trips(data, config_content)
 }
+
 get_colony <- function(gps_data) {
   gps_data |>
     dplyr::summarise(
