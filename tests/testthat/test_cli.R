@@ -20,7 +20,7 @@ describe("Write trips geographic points", {
     config_path <- "/workdir/tests/data/trips_config.json"
     options <- list("data_path" = gps_path, "config_path" = config_path, "output_path" = output_path)
     testtools::if_exist_remove(output_path)
-    xxwrite_trips(options)
+    write_trips(options)
     expect_true(testtools::exist_output_file(output_path))
     obtained <- readr::read_csv(output_path, show_col_types = FALSE)
     expected_columns <- c("tripID", "Latitude", "Longitude")
