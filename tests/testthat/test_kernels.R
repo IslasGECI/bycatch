@@ -7,7 +7,6 @@ describe("Calculate space use", {
   complete_trips <- subset(trips, trips$Returns == "Yes")
   it("calculates candidate smoothing parameter values ", {
     obtained <- get_scale_parameters(complete_trips, trips_summary)
-    print(obtained)
     expected_ncol <- 5
     expect_equal(ncol(obtained), expected_ncol)
     expected_magnitud <- 5.45
@@ -17,5 +16,9 @@ describe("Calculate space use", {
     obtained <- get_kernel_density_estimates(gps_data, config_content)
     number_of_individuals <- 10
     expect_equal(nrow(obtained$UDPolygons), number_of_individuals)
+    obtained_area <- sum(obtained$UDPolygons$area)
+    print(obtained_area)
+    expected_area <- 113856.8
+    expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
 })
