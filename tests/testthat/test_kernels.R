@@ -6,5 +6,7 @@ describe("Calculate space use", {
   it("calculates candidate smoothing parameter values ", {
     trips_summary <- readr::read_csv("/workdir/tests/data/trips_summary.csv", show_col_types = FALSE)
     obtained <- get_scale_parameters(trips, trips_summary)
+    expected_ncol <- 5
+    expect_equal(ncol(obtained), expected_ncol)
   })
 })
