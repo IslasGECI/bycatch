@@ -3,10 +3,9 @@ get_kernel_density_estimates <- function(gps_data, config_content) {
   complete_trips <- subset(trips, trips$Returns == "Yes")
   colony <- config_content$colony
   sumTrips <- track2KBA::tripSummary(trips = complete_trips, colony = colony)
-  scale_parameters <- get_scale_parameters(complete_trips, sumTrips)
   tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
-  tracks <- tracks[tracks$ColDist > 3, ] # remove trip start and end points near colony
-
+  tracks <- tracks[tracks$ColDist > 3, ]
+  scale_parameters <- get_scale_parameters(complete_trips, sumTrips)
   KDE <- track2KBA::estSpaceUse(
     tracks = tracks,
     scale = scale_parameters$mag,
@@ -16,14 +15,12 @@ get_kernel_density_estimates <- function(gps_data, config_content) {
   return(KDE)
 }
 
-get_scale_parameters <- function(trips, trips_summary) {
-  complete_trips <- subset(trips, trips$Returns == "Yes")
+get_scale_parameters <- function(complete_trips, trips_summary) {
   tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
-  complete_summary <- subset(trips_summary, trips_summary$complete == "complete trip")
   hVals <- track2KBA::findScale(
     tracks = tracks,
     scaleARS = TRUE,
-    sumTrips = complete_summary
+    sumTrips = trips_summary
   )
   return(hVals)
 }

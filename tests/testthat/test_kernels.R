@@ -4,8 +4,9 @@ describe("Calculate space use", {
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   trips <- get_trips(gps_data, config_content)
   trips_summary <- readr::read_csv("/workdir/tests/data/trips_summary.csv", show_col_types = FALSE)
+  complete_trips <- subset(trips, trips$Returns == "Yes")
   it("calculates candidate smoothing parameter values ", {
-    obtained <- get_scale_parameters(trips, trips_summary)
+    obtained <- get_scale_parameters(complete_trips, trips_summary)
     print(obtained)
     expected_ncol <- 5
     expect_equal(ncol(obtained), expected_ncol)
