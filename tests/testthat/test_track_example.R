@@ -8,6 +8,7 @@ describe("Get trips from GECI data", {
   })
   it("Calculate foraging trips list", {
     obtained <- get_summary_of_trips(gps_data, config_content)
+    obtained |> readr::write_csv("/workdir/tests/data/trips_summary.csv")
     expected_rows <- 121
     expect_equal(nrow(obtained), expected_rows)
     expected_complete_trips <- 116
