@@ -4,10 +4,10 @@ describe("Calculate space use", {
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   trips <- get_trips(gps_data, config_content)
   trips_summary <- readr::read_csv("/workdir/tests/data/trips_summary.csv", show_col_types = FALSE)
-  trips_summary <- get_summary_of_trips(gps_data, config_content)
   complete_trips <- subset(trips, trips$Returns == "Yes")
   it("calculates candidate smoothing parameter values ", {
-    obtained <- get_scale_parameters(complete_trips, trips_summary)
+    tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
+    obtained <- xxget_scale_parameters(tracks, trips_summary)
     expected_ncol <- 5
     expect_equal(ncol(obtained), expected_ncol)
     expected_magnitud <- 5.55
