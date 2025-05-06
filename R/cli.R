@@ -1,12 +1,22 @@
+plot_individual_kernels <- function(options) {
+  config_content <- read_config(options[["config-path"]])
+  gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  percentage_distribution <- options[["percentage-distribution"]]
+  KDE <- get_kernel_density_estimates(gps_data, config_content, percentage_distribution)
+
+  track2KBA::mapKDE(KDE = KDE$UDPolygons, colony = config_content$colony)
+  ggplot2::ggsave(filename = options[["output-path"]], device = "png")
+}
+
 write_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
-  readr::read_csv(options[["data-path"]], show_col_types = TRUE) |>
+  readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     get_summary_of_trips(config_content) |>
     readr::write_csv(options[["output-path"]])
 }
 write_trips <- function(options, config_content) {
   config_content <- read_config(options[["config-path"]])
-  trips <- readr::read_csv(options[["data-path"]], show_col_types = TRUE) |>
+  trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     get_trips(config_content)
   trips@data |>
     readr::write_csv(options[["output-path"]])
