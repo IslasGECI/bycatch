@@ -1,6 +1,11 @@
 gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv"
 config_path <- "/workdir/tests/data/trips_config.json"
 
+describe("plot map of individuals KDE", {
+  output_path <- "/workdir/tests/kde_map.png"
+  gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv"
+  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
+})
 describe("Write trips summary", {
   it("write_trips_cummary", {
     output_path <- "/workdir/tests/trips_summary.csv"

@@ -16,6 +16,10 @@ get_kernel_density_estimates <- function(gps_data, config_content, percentage_di
 
 get_scale_parameters <- function(complete_trips, trips_summary) {
   tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
+  xxget_scale_parameters(tracks, trips_summary)
+}
+
+xxget_scale_parameters <- function(tracks, trips_summary) {
   hVals <- track2KBA::findScale(
     tracks = tracks,
     scaleARS = TRUE,
