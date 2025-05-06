@@ -4,7 +4,11 @@ config_path <- "/workdir/tests/data/trips_config.json"
 describe("plot map of individuals KDE", {
   output_path <- "/workdir/tests/kde_map.png"
   gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv"
-  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
+  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
+  it("write figure", {
+    plot_individual_kernels(options)
+    expect_true(testtools::exist_output_file(output_path))
+  })
 })
 describe("Write trips summary", {
   it("write_trips_cummary", {
