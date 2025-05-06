@@ -7,7 +7,7 @@ describe("Calculate space use", {
   complete_trips <- subset(trips, trips$Returns == "Yes")
   it("calculates candidate smoothing parameter values ", {
     tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
-    obtained <- xxget_scale_parameters(tracks, trips_summary)
+    obtained <- get_scale_parameters(tracks, trips_summary)
     expected_ncol <- 5
     expect_equal(ncol(obtained), expected_ncol)
     expected_magnitud <- 5.55
