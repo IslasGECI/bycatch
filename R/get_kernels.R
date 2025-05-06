@@ -1,4 +1,4 @@
-get_kernel_density_estimates <- function(gps_data, config_content) {
+get_kernel_density_estimates <- function(gps_data, config_content, percentage_distribution = 50) {
   trips <- get_trips(gps_data, config_content)
   complete_trips <- subset(trips, trips$Returns == "Yes")
   colony <- config_content$colony
@@ -8,7 +8,7 @@ get_kernel_density_estimates <- function(gps_data, config_content) {
   KDE <- track2KBA::estSpaceUse(
     tracks = tracks,
     scale = scale_parameters$mag,
-    levelUD = 50,
+    levelUD = percentage_distribution,
     polyOut = TRUE
   )
   return(KDE)
