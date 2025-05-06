@@ -6,8 +6,10 @@ describe("plot map of individuals KDE", {
   gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv"
   options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
   it("write figure", {
+    testtools::if_exist_remove(output_path)
     plot_individual_kernels(options)
     expect_true(testtools::exist_output_file(output_path))
+    testtools::if_exist_remove(output_path)
   })
 })
 describe("Write trips summary", {
