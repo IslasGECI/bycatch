@@ -4,7 +4,6 @@ get_kernel_density_estimates <- function(gps_data, config_content) {
   colony <- config_content$colony
   sumTrips <- track2KBA::tripSummary(trips = complete_trips, colony = colony)
   tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
-  tracks <- tracks[tracks$ColDist > 3, ]
   scale_parameters <- get_scale_parameters(complete_trips, sumTrips)
   KDE <- track2KBA::estSpaceUse(
     tracks = tracks,
