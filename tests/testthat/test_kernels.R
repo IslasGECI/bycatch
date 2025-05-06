@@ -17,6 +17,10 @@ describe("Calculate space use", {
     number_of_individuals <- 10
     expect_equal(nrow(obtained$UDPolygons), number_of_individuals)
     obtained_area <- sum(obtained$UDPolygons$area)
+    expected_area <- 113856.8
+    expect_equal(obtained_area, expected_area, tolerance = 1e-3)
+    config_content$inner_buff <- 60
+    obtained <- get_kernel_density_estimates(gps_data, config_content)
     expected_area <- 114251
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
