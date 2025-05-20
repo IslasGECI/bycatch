@@ -1,25 +1,3 @@
-get_kernel_density_estimates <- function(gps_data, config_content, percentage_distribution = 50) {
-  trips <- get_trips(gps_data, config_content)
-  complete_trips <- subset(trips, trips$Returns == "Yes")
-  colony <- config_content$colony
-  sumTrips <- track2KBA::tripSummary(trips = complete_trips, colony = colony)
-  tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
-  scale_parameters <- get_scale_parameters(tracks, sumTrips)
-  KDE <- track2KBA::estSpaceUse(
-    tracks = tracks,
-    scale = scale_parameters$mag,
-    levelUD = percentage_distribution,
-    polyOut = TRUE
-  )
-  return(KDE)
-}
-
-xxget_kernel_density_estimates <- function(gps_data, config_content, percentage_distribution = 50) {
-  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
-  KDE <- wrapper$get_kde(percentage_distribution)
-  return(KDE)
-}
-
 get_scale_parameters <- function(tracks, trips_summary) {
   hVals <- track2KBA::findScale(
     tracks = tracks,

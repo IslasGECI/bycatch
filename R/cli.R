@@ -2,7 +2,9 @@ plot_individual_kernels <- function(options) {
   config_content <- read_config(options[["config-path"]])
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
-  KDE <- get_kernel_density_estimates(gps_data, config_content, percentage_distribution)
+
+  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
+  KDE <- wrapper$get_kde(percentage_distribution)
 
   track2KBA::mapKDE(KDE = KDE$UDPolygons, colony = config_content$colony)
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
