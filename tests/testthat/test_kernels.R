@@ -13,12 +13,4 @@ describe("Calculate space use", {
     expected_magnitud <- 5.55
     expect_equal(obtained$mag, expected_magnitud)
   })
-  it("Calculate Kernel Density Estimates", {
-    config_content$inner_buff <- 60
-    percentage_distribution <- 75
-    obtained <- get_kernel_density_estimates(gps_data, config_content, percentage_distribution)
-    obtained_area <- sum(obtained$UDPolygons$area)
-    expected_area <- 42489.8
-    expect_equal(obtained_area, expected_area, tolerance = 1e-3)
-  })
 })

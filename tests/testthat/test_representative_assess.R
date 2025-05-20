@@ -15,5 +15,11 @@ describe("Check representativity", {
     obtained_area <- sum(obtained_kde$UDPolygons$area)
     expected_area <- 17929
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)
+
+    percentage_distribution <- 75
+    obtained_kde <- obtained$get_kde(percentage_distribution)
+    obtained_area <- sum(obtained_kde$UDPolygons$area)
+    expected_area <- 44250
+    expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
 })
