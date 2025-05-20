@@ -24,6 +24,9 @@ Track2KBA_Wrapper <- R6::R6Class(
         polyOut = TRUE
       )
       return(KDE)
+    },
+    get_representative_assess = function(percentage_distribution) {
+
     }
   )
 )
