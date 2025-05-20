@@ -22,4 +22,7 @@ describe("Check representativity", {
     expected_area <- 44250
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
+  it("get representative assess with percentage distribution", {
+    obtained_assess <- obtained$get_representative_assess(percentage_distribution = 50)
+  })
 })
