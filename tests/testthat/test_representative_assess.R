@@ -4,7 +4,7 @@ describe("Check representativity", {
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   obtained <- Track2KBA_Wrapper$new(gps_data, config_content)
   it("Get tracks", {
-    obtained_tracks <- obtained$get_tracks()
+    obtained_tracks <- obtained$tracks
     expect_true(inherits(obtained_tracks, "SpatialPointsDataFrame"))
   })
   it("Get KDE", {
