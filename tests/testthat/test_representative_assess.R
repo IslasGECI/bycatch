@@ -24,5 +24,6 @@ describe("Check representativity", {
   })
   it("get representative assess with percentage distribution", {
     obtained_assess <- obtained$get_representative_assess(percentage_distribution = 50)
+    expect_true(inherits(obtained_assess, "data.frame"))
   })
 })
