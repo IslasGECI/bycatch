@@ -9,6 +9,6 @@ describe("Check representativity", {
   })
   it("Get KDE", {
     obtained_kde <- obtained$get_kde()
-    expect_true(inherits(obtained_kde, "estUDm"))
+    expect_true(all(c("KDE.Surface", "UDPolygons") %in% names(obtained_kde)))
   })
 })
