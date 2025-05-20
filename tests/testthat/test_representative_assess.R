@@ -10,5 +10,10 @@ describe("Check representativity", {
   it("Get KDE", {
     obtained_kde <- obtained$get_kde()
     expect_true(all(c("KDE.Surface", "UDPolygons") %in% names(obtained_kde)))
+    number_of_individuals <- 3
+    expect_equal(nrow(obtained_kde$UDPolygons), number_of_individuals)
+    obtained_area <- sum(obtained_kde$UDPolygons$area)
+    expected_area <- 17929
+    expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
 })
