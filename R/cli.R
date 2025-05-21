@@ -1,3 +1,20 @@
+#' Plot Representative Assessment
+#'
+#' Generates and saves a representative assessment plot based on GPS data and configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths, creates a `Track2KBA_Wrapper` object,
+#' and generates a representative assessment plot for the specified percentage distribution. The plot is saved as a PNG file
+#' to the specified output path.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output PNG plot will be saved.}
+#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
+#'   }
+#'
+#' @return None. The function is called for its side effect of saving a plot to disk.
 #' @export
 plot_representative_assess <- function(options) {
   config_content <- read_config(options[["config-path"]])
@@ -5,11 +22,27 @@ plot_representative_assess <- function(options) {
   percentage_distribution <- options[["percentage-distribution"]]
 
   wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
-  png(options[["output-path"]])
+  grDevices::png(options[["output-path"]])
   wrapper$get_representative_assess(percentage_distribution)
-  dev.off()
+  grDevices::dev.off()
 }
 
+#' Plot Individual Kernels
+#'
+#' Generates and saves a plot of individual kernel density estimates (KDEs) for GPS data based on configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths, creates a `Track2KBA_Wrapper` object,
+#' computes the KDEs for the specified percentage distribution, and saves the resulting plot as a PNG file to the specified output path.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output PNG plot will be saved.}
+#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the KDE.}
+#'   }
+#'
+#' @return None. The function is called for its side effect of saving a plot to disk.
 #' @export
 plot_individual_kernels <- function(options) {
   config_content <- read_config(options[["config-path"]])
@@ -23,6 +56,21 @@ plot_individual_kernels <- function(options) {
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
 }
 
+#' Write Trips Summary
+#'
+#' Generates and writes a summary of trips based on GPS data and configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths, summarizes the trips using `get_summary_of_trips`,
+#' and writes the summary to the specified output CSV file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output CSV summary will be saved.}
+#'   }
+#'
+#' @return None. The function is called for its side effect of writing a summary to disk.
 #' @export
 write_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
@@ -31,6 +79,22 @@ write_trips_summary <- function(options) {
     readr::write_csv(options[["output-path"]])
 }
 
+#' Write Trips
+#'
+#' Extracts and writes trip data based on GPS data and configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths, extracts trip data using `get_trips`,
+#' and writes the resulting data to the specified output CSV file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output CSV file will be saved.}
+#'   }
+#' @param config_content The configuration content as a list (optional, will be overwritten by reading from config-path).
+#'
+#' @return None. The function is called for its side effect of writing trip data to disk.
 #' @export
 write_trips <- function(options, config_content) {
   config_content <- read_config(options[["config-path"]])
@@ -40,6 +104,14 @@ write_trips <- function(options, config_content) {
     readr::write_csv(options[["output-path"]])
 }
 
+#' Get Domain Specific Options
+#'
+#' Defines and retrieves command-line options specific to the domain for use in CLI tools.
+#'
+#' This function sets up options for data path, configuration path, output path, and percentage distribution,
+#' and returns them as a named list.
+#'
+#' @return A named list of command-line options for use in CLI tools.
 #' @export
 get_domain_specific_options <- function() {
   data_path <- geci.optparse::character_option(c("-i", "--data-path"), default = "/workdir/reports/tables/input.csv", help = "File path of the desire input")
