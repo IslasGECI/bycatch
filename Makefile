@@ -70,9 +70,10 @@ setup: clean install
 
 install:
 	R -e "devtools::document()" && \
-    R CMD build . && \
-    R CMD check bycatch_0.1.0.tar.gz && \
-    R CMD INSTALL bycatch_0.1.0.tar.gz
+	R -e "devtools::check()" && \
+	R -e "devtools::build()" && \
+	R -e "devtools::install()"
+
 
 tests:
 	Rscript -e "devtools::test(stop_on_failure = TRUE)"
