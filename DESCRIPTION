@@ -13,9 +13,9 @@ Imports:
     dplyr,
     R6,
     readr,
-    tidyverse,
     track2KBA,
     geci.optparse,
+    ggplot2,
     rjson,
     tibble,
 LazyData: true
@@ -23,12 +23,11 @@ License: AGPL-3.0-or-later
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.2
 Suggests:
-    testtools,
-Remotes:
-    IslasGECI/testtools
-Depends:
     devtools,
     roxygen2,
     testthat,
+    testtools,
+Remotes:
+    IslasGECI/testtools
 Type: Package
 Version: 0.1.0
