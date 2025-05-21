@@ -23,6 +23,9 @@ describe("Check representativity", {
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
   it("get representative assess with percentage distribution", {
+    gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv", show_col_types = FALSE)
+    config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
+    obtained <- Track2KBA_Wrapper$new(gps_data, config_content)
     obtained_assess <- obtained$get_representative_assess(percentage_distribution = 50)
     expect_true(inherits(obtained_assess, "data.frame"))
   })
