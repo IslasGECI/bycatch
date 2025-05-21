@@ -3,6 +3,7 @@ Track2KBA_Wrapper <- R6::R6Class(
   public = list(
     complete_trips = NULL,
     colony = NULL,
+    KDE = NULL,
     trips = NULL,
     tracks = NULL,
     initialize = function(gps_data, config_content) {
@@ -26,7 +27,14 @@ Track2KBA_Wrapper <- R6::R6Class(
       return(KDE)
     },
     get_representative_assess = function(percentage_distribution) {
-
+      self$KDE <- self$get_kde(percentage_distribution)
+      repr <- track2KBA::repAssess(
+        tracks    = self$tracks,
+        KDE       = self$KDE$KDE.Surface,
+        levelUD   = percentage_distribution,
+        iteration = 1,
+        bootTable = FALSE
+      )
     }
   )
 )
