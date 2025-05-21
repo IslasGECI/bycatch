@@ -1,13 +1,16 @@
+#' @export
 plot_representative_assess <- function(options) {
   config_content <- read_config(options[["config-path"]])
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
   wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
-  rep_assess <- wrapper$get_representative_assess(percentage_distribution)
-  ggplot2::ggsave(filename = options[["output-path"]], device = "png")
+  png(options[["output-path"]])
+  wrapper$get_representative_assess(percentage_distribution)
+  dev.off()
 }
 
+#' @export
 plot_individual_kernels <- function(options) {
   config_content <- read_config(options[["config-path"]])
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
@@ -20,12 +23,15 @@ plot_individual_kernels <- function(options) {
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
 }
 
+#' @export
 write_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     get_summary_of_trips(config_content) |>
     readr::write_csv(options[["output-path"]])
 }
+
+#' @export
 write_trips <- function(options, config_content) {
   config_content <- read_config(options[["config-path"]])
   trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
@@ -33,6 +39,8 @@ write_trips <- function(options, config_content) {
   trips@data |>
     readr::write_csv(options[["output-path"]])
 }
+
+#' @export
 get_domain_specific_options <- function() {
   data_path <- geci.optparse::character_option(c("-i", "--data-path"), default = "/workdir/reports/tables/input.csv", help = "File path of the desire input")
   config_path <- geci.optparse::character_option(c("-c", "--config-path"), default = "/workdir/reports/non-tabular/config_file.json", help = "File path of the configuration")
