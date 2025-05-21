@@ -1,3 +1,13 @@
+plot_representative_assess <- function(options) {
+  config_content <- read_config(options[["config-path"]])
+  gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  percentage_distribution <- options[["percentage-distribution"]]
+
+  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
+  rep_assess <- wrapper$get_representative_assess(percentage_distribution)
+  ggplot2::ggsave(filename = options[["output-path"]], device = "png")
+}
+
 plot_individual_kernels <- function(options) {
   config_content <- read_config(options[["config-path"]])
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
