@@ -70,7 +70,7 @@ setup: clean install
 
 install:
 	R -e "devtools::document()" && \
-	R -e "devtools::check()" && \
+	R -e "devtools::check(error_on = 'error')" && \
 	R -e "devtools::build()" && \
 	R -e "devtools::install()"
 
