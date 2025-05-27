@@ -21,7 +21,7 @@ plot_representative_assess <- function(options) {
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
-  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
+  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
   grDevices::png(options[["output-path"]])
   wrapper$get_representative_assess(percentage_distribution)
   grDevices::dev.off()
@@ -49,10 +49,9 @@ plot_individual_kernels <- function(options) {
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
-  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content)
-  KDE <- wrapper$get_kde(percentage_distribution)
+  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
 
-  track2KBA::mapKDE(KDE = KDE$UDPolygons, colony = config_content$colony)
+  track2KBA::mapKDE(KDE = wrapper$KDE$UDPolygons, colony = config_content$colony)
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
 }
 

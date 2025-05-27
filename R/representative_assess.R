@@ -6,16 +6,19 @@ Track2KBA_Wrapper <- R6::R6Class(
     KDE = NULL,
     trips = NULL,
     tracks = NULL,
-    initialize = function(gps_data, config_content) {
+    percentage_distribution = NULL,
+    initialize = function(gps_data, config_content, percentage_distribution = 50) {
       self$trips <- get_trips(gps_data, config_content)
       self$complete_trips <- subset(self$trips, self$trips$Returns == "Yes")
       self$colony <- config_content$colony
       self$tracks <- self$get_tracks()
+      self$percentage_distribution <- percentage_distribution
+      self$KDE <- self$calculate_kde(percentage_distribution)
     },
     get_tracks = function() {
       track2KBA::projectTracks(dataGroup = self$complete_trips, projType = "azim", custom = TRUE)
     },
-    get_kde = function(percentage_distribution = 50) {
+    calculate_kde = function(percentage_distribution = 50) {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
       scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
       KDE <- track2KBA::estSpaceUse(
@@ -27,7 +30,6 @@ Track2KBA_Wrapper <- R6::R6Class(
       return(KDE)
     },
     get_representative_assess = function(percentage_distribution) {
-      self$KDE <- self$get_kde(percentage_distribution)
       repr <- track2KBA::repAssess(
         tracks    = self$tracks,
         KDE       = self$KDE$KDE.Surface,
@@ -43,7 +45,7 @@ Track2KBA_Wrapper <- R6::R6Class(
         KDE = self$KDE$KDE.Surface,
         represent = repr$out,
         levelUD = percentage_distribution,
-        polyOut = TRUE
+        polyOut = FALSE
       )
       return(Site)
     }
