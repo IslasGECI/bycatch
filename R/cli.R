@@ -23,7 +23,7 @@ plot_representative_assess <- function(options) {
 
   wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
   grDevices::png(options[["output-path"]])
-  wrapper$get_representative_assess(percentage_distribution)
+  wrapper$get_representative_assess(percentage_distribution, options[["n-iterations"]])
   grDevices::dev.off()
 }
 

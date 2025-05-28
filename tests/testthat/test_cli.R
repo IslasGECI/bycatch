@@ -4,7 +4,7 @@ config_path <- "/workdir/tests/data/trips_config.json"
 describe("plot representative assess", {
   output_path <- "/workdir/tests/representative_assess.png"
   gps_path <- "/workdir/tests/data/bl_sample_10_percent_5_ids.csv"
-  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
+  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_representative_assess(options)
