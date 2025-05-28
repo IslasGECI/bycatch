@@ -52,6 +52,6 @@ describe("Write trips geographic points", {
 })
 describe("Define domain specific options", {
   obtained_options <- get_domain_specific_options()
-  expected_options <- c("data-path", "config-path", "output-path", "percentage-distribution")
+  expected_options <- c("data-path", "config-path", "output-path", "percentage-distribution", "n-iterations")
   expect_true(all(expected_options %in% names(obtained_options)))
 })
