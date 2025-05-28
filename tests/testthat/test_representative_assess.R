@@ -2,9 +2,7 @@ Wrapper_Tester <- R6::R6Class(
   "Wrapper_Tester",
   inherit = Track2KBA_Wrapper,
   public = list(
-    initialize = function(gps_data, config_content, percentage_distribution = 50) {
-      self$trips <- get_trips(gps_data, config_content)
-      self$complete_trips <- subset(self$trips, self$trips$Returns == "Yes")
+    initialize = function() {
     }
   )
 )
@@ -13,16 +11,18 @@ describe("Check representativity", {
   colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   percentage_distribution <- 50
-  obtained <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
   it("Get tracks", {
-    obtained <- Wrapper_Tester$new(gps_data, config_content, percentage_distribution)
-    saveRDS(obtained$complete_trips, "/workdir/tests/data/completed_trips.rds")
+    obtained <- Wrapper_Tester$new()
     obtained$complete_trips <- readRDS("/workdir/tests/data/completed_trips.rds")
     obtained_tracks <- obtained$get_tracks()
     expect_true(inherits(obtained_tracks, "SpatialPointsDataFrame"))
   })
   it("Get KDE", {
-    obtained_kde <- obtained$KDE
+    obtained <- Wrapper_Tester$new()
+    obtained$complete_trips <- readRDS("/workdir/tests/data/completed_trips.rds")
+    obtained$colony <- colony_df
+    obtained$tracks <- readRDS("/workdir/tests/data/tracks.rds")
+    obtained_kde <- obtained$calculate_kde()
     expect_true(all(c("KDE.Surface", "UDPolygons") %in% names(obtained_kde)))
     number_of_individuals <- 3
     expect_equal(nrow(obtained_kde$UDPolygons), number_of_individuals)
