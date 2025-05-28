@@ -7,7 +7,7 @@ Track2KBA_Wrapper <- R6::R6Class(
     trips = NULL,
     tracks = NULL,
     percentage_distribution = NULL,
-    initialize = function(gps_data, config_content, percentage_distribution = 50) {
+    initialize = function(gps_data, config_content, percentage_distribution) {
       self$trips <- get_trips(gps_data, config_content)
       self$complete_trips <- subset(self$trips, self$trips$Returns == "Yes")
       self$colony <- config_content$colony
