@@ -1,10 +1,25 @@
+plot_usage_area_by_proportion <- function(options) {
+  config_content <- read_config(options[["config-path"]])
+  gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  percentage_distribution <- options[["percentage-distribution"]]
+  n_iterations <- options[["n-iterations"]]
+
+  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
+  representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
+  site <- wrapper$get_site(representative_assess, percentage_distribution)
+  grDevices::png(options[["output-path"]])
+  track2KBA::mapSite(site)
+  grDevices::dev.off()
+}
+
+
 #' Plot Representative Assessment
 #'
 #' Generates and saves a representative assessment plot based on GPS data and configuration settings.
 #'
 #' This function reads configuration and GPS data from the provided file paths, creates a `Track2KBA_Wrapper` object,
-#' and generates a representative assessment plot for the specified percentage distribution. The plot is saved as a PNG file
-#' to the specified output path.
+#' and generates a representative assessment plot for the specified percentage distribution and number of iterations.
+#' The plot is saved as a PNG file to the specified output path.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
@@ -12,9 +27,10 @@
 #'     \item{data-path}{Path to the input GPS data file (CSV).}
 #'     \item{output-path}{Path where the output PNG plot will be saved.}
 #'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
+#'     \item{n-iterations}{Integer specifying the number of iterations for the assessment.}
 #'   }
 #'
-#' @return None. The function is called for its side effect of saving a plot to disk.
+#' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 plot_representative_assess <- function(options) {
   config_content <- read_config(options[["config-path"]])
@@ -42,7 +58,7 @@ plot_representative_assess <- function(options) {
 #'     \item{percentage-distribution}{Integer specifying the percentage distribution for the KDE.}
 #'   }
 #'
-#' @return None. The function is called for its side effect of saving a plot to disk.
+#' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 plot_individual_kernels <- function(options) {
   config_content <- read_config(options[["config-path"]])
@@ -69,7 +85,7 @@ plot_individual_kernels <- function(options) {
 #'     \item{output-path}{Path where the output CSV summary will be saved.}
 #'   }
 #'
-#' @return None. The function is called for its side effect of writing a summary to disk.
+#' @return None. Called for its side effect of writing a summary to disk.
 #' @export
 write_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
@@ -93,7 +109,7 @@ write_trips_summary <- function(options) {
 #'   }
 #' @param config_content The configuration content as a list (optional, will be overwritten by reading from config-path).
 #'
-#' @return None. The function is called for its side effect of writing trip data to disk.
+#' @return None. Called for its side effect of writing trip data to disk.
 #' @export
 write_trips <- function(options, config_content) {
   config_content <- read_config(options[["config-path"]])
@@ -107,8 +123,8 @@ write_trips <- function(options, config_content) {
 #'
 #' Defines and retrieves command-line options specific to the domain for use in CLI tools.
 #'
-#' This function sets up options for data path, configuration path, output path, and percentage distribution,
-#' and returns them as a named list.
+#' This function sets up options for data path, configuration path, output path, percentage distribution,
+#' and number of iterations, and returns them as a named list.
 #'
 #' @return A named list of command-line options for use in CLI tools.
 #' @export
