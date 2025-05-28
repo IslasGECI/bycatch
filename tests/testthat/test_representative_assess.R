@@ -50,7 +50,7 @@ describe("Get representative assess", {
     expect_equal(obtained_repr$out, expected_rep_out, tolerance = 1e-3)
   })
   it("Get potential site", {
-    obtained_site <- obtained$get_site()
+    obtained_site <- obtained$get_site(obtained_repr, percentage_distribution)
     expect_true(inherits(obtained_site, "SpatialPixelsDataFrame"))
   })
 })

@@ -42,9 +42,7 @@ Track2KBA_Wrapper <- R6::R6Class(
         )
       )
     },
-    get_site = function() {
-      percentage_distribution <- 50
-      repr <- self$get_representative_assess(percentage_distribution)
+    get_site = function(repr, percentage_distribution) {
       Site <- track2KBA::findSite(
         KDE = self$KDE$KDE.Surface,
         represent = repr$out,
