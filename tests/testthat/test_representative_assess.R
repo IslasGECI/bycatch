@@ -42,9 +42,12 @@ describe("Get representative assess", {
   obtained$colony <- colony_df
   obtained$tracks <- readRDS("/workdir/tests/data/tracks_20percent_sample.rds")
   obtained$KDE <- readRDS("/workdir/tests/data/kde_20percent_sample.rds")
+  n_iterations <- 1
+  obtained_repr <- obtained$get_representative_assess(percentage_distribution, n_iterations)
   it("get representative assess with percentage distribution", {
-    obtained_repr <- obtained$get_representative_assess(percentage_distribution)
     expect_true(inherits(obtained_repr, "data.frame"))
+    expected_rep_out <- 59.30424
+    expect_equal(obtained_repr$out, expected_rep_out, tolerance = 1e-3)
   })
   it("Get potential site", {
     obtained_site <- obtained$get_site()
