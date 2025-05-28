@@ -1,3 +1,13 @@
+Wrapper_Tester <- R6::R6Class(
+  "Wrapper_Tester",
+  inherit = Track2KBA_Wrapper,
+  public = list(
+    initialize = function(gps_data, config_content, percentage_distribution = 50) {
+      self$trips <- get_trips(gps_data, config_content)
+      self$complete_trips <- subset(self$trips, self$trips$Returns == "Yes")
+    }
+  )
+)
 describe("Check representativity", {
   gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv", show_col_types = FALSE)
   colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
@@ -5,7 +15,10 @@ describe("Check representativity", {
   percentage_distribution <- 50
   obtained <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
   it("Get tracks", {
-    obtained_tracks <- obtained$tracks
+    obtained <- Wrapper_Tester$new(gps_data, config_content, percentage_distribution)
+    saveRDS(obtained$complete_trips, "/workdir/tests/data/completed_trips.rds")
+    obtained$complete_trips <- readRDS("/workdir/tests/data/completed_trips.rds")
+    obtained_tracks <- obtained$get_tracks()
     expect_true(inherits(obtained_tracks, "SpatialPointsDataFrame"))
   })
   it("Get KDE", {
