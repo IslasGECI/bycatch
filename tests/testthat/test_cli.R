@@ -8,7 +8,7 @@ describe("plot ussage area by a proportion of the total birds", {
     testtools::if_exist_remove(output_path)
     plot_usage_area_by_individual(options)
     expect_true(testtools::exist_output_file(output_path))
-    # testtools::if_exist_remove(output_path)
+    testtools::if_exist_remove(output_path)
   })
 })
 describe("plot representative assess", {
