@@ -7,9 +7,7 @@ Wrapper_Tester <- R6::R6Class(
   )
 )
 describe("Check representativity", {
-  gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv", show_col_types = FALSE)
   colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
-  config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   percentage_distribution <- 50
   it("Get tracks", {
     obtained <- Wrapper_Tester$new()
@@ -36,11 +34,16 @@ describe("Check representativity", {
     expected_area <- 44250
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)
   })
-  gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv", show_col_types = FALSE)
-  config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
-  obtained <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
-  obtained_repr <- obtained$get_representative_assess(percentage_distribution)
+})
+describe("Get representative assess", {
+  colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
+  percentage_distribution <- 50
+  obtained <- Wrapper_Tester$new()
+  obtained$colony <- colony_df
+  obtained$tracks <- readRDS("/workdir/tests/data/tracks_20percent_sample.rds")
+  obtained$KDE <- readRDS("/workdir/tests/data/kde_20percent_sample.rds")
   it("get representative assess with percentage distribution", {
+    obtained_repr <- obtained$get_representative_assess(percentage_distribution)
     expect_true(inherits(obtained_repr, "data.frame"))
   })
   it("Get potential site", {
