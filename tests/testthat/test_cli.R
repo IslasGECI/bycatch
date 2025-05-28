@@ -6,7 +6,7 @@ describe("plot ussage area by a proportion of the total birds", {
   options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
   it("write figure", {
     testtools::if_exist_remove(output_path)
-    plot_usage_area_by_proportion(options)
+    plot_usage_area_by_individual(options)
     expect_true(testtools::exist_output_file(output_path))
     # testtools::if_exist_remove(output_path)
   })

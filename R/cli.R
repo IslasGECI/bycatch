@@ -1,4 +1,4 @@
-plot_usage_area_by_proportion <- function(options) {
+plot_usage_area_by_individual <- function(options) {
   config_content <- read_config(options[["config-path"]])
   gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
