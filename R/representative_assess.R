@@ -18,7 +18,7 @@ Track2KBA_Wrapper <- R6::R6Class(
     get_tracks = function() {
       track2KBA::projectTracks(dataGroup = self$complete_trips, projType = "azim", custom = TRUE)
     },
-    calculate_kde = function(percentage_distribution = 50) {
+    calculate_kde = function(percentage_distribution) {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
       scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
       KDE <- track2KBA::estSpaceUse(

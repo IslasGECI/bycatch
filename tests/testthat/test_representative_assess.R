@@ -20,7 +20,8 @@ describe("Check representativity", {
     obtained$complete_trips <- readRDS("/workdir/tests/data/completed_trips.rds")
     obtained$colony <- colony_df
     obtained$tracks <- readRDS("/workdir/tests/data/tracks.rds")
-    obtained_kde <- obtained$calculate_kde()
+    percentage_distribution <- 50
+    obtained_kde <- obtained$calculate_kde(percentage_distribution)
     expect_true(all(c("KDE.Surface", "UDPolygons") %in% names(obtained_kde)))
     number_of_individuals <- 3
     expect_equal(nrow(obtained_kde$UDPolygons), number_of_individuals)
