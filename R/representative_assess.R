@@ -34,7 +34,7 @@ Track2KBA_Wrapper <- R6::R6Class(
         tracks    = self$tracks,
         KDE       = self$KDE$KDE.Surface,
         levelUD   = percentage_distribution,
-        iteration = 1,
+        iteration = 10,
         bootTable = FALSE
       )
     },
