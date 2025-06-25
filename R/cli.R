@@ -137,6 +137,27 @@ write_trips <- function(options, config_content) {
   trips@data |>
     readr::write_csv(options[["output-path"]])
 }
+
+#' Process Fisheries Data
+#'
+#' Filters and processes raw fisheries GPS data based on date and geographic boundaries, then writes the filtered data to a CSV file.
+#'
+#' This function reads fisheries GPS data from the specified input file, filters the data according to the provided date range and latitude and longitude bounds, and writes the resulting filtered data to the specified output file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{data-path}{Path to the input fisheries GPS data file (CSV).}
+#'     \item{output-path}{Path where the filtered output CSV file will be saved.}
+#'     \item{start}{Start date for filtering (inclusive).}
+#'     \item{end}{End date for filtering (inclusive).}
+#'     \item{lat-min}{Minimum latitude for filtering.}
+#'     \item{lat-max}{Maximum latitude for filtering.}
+#'     \item{lon-min}{Minimum longitude for filtering.}
+#'     \item{lon-max}{Maximum longitude for filtering.}
+#'   }
+#'
+#' @return None. Called for its side effect of writing filtered data to disk.
+#' @export
 process_fisheries_data <- function(options) {
   fisheries_raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   fisheries_data <- fisheries_raw_data |>
@@ -167,6 +188,12 @@ get_domain_specific_options <- function() {
   output_path <- geci.optparse::character_option(c("-o", "--output-path"), default = "/workdir/reports/tables/result.csv", help = "File path of the desire output")
   percentage_distribution <- geci.optparse::integer_option(c("-p", "--percentage-distribution"), default = 50)
   n_iterations <- geci.optparse::integer_option(c("-n", "--n-iterations"), default = 10)
-  option_names <- c(data_path, config_path, output_path, percentage_distribution, n_iterations)
+  start <- geci.optparse::character_option(c("-s", "--start"), default = "2014-01-01", help = "start date for filtering fisheries data")
+  end <- geci.optparse::character_option(c("-e", "--end"), default = "2015-01-01", help = "End date for filtering fisheries data")
+  lat_min <- geci.optparse::double_option(c("-l", "--lat-min"), default = 0, help = "Minimum latitude for filtering fisheries data")
+  lat_max <- geci.optparse::double_option(c("-a", "--lat-max"), default = 0, help = "Maximum longitude for filtering fisheries data")
+  lon_min <- geci.optparse::double_option(c("-m", "--lon-min"), default = 0, help = "Minimum longitude for filtering fisheries data")
+  lon_max <- geci.optparse::double_option(c("-x", "--lon-max"), default = 0, help = "Maximum longitude for filtering fisheries data")
+  option_names <- c(data_path, config_path, output_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max)
   geci.optparse::get_options_from_vec(option_names)
 }
