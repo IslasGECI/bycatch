@@ -137,6 +137,20 @@ write_trips <- function(options, config_content) {
   trips@data |>
     readr::write_csv(options[["output-path"]])
 }
+process_fisheries_data <- function(options) {
+  fisheries_raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  fisheries_data <- fisheries_raw_data |>
+    filter_fisheries_by_date_and_lat_lon(
+      start = options[["start"]],
+      end = options[["end"]],
+      lat_min = options[["lat-min"]],
+      lat_max = options[["lat-max"]],
+      lon_min = options[["lon-min"]],
+      lon_max = options[["lon-max"]]
+    )
+  fisheries_data |>
+    readr::write_csv(options[["output-path"]])
+}
 
 #' Get Domain Specific Options
 #'
