@@ -10,14 +10,14 @@ Config/testthat/edition: 3
 Description: R package for Bycatch Assessment
 Encoding: UTF-8
 Imports:
-    dplyr,
     R6,
-    readr,
-    track2KBA,
+    dplyr,
     geci.optparse,
     ggplot2,
+    readr,
     rjson,
     tibble,
+    track2KBA,
 LazyData: true
 License: AGPL-3.0-or-later
 Roxygen: list(markdown = TRUE)
