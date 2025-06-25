@@ -89,7 +89,7 @@ green_file: format
 	|| git restore .
 	chmod g+w -R .
 
-refactor: format
+refactor_file: format
 	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
 	&& (git add R/*.R ${file} && git commit -m "♻️  Refactor") \
 	|| git restore .
