@@ -1,5 +1,7 @@
 all: check coverage
 
+
+
 .PHONY: \
     check \
     clean \
@@ -74,6 +76,27 @@ install:
 	R -e "devtools::build()" && \
 	R -e "devtools::install()"
 
+
+red_file: format
+	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
+	&& git restore . \
+	|| (git add ${file} && git commit -m "🛑🧪 Fail tests")
+	chmod g+w -R .
+
+green_file: format
+	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
+	&& (git add R/*.R && git commit -m "✅ Pass tests") \
+	|| git restore .
+	chmod g+w -R .
+
+refactor: format
+	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
+	&& (git add R/*.R ${file} && git commit -m "♻️  Refactor") \
+	|| git restore .
+	chmod g+w -R .
+
+tests_file:
+	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)"
 
 tests:
 	Rscript -e "devtools::test(stop_on_failure = TRUE)"
