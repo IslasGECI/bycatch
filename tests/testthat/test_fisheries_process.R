@@ -5,7 +5,9 @@ describe("Processes fisheries data", {
     Latitud = c(123.456, 123.456, 123.456),
     Longitud = c(-76.543, -76.543, -76.543)
   )
-  obtained <- filter_fisheries_by_date(fisheries_data, start = "2014-01-01", end = "2014-06-30")
-  expected_rows <- 1
-  expect_equal(nrow(obtained), expected_rows)
+  it("filters fisheries data by date range", {
+    obtained <- filter_fisheries_by_date(fisheries_data, start = "2014-01-01", end = "2014-06-30")
+    expected_rows <- 1
+    expect_equal(nrow(obtained), expected_rows)
+  })
 })
