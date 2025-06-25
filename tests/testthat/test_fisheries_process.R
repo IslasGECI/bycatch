@@ -1,5 +1,5 @@
 describe("Processes fisheries data", {
-  fishery_data <- tibble::tibble(
+  fisheries_data <- tibble::tibble(
     Nombre = c("Test Fishery", "Sample Fishery", "Example Fishery"),
     FechaRecepcionUnitrac = c("2013-05-01T00:00:00Z", "2014-05-01T00:00:00Z", "2014-07-01T00:00:00Z"),
     Latitud = c(123.456, 123.456, 123.456),
