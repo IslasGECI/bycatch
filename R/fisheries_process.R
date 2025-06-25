@@ -14,7 +14,7 @@ filter_fisheries_by_date <- function(fisheries_data, start, end) {
 filter_fisheries_by_lat_lon <- function(fisheries_data, lat_min, lat_max, lon_min, lon_max) {
   fisheries_data |>
     dplyr::filter(
-      Latitud >= lat_min & Latitud <= lat_max &
-        Longitud >= lon_min & Longitud <= lon_max
+      Latitude >= lat_min & Latitude <= lat_max &
+        Longitude >= lon_min & Longitude <= lon_max
     )
 }
