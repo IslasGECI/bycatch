@@ -11,12 +11,12 @@ describe("Processes fisheries data", {
     expect_equal(nrow(obtained), expected_rows)
   })
   it("filter rows between latitude and longitude", {
-    obtained <- filter_fisheries_by_lat_long(fisheries_data, lat_min = 123.0, lat_max = 124.0, long_min = -77.0, long_max = -76.0)
+    obtained <- filter_fisheries_by_lat_lon(fisheries_data, lat_min = 123.0, lat_max = 124.0, lon_min = -77.0, lon_max = -76.0)
     expected_rows <- 1
     expect_equal(nrow(obtained), expected_rows)
   })
   it("filters fisheries data by date range and latitude/longitude", {
-    obtained <- filter_fisheries_by_date_and_lat_long(fisheries_data, start = "2013-01-01", end = "2013-06-30", lat_min = 123.0, lat_max = 124.0, long_min = -77.0, long_max = -76.0)
+    obtained <- filter_fisheries_by_date_and_lat_lon(fisheries_data, start = "2013-01-01", end = "2013-06-30", lat_min = 123.0, lat_max = 124.0, lon_min = -77.0, lon_max = -76.0)
     expected_rows <- 1
     expect_equal(nrow(obtained), expected_rows)
   })

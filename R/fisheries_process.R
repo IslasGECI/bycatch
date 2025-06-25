@@ -1,7 +1,7 @@
-filter_fisheries_by_date_and_lat_long <- function(fisheries_data, start, end, lat_min, lat_max, long_min, long_max) {
+filter_fisheries_by_date_and_lat_lon <- function(fisheries_data, start, end, lat_min, lat_max, lon_min, lon_max) {
   fisheries_data |>
     filter_fisheries_by_date(start, end) |>
-    filter_fisheries_by_lat_long(lat_min, lat_max, long_min, long_max)
+    filter_fisheries_by_lat_lon(lat_min, lat_max, lon_min, lon_max)
 }
 filter_fisheries_by_date <- function(fisheries_data, start, end) {
   fisheries_data |>
@@ -11,10 +11,10 @@ filter_fisheries_by_date <- function(fisheries_data, start, end) {
     )
 }
 
-filter_fisheries_by_lat_long <- function(fisheries_data, lat_min, lat_max, long_min, long_max) {
+filter_fisheries_by_lat_lon <- function(fisheries_data, lat_min, lat_max, lon_min, lon_max) {
   fisheries_data |>
     dplyr::filter(
       Latitud >= lat_min & Latitud <= lat_max &
-        Longitud >= long_min & Longitud <= long_max
+        Longitud >= lon_min & Longitud <= lon_max
     )
 }
