@@ -10,7 +10,7 @@ get_trips <- function(data, config_content) {
     dataGroup = data,
     fieldID = "track_id",
     fieldDate = "date_gmt",
-    fieldTime = "time",
+    fieldTime = "time_gmt",
     fieldLon = "longitude",
     fieldLat = "latitude",
     formatDT = "ymd_HMS"
