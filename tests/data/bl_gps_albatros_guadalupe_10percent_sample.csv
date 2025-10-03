@@ -1,4 +1,4 @@
-bird_id,sex,breed_stage,breed_status,lat_colony,lon_colony,season,date_gmt,time_gmt,longitude,latitude,track_id,original_track_id,time_gmt_bad,argos_quality,common_name,site_name,colony_name,device
+bird_id,sex,breed_stage,breed_status,lat_colony,lon_colony,season,date_gmt,time,longitude,latitude,track_id,original_track_id,time_gmt,argos_quality,common_name,site_name,colony_name,device
 3C4,female,"I,E,C",TRUE,28.884333,-118.291915,2014,2014-02-27,03:20:04,-118.292138,28.884665,3C4,3C4,NA,NA,Laysan albatross,Mexico,Isla Guadalupe,GPS
 8A6,male,"I,E,C",TRUE,28.884333,-118.291915,2014,2014-03-03,16:40:03,-121.790533,34.555902,8A6,8A6,NA,NA,Laysan albatross,Mexico,Isla Guadalupe,GPS
 3A6,female,I,TRUE,28.884478,-118.291855,2014,2014-02-01,12:10:06,-133.201215,41.094273,3A6,3A6,NA,NA,Laysan albatross,Mexico,Isla Guadalupe,GPS
