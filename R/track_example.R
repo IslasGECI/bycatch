@@ -8,11 +8,12 @@ get_summary_of_trips <- function(gps_data, config_content) {
 get_trips <- function(data, config_content) {
   dataGroup <- track2KBA::formatFields(
     dataGroup = data,
-    fieldID   = "track_id",
+    fieldID = "track_id",
     fieldDate = "date_gmt",
     fieldTime = "time",
-    fieldLon  = "longitude",
-    fieldLat  = "latitude"
+    fieldLon = "longitude",
+    fieldLat = "latitude",
+    formatDT = "ymd_HMS"
   )
   colony <- config_content$colony
   trips <- track2KBA::tripSplit(
