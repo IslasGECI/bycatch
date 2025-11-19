@@ -31,6 +31,18 @@ plot_usage_area_by_individual <- function(options) {
   grDevices::dev.off()
 }
 
+plot_potential_site <- function(options) {
+  config_content <- read_config(options[["config-path"]])
+  gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  percentage_distribution <- options[["percentage-distribution"]]
+  n_iterations <- options[["n-iterations"]]
+
+  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
+  representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
+  site <- wrapper$get_potential_site(representative_assess, percentage_distribution, population_size = options[["population-size"]])
+  track2KBA::mapSite(site)
+  ggplot2::ggsave(filename = options[["output-path"]], device = "png")
+}
 
 #' Plot Representative Assessment
 #'
