@@ -20,7 +20,7 @@ describe("process fisheries data", {
 
 describe("plot ussage area by a proportion of the total birds", {
   output_path <- "/workdir/tests/usage_area.png"
-  gps_path <- "/workdir/tests/data/bl_sample_10_percent_5_ids.csv"
+  gps_path <- "/workdir/tests/data/raw_gps_albatros_5_ids.csv"
   options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
   it("write figure", {
     testtools::if_exist_remove(output_path)
@@ -31,7 +31,7 @@ describe("plot ussage area by a proportion of the total birds", {
 })
 describe("plot representative assess", {
   output_path <- "/workdir/tests/representative_assess.png"
-  gps_path <- "/workdir/tests/data/bl_sample_10_percent_5_ids.csv"
+  gps_path <- "/workdir/tests/data/raw_gps_albatros_5_ids.csv"
   options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
   it("write figure", {
     testtools::if_exist_remove(output_path)
