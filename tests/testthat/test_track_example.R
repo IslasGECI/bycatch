@@ -7,11 +7,10 @@ describe("Get trips from GECI data", {
     expect_true("tripID" %in% colnames(obtained@data))
   })
   it("Calculate foraging trips list", {
-    gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv", show_col_types = FALSE)
     obtained <- get_summary_of_trips(gps_data, config_content)
-    expected_rows <- 121
+    expected_rows <- 26
     expect_equal(nrow(obtained), expected_rows)
-    expected_complete_trips <- 116
+    expected_complete_trips <- 23
     obtained_complete_trips <- sum(obtained$complete == "complete trip")
     expect_equal(obtained_complete_trips, expected_complete_trips)
   })

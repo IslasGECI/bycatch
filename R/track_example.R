@@ -1,5 +1,5 @@
 get_summary_of_trips <- function(gps_data, config_content) {
-  trips <- get_trips(gps_data, config_content)
+  trips <- xxget_trips(gps_data, config_content)
   colony <- config_content$colony
   sumTrips <- track2KBA::tripSummary(trips = trips, colony = colony)
   return(sumTrips)
