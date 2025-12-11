@@ -8,8 +8,8 @@ get_summary_of_trips <- function(gps_data, config_content) {
 get_trips <- function(data, config_content) {
   dataGroup <- track2KBA::formatFields(
     dataGroup = data,
-    fieldID = "track_id",
-    fieldDate = "date_gmt",
+    fieldID = "name",
+    fieldDate = "date",
     fieldTime = "time",
     fieldLon = "longitude",
     fieldLat = "latitude",
