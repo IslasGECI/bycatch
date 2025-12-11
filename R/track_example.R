@@ -5,6 +5,27 @@ get_summary_of_trips <- function(gps_data, config_content) {
   return(sumTrips)
 }
 
+xxget_trips <- function(data, config_content) {
+  dataGroup <- track2KBA::formatFields(
+    dataGroup = data,
+    fieldID = "name",
+    fieldDate = "date",
+    fieldTime = "time",
+    fieldLon = "longitude",
+    fieldLat = "latitude",
+    formatDT = "ymd_HMS"
+  )
+  colony <- config_content$colony
+  trips <- track2KBA::tripSplit(
+    dataGroup  = dataGroup,
+    colony     = colony,
+    innerBuff  = config_content$inner_buff, # kilometers
+    returnBuff = config_content$return_buff,
+    duration   = config_content$duration, # hours
+    rmNonTrip  = TRUE
+  )
+  return(trips)
+}
 get_trips <- function(data, config_content) {
   dataGroup <- track2KBA::formatFields(
     dataGroup = data,
