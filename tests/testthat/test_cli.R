@@ -20,7 +20,7 @@ describe("process fisheries data", {
 
 describe("plot potential site", {
   output_path <- "/workdir/tests/potential_site.png"
-  gps_path <- "/workdir/tests/data/bl_sample_10_percent_5_ids.csv"
+  gps_path <- "/workdir/tests/data/raw_gps_albatros_5_ids.csv"
   options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10, "population-size" = 10)
   it("write figure", {
     testtools::if_exist_remove(output_path)
