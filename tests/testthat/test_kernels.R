@@ -1,8 +1,8 @@
 describe("Calculate space use", {
-  gps_data <- readr::read_csv("/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv", show_col_types = FALSE)
+  gps_data <- readr::read_csv("/workdir/tests/data/raw_gps_albatros_guadalupe.csv", show_col_types = FALSE)
   colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
-  trips <- get_trips(gps_data, config_content)
+  trips <- xxget_trips(gps_data, config_content)
   trips_summary <- readr::read_csv("/workdir/tests/data/trips_summary.csv", show_col_types = FALSE)
   complete_trips <- subset(trips, trips$Returns == "Yes")
   it("calculates candidate smoothing parameter values ", {
