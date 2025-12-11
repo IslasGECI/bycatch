@@ -40,9 +40,10 @@ describe("plot representative assess", {
     testtools::if_exist_remove(output_path)
   })
 })
+
+gps_path <- "/workdir/tests/data/raw_gps_albatros_guadalupe.csv"
 describe("plot map of individuals KDE", {
   output_path <- "/workdir/tests/kde_map.png"
-  gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_10percent_sample.csv"
   options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
   it("write figure", {
     testtools::if_exist_remove(output_path)
@@ -51,7 +52,6 @@ describe("plot map of individuals KDE", {
     testtools::if_exist_remove(output_path)
   })
 })
-gps_path <- "/workdir/tests/data/bl_gps_albatros_guadalupe_20percent_sample.csv"
 describe("Write trips summary", {
   it("write_trips_cummary", {
     output_path <- "/workdir/tests/trips_summary.csv"
