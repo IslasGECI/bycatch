@@ -7,12 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
-- `formatDT = "ymd_HMS"` in order to remove parse date time warning.
+
 ### Fixed
 
 ### Changed
 
 ### Removed
+
+## [0.4.0] - 2025-12-11
+
+### Added
+- `formatDT = "ymd_HMS"` in order to remove parse date time warning.
+
+### Changed
+- Function `get_trips()` now accept columns `time` and `name` from raw GPS files.
 
 ## [0.3.0] - 2025-06-25
 
