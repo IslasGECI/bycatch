@@ -55,7 +55,8 @@ describe("plot map of individuals KDE", {
 describe("Write trips summary", {
   it("write_trips_cummary", {
     output_path <- "/workdir/tests/trips_summary.csv"
-    options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
+    trips_path <- "/workdir/tests/data/trips.csv"
+    options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path)
     testtools::if_exist_remove(output_path)
     write_trips_summary(options)
     expect_true(testtools::exist_output_file(output_path))
