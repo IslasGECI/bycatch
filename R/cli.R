@@ -53,10 +53,10 @@ plot_usage_area_by_individual <- function(options) {
 #' @export
 plot_representative_assess <- function(options) {
   config_content <- read_config(options[["config-path"]])
-  gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
-  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
+  wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
   grDevices::png(options[["output-path"]])
   wrapper$get_representative_assess(percentage_distribution, options[["n-iterations"]])
   grDevices::dev.off()

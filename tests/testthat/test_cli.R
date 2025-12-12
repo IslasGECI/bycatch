@@ -31,8 +31,8 @@ describe("plot ussage area by a proportion of the total birds", {
 })
 describe("plot representative assess", {
   output_path <- "/workdir/tests/representative_assess.png"
-  gps_path <- "/workdir/tests/data/raw_gps_albatros_5_ids.csv"
-  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
+  trips_path <- "/workdir/tests/data/trips_5_ids.csv"
+  options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_representative_assess(options)
@@ -41,7 +41,6 @@ describe("plot representative assess", {
   })
 })
 
-gps_path <- "/workdir/tests/data/raw_gps_albatros_guadalupe.csv"
 describe("plot map of individuals KDE", {
   output_path <- "/workdir/tests/kde_map.png"
   trips_path <- "/workdir/tests/data/trips.csv"
@@ -71,6 +70,7 @@ describe("Write trips summary", {
 describe("Write trips geographic points", {
   it("write_trips", {
     output_path <- "/workdir/tests/trips_geographic_points.csv"
+    gps_path <- "/workdir/tests/data/raw_gps_albatros_guadalupe.csv"
     options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
     testtools::if_exist_remove(output_path)
     write_trips(options)
