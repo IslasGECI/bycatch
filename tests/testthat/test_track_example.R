@@ -3,7 +3,7 @@ describe("Get trips from GECI data", {
   config_content <- list(inner_buff = 3, return_buff = 10, duration = 1, colony = colony_df)
   it("Calculate foraging trips list", {
     trips <- readr::read_csv("/workdir/tests/data/trips.csv")
-    obtained <- xxget_summary_of_trips(trips, config_content)
+    obtained <- get_summary_of_trips(trips, config_content)
     expected_rows <- 26
     expect_equal(nrow(obtained), expected_rows)
     expected_complete_trips <- 23
