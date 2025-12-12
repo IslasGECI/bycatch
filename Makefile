@@ -79,20 +79,20 @@ install:
 
 red_file: format
 	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
-	&& git restore . \
+	&& git restore R/*.R tests/testthat/*.R \
 	|| (git add ${file} && git commit -m "🛑🧪 Fail tests")
 	chmod g+w -R .
 
 green_file: format
 	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
 	&& (git add R/*.R && git commit -m "✅ Pass tests") \
-	|| git restore .
+	|| git restore R/*.R tests/testthat/*.R
 	chmod g+w -R .
 
 refactor_file: format
 	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
 	&& (git add R/*.R ${file} && git commit -m "♻️  Refactor") \
-	|| git restore .
+	|| git restore R/*.R tests/testthat/*.R
 	chmod g+w -R .
 
 tests_file:
