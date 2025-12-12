@@ -44,7 +44,8 @@ describe("plot representative assess", {
 gps_path <- "/workdir/tests/data/raw_gps_albatros_guadalupe.csv"
 describe("plot map of individuals KDE", {
   output_path <- "/workdir/tests/kde_map.png"
-  options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
+  trips_path <- "/workdir/tests/data/trips.csv"
+  options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_individual_kernels(options)

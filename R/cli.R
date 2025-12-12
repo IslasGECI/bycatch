@@ -81,10 +81,10 @@ plot_representative_assess <- function(options) {
 #' @export
 plot_individual_kernels <- function(options) {
   config_content <- read_config(options[["config-path"]])
-  gps_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
-  wrapper <- Track2KBA_Wrapper$new(gps_data, config_content, percentage_distribution)
+  wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
 
   track2KBA::mapKDE(KDE = wrapper$KDE$UDPolygons, colony = config_content$colony)
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
