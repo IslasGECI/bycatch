@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 ### Changed
+- Function `write_trips_summary()` now receives a csv file from `write_trips()` output. Before, we calculated the trips twice.
+- Function `plot_individual_kernels()` now receives a csv file from `write_trips()` output. Before, we calculated the trips twice.
+- Function `plot_representative_assess()` now receives a csv file from `write_trips()` output. Before, we calculated the trips twice.
 
 ### Removed
 
