@@ -109,7 +109,7 @@ plot_individual_kernels <- function(options) {
 write_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
-    xxget_summary_of_trips(config_content) |>
+    get_summary_of_trips(config_content) |>
     readr::write_csv(options[["output-path"]])
 }
 
