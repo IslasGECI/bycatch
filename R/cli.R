@@ -23,7 +23,7 @@ plot_usage_area_by_individual <- function(options) {
   percentage_distribution <- options[["percentage-distribution"]]
   n_iterations <- options[["n-iterations"]]
 
-  wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
+  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
   representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
   site <- wrapper$get_site(representative_assess, percentage_distribution)
   grDevices::png(options[["output-path"]])
@@ -37,7 +37,7 @@ plot_potential_site <- function(options) {
   percentage_distribution <- options[["percentage-distribution"]]
   n_iterations <- options[["n-iterations"]]
 
-  wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
+  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
   representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
   site <- wrapper$get_potential_site(representative_assess, percentage_distribution, population_size = options[["population-size"]])
   valid_site <- sf::st_make_valid(site)
@@ -69,7 +69,7 @@ plot_representative_assess <- function(options) {
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
-  wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
+  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
   grDevices::png(options[["output-path"]])
   wrapper$get_representative_assess(percentage_distribution, options[["n-iterations"]])
   grDevices::dev.off()
@@ -97,7 +97,7 @@ plot_individual_kernels <- function(options) {
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
 
-  wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
+  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
 
   track2KBA::mapKDE(KDE = wrapper$KDE$UDPolygons, colony = config_content$colony)
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
