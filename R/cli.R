@@ -40,8 +40,8 @@ plot_potential_site <- function(options) {
   wrapper <- xxTrack2KBA_Wrapper$new(trips_data, config_content, percentage_distribution)
   representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
   site <- wrapper$get_potential_site(representative_assess, percentage_distribution, population_size = options[["population-size"]])
-  sf::sf_use_s2(FALSE)
-  track2KBA::mapSite(site)
+  valid_site <- sf::st_make_valid(site)
+  track2KBA::mapSite(valid_site)
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
 }
 
