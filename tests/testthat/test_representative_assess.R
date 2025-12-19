@@ -1,6 +1,6 @@
 Wrapper_Tester <- R6::R6Class(
   "Wrapper_Tester",
-  inherit = xxTrack2KBA_Wrapper,
+  inherit = Track2KBA_Wrapper,
   public = list(
     initialize = function() {
     }
