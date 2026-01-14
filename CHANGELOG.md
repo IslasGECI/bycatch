@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New argument `smoothing-method` to select the method used to compute the smoothing parameter `h` in the following CLI commands:
   - `plot_potential_site()`
-  - `plot_representatuve_assess()`
+  - `plot_representative_assess()`
   - `plot_usage_area_by_individual()`
   - `plot_individual_kernels()`
 
