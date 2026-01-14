@@ -14,8 +14,8 @@ Track2KBA_Wrapper <- R6::R6Class(
       self$colony <- config_content$colony
       self$tracks <- self$get_tracks()
       self$percentage_distribution <- percentage_distribution
-      self$KDE <- self$calculate_kde(percentage_distribution)
       self$smoothing_method <- smoothing_method
+      self$KDE <- self$calculate_kde(percentage_distribution)
     },
     get_tracks = function() {
       track2KBA::projectTracks(dataGroup = self$complete_trips, projType = "azim", custom = TRUE)

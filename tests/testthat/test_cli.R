@@ -21,7 +21,15 @@ describe("process fisheries data", {
 trips_path <- "/workdir/tests/data/trips_5_ids.csv"
 describe("plot potential site", {
   output_path <- "/workdir/tests/potential_site.png"
-  options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10, "population-size" = 10)
+  options <- list(
+    "data-path" = trips_path,
+    "config-path" = config_path,
+    "output-path" = output_path,
+    "percentage-distribution" = 50,
+    "n-iterations" = 10,
+    "population-size" = 10,
+    "smoothing-method" = "log_median"
+  )
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_potential_site(options)
@@ -32,7 +40,14 @@ describe("plot potential site", {
 
 describe("plot ussage area by a proportion of the total birds", {
   output_path <- "/workdir/tests/usage_area.png"
-  options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
+  options <- list(
+    "data-path" = trips_path,
+    "config-path" = config_path,
+    "output-path" = output_path,
+    "percentage-distribution" = 50,
+    "n-iterations" = 10,
+    "smoothing-method" = "log_median"
+  )
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_usage_area_by_individual(options)
@@ -42,7 +57,14 @@ describe("plot ussage area by a proportion of the total birds", {
 })
 describe("plot representative assess", {
   output_path <- "/workdir/tests/representative_assess.png"
-  options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50, "n-iterations" = 10)
+  options <- list(
+    "data-path" = trips_path,
+    "config-path" = config_path,
+    "output-path" = output_path,
+    "percentage-distribution" = 50,
+    "n-iterations" = 10,
+    "smoothing-method" = "scale_ARS"
+  )
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_representative_assess(options)
@@ -54,7 +76,13 @@ describe("plot representative assess", {
 describe("plot map of individuals KDE", {
   output_path <- "/workdir/tests/kde_map.png"
   trips_path <- "/workdir/tests/data/trips.csv"
-  options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path, "percentage-distribution" = 50)
+  options <- list(
+    "data-path" = trips_path,
+    "config-path" = config_path,
+    "output-path" = output_path,
+    "percentage-distribution" = 50,
+    "smoothing-method" = "log_median"
+  )
   it("write figure", {
     testtools::if_exist_remove(output_path)
     plot_individual_kernels(options)
