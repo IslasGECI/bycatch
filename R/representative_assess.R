@@ -28,7 +28,8 @@ Track2KBA_Wrapper <- R6::R6Class(
     },
     calculate_kde = function(percentage_distribution) {
       scale_dictionary <- self$get_scale_dictionary()
-      print("scale parameter: ", scale_dictionary[[self$smoothing_method]])
+      print("scale parameter:")
+      print(scale_dictionary[[self$smoothing_method]])
       KDE <- track2KBA::estSpaceUse(
         tracks = self$tracks,
         scale = scale_dictionary[[self$smoothing_method]],
