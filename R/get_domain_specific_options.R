@@ -11,7 +11,7 @@ get_domain_specific_options <- function() {
   data_path <- geci.optparse::character_option(c("-i", "--data-path"), default = "/workdir/reports/tables/input.csv", help = "File path of the desire input")
   config_path <- geci.optparse::character_option(c("-c", "--config-path"), default = "/workdir/reports/non-tabular/config_file.json", help = "File path of the configuration")
   output_path <- geci.optparse::character_option(c("-o", "--output-path"), default = "/workdir/reports/tables/result.csv", help = "File path of the desire output")
-  percentage_distribution <- geci.optparse::integer_option(c("-p", "--percentage-distribution"), default = 50)
+  percentage_distribution <- geci.optparse::integer_option(c("-d", "--percentage-distribution"), default = 50)
   n_iterations <- geci.optparse::integer_option(c("-n", "--n-iterations"), default = 10)
   start <- geci.optparse::character_option(c("-s", "--start"), default = "2014-01-01", help = "start date for filtering fisheries data")
   end <- geci.optparse::character_option(c("-e", "--end"), default = "2015-01-01", help = "End date for filtering fisheries data")
