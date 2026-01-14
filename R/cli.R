@@ -185,28 +185,3 @@ process_fisheries_data <- function(options) {
   fisheries_data |>
     readr::write_csv(options[["output-path"]])
 }
-
-#' Get Domain Specific Options
-#'
-#' Defines and retrieves command-line options specific to the domain for use in CLI tools.
-#'
-#' This function sets up options for data path, configuration path, output path, percentage distribution,
-#' and number of iterations, and returns them as a named list.
-#'
-#' @return A named list of command-line options for use in CLI tools.
-#' @export
-get_domain_specific_options <- function() {
-  data_path <- geci.optparse::character_option(c("-i", "--data-path"), default = "/workdir/reports/tables/input.csv", help = "File path of the desire input")
-  config_path <- geci.optparse::character_option(c("-c", "--config-path"), default = "/workdir/reports/non-tabular/config_file.json", help = "File path of the configuration")
-  output_path <- geci.optparse::character_option(c("-o", "--output-path"), default = "/workdir/reports/tables/result.csv", help = "File path of the desire output")
-  percentage_distribution <- geci.optparse::integer_option(c("-p", "--percentage-distribution"), default = 50)
-  n_iterations <- geci.optparse::integer_option(c("-n", "--n-iterations"), default = 10)
-  start <- geci.optparse::character_option(c("-s", "--start"), default = "2014-01-01", help = "start date for filtering fisheries data")
-  end <- geci.optparse::character_option(c("-e", "--end"), default = "2015-01-01", help = "End date for filtering fisheries data")
-  lat_min <- geci.optparse::double_option(c("-l", "--lat-min"), default = 0, help = "Minimum latitude for filtering fisheries data")
-  lat_max <- geci.optparse::double_option(c("-a", "--lat-max"), default = 0, help = "Maximum longitude for filtering fisheries data")
-  lon_min <- geci.optparse::double_option(c("-m", "--lon-min"), default = 0, help = "Minimum longitude for filtering fisheries data")
-  lon_max <- geci.optparse::double_option(c("-x", "--lon-max"), default = 0, help = "Maximum longitude for filtering fisheries data")
-  option_names <- c(data_path, config_path, output_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max)
-  geci.optparse::get_options_from_vec(option_names)
-}
