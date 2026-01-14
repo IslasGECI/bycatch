@@ -21,6 +21,7 @@ Track2KBA_Wrapper <- R6::R6Class(
     calculate_kde = function(percentage_distribution) {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
       scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
+      print(scale_parameters$mag)
       KDE <- track2KBA::estSpaceUse(
         tracks = self$tracks,
         scale = scale_parameters$mag,
