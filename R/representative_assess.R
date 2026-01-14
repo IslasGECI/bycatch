@@ -20,12 +20,15 @@ Track2KBA_Wrapper <- R6::R6Class(
     get_tracks = function() {
       track2KBA::projectTracks(dataGroup = self$complete_trips, projType = "azim", custom = TRUE)
     },
-    calculate_kde = function(percentage_distribution) {
+    get_scale_dictionary = function() {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
       scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
-      scale_dictionary <- list("log_median" = scale_parameters$mag)
-      print(self$smoothing_method)
-      print(scale_dictionary[[self$smoothing_method]])
+      scale_dictionary <- list("log_median" = scale_parameters$mag, "reference_bandwith" = scale_parameters$href, "scale_ARS" = scale_parameters$scaleARS)
+      return(scale_dictionary)
+    },
+    calculate_kde = function(percentage_distribution) {
+      scale_dictionary <- self$get_scale_dictionary()
+      print("scale parameter: ", scale_dictionary[[self$smoothing_method]])
       KDE <- track2KBA::estSpaceUse(
         tracks = self$tracks,
         scale = scale_dictionary[[self$smoothing_method]],
