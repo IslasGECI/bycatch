@@ -6,14 +6,16 @@ Track2KBA_Wrapper <- R6::R6Class(
     KDE = NULL,
     trips = NULL,
     tracks = NULL,
+    smoothing_method = NULL,
     percentage_distribution = NULL,
-    initialize = function(trips_data, config_content, percentage_distribution) {
+    initialize = function(trips_data, config_content, percentage_distribution, smoothing_method = "log_median") {
       self$trips <- trips_data
       self$complete_trips <- subset(self$trips, self$trips$Returns == "Yes")
       self$colony <- config_content$colony
       self$tracks <- self$get_tracks()
       self$percentage_distribution <- percentage_distribution
       self$KDE <- self$calculate_kde(percentage_distribution)
+      self$smoothing_method <- smoothing_method
     },
     get_tracks = function() {
       track2KBA::projectTracks(dataGroup = self$complete_trips, projType = "azim", custom = TRUE)
@@ -21,10 +23,12 @@ Track2KBA_Wrapper <- R6::R6Class(
     calculate_kde = function(percentage_distribution) {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
       scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
-      print(scale_parameters$mag)
+      scale_dictionary <- list("log_median" = scale_parameters$mag)
+      print(self$smoothing_method)
+      print(scale_dictionary[[self$smoothing_method]])
       KDE <- track2KBA::estSpaceUse(
         tracks = self$tracks,
-        scale = scale_parameters$mag,
+        scale = scale_dictionary[[self$smoothing_method]],
         levelUD = percentage_distribution,
         polyOut = TRUE
       )
