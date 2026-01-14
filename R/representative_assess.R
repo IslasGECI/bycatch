@@ -23,7 +23,7 @@ Track2KBA_Wrapper <- R6::R6Class(
     get_scale_dictionary = function() {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
       scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
-      scale_dictionary <- list("log_median" = scale_parameters$mag, "reference_bandwith" = scale_parameters$href, "scale_ARS" = scale_parameters$scaleARS)
+      scale_dictionary <- list("log_median" = scale_parameters$mag, "reference_bandwidth" = scale_parameters$href, "scale_ARS" = scale_parameters$scaleARS)
       return(scale_dictionary)
     },
     calculate_kde = function(percentage_distribution) {

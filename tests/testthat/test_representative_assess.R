@@ -2,8 +2,7 @@ Wrapper_Tester <- R6::R6Class(
   "Wrapper_Tester",
   inherit = Track2KBA_Wrapper,
   public = list(
-    initialize = function() {
-    }
+    initialize = function() {}
   )
 )
 describe("Check representativity", {
@@ -15,7 +14,7 @@ describe("Check representativity", {
     obtained$colony <- colony_df
     obtained$tracks <- readRDS("/workdir/tests/data/tracks.rds")
     obtained_scale_dictionary <- obtained$get_scale_dictionary()
-    expected_names <- c("log_median", "reference_bandwith", "scale_ARS")
+    expected_names <- c("log_median", "reference_bandwidth", "scale_ARS")
     expect_true(all(names(obtained_scale_dictionary) %in% expected_names))
   })
   it("Get tracks", {
