@@ -9,6 +9,15 @@ Wrapper_Tester <- R6::R6Class(
 describe("Check representativity", {
   colony_df <- tibble::tibble(Longitude = -118.29162, Latitude = 28.88421)
   percentage_distribution <- 50
+  it("get scale dictionary", {
+    obtained <- Wrapper_Tester$new()
+    obtained$complete_trips <- readRDS("/workdir/tests/data/completed_trips.rds")
+    obtained$colony <- colony_df
+    obtained$tracks <- readRDS("/workdir/tests/data/tracks.rds")
+    obtained_scale_dictionary <- obtained$get_scale_dictionary()
+    expected_names <- c("log_median", "reference_bandwith", "scale_ARS")
+    expect_true(all(names(obtained_scale_dictionary) %in% expected_names))
+  })
   it("Get tracks", {
     obtained <- Wrapper_Tester$new()
     obtained$complete_trips <- readRDS("/workdir/tests/data/completed_trips.rds")
