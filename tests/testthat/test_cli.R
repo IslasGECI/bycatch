@@ -32,7 +32,9 @@ describe("plot potential site", {
   )
   it("write figure", {
     testtools::if_exist_remove(output_path)
+    withr::local_options(list(sf_use_s2 = sf::sf_use_s2()))
     plot_potential_site(options)
+    expect_false(getOption("sf_use_s2"))
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
   })

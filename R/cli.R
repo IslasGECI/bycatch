@@ -39,6 +39,7 @@ plot_potential_site <- function(options) {
   n_iterations <- options[["n-iterations"]]
   smoothing_method <- options[["smoothing-method"]]
 
+  sf::sf_use_s2(FALSE)
   wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
   representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
   site <- wrapper$get_potential_site(representative_assess, percentage_distribution, population_size = options[["population-size"]])
