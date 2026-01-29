@@ -5,11 +5,17 @@ filter_fisheries_by_date_and_lat_lon <- function(fisheries_data, start, end, lat
 }
 filter_fisheries_by_date <- function(fisheries_data, start, end) {
   fisheries_data |>
+    filter_between_dates(start, end, FechaRecepcionUnitrac)
+}
+
+filter_between_dates <- function(data, start, end, date_column = `Fecha`) {
+  data |>
     dplyr::filter(
-      as.Date(FechaRecepcionUnitrac) >= as.Date(start) &
-        as.Date(FechaRecepcionUnitrac) <= as.Date(end)
+      as.Date({{ date_column }}) >= as.Date(start) &
+        as.Date({{ date_column }}) <= as.Date(end)
     )
 }
+
 
 filter_fisheries_by_lat_lon <- function(fisheries_data, lat_min, lat_max, lon_min, lon_max) {
   fisheries_data |>
