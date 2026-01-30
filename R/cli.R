@@ -198,7 +198,7 @@ filter_data_between_dates <- function(options) {
     filter_between_dates(
       start = options[["start"]],
       end = options[["end"]],
-      date
+      !!rlang::sym(options[["date-column-name"]])
     )
   filtered_data |>
     readr::write_csv(options[["output-path"]])
