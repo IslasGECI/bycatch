@@ -7,12 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Added
+- Command `filter_data_between_dates()` filter GPS data between two dates. The dates given are included on the output file.
 
 ### Fixed
 
 ### Changed
 
 ### Removed
+
+## [0.7.0] - 2026-01-30
+### Added
+- Command `filter_data_between_dates()` filter GPS data between two dates. The dates given are included on the output file.
 
 ## [0.6.0] - 2026-01-14
 ### Added
