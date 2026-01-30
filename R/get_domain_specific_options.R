@@ -21,6 +21,7 @@ get_domain_specific_options <- function() {
   lon_max <- geci.optparse::double_option(c("-x", "--lon-max"), default = 0, help = "Maximum longitude for filtering fisheries data")
   population_size <- geci.optparse::integer_option(c("-p", "--population-size"), default = 1551)
   smoothing_method <- geci.optparse::character_option(c("-z", "--smoothing-method"), default = "log_median", help = "Method to compute the smoothing parameter h")
-  option_names <- c(data_path, config_path, output_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max, population_size, smoothing_method)
+  column_name <- geci.optparse::character_option(c("-t", "--date-column-name"), default = "Fecha", help = "Name of date column to filter")
+  option_names <- c(data_path, config_path, output_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max, population_size, smoothing_method, column_name)
   geci.optparse::get_options_from_vec(option_names)
 }
