@@ -190,3 +190,16 @@ process_fisheries_data <- function(options) {
   fisheries_data |>
     readr::write_csv(options[["output-path"]])
 }
+
+#' @export
+filter_data_between_dates <- function(options) {
+  raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  filtered_data <- raw_data |>
+    filter_between_dates(
+      start = options[["start"]],
+      end = options[["end"]],
+      date
+    )
+  filtered_data |>
+    readr::write_csv(options[["output-path"]])
+}
