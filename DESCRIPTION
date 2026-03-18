@@ -34,7 +34,7 @@ Suggests:
     testtools,
 Remotes:
     BirdLifeInternational/track2kba,
-    IslasGECI/optparse,
+    IslasGECI/geci_optparse,
     IslasGECI/testtools,
     r-quantities/units,
 Type: Package

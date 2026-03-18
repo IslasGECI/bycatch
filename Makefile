@@ -71,10 +71,10 @@ refactor: format
 setup: clean install
 
 install:
-	R -e "devtools::document()" && \
 	R -e "devtools::install(dependencies=TRUE)" && \
 	R -e "devtools::check(error_on = 'error')" && \
-	R -e "devtools::build()"
+	R -e "devtools::build()" && \
+	R -e "devtools::document()"
 
 red_file: format
 	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)" \
