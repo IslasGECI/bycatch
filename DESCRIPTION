@@ -10,14 +10,18 @@ Config/testthat/edition: 3
 Description: R package for Bycatch Assessment
 Encoding: UTF-8
 Imports:
+    adehabitatHR,
     dplyr,
     geci.optparse,
     ggplot2,
     R6,
     readr,
     rjson,
+    s2,
+    sf,
     tibble,
     track2KBA,
+    units,
 LazyData: true
 License: AGPL-3.0-or-later
 Roxygen: list(markdown = TRUE)
@@ -30,6 +34,8 @@ Suggests:
     testtools,
 Remotes:
     BirdLifeInternational/track2kba,
+    IslasGECI/optparse,
     IslasGECI/testtools,
+    r-quantities/units,
 Type: Package
 Version: 0.7.0
