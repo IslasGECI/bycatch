@@ -10,10 +10,10 @@ Config/testthat/edition: 3
 Description: R package for Bycatch Assessment
 Encoding: UTF-8
 Imports:
-    R6,
     dplyr,
     geci.optparse,
     ggplot2,
+    R6,
     readr,
     rjson,
     tibble,
@@ -29,6 +29,7 @@ Suggests:
     testthat,
     testtools,
 Remotes:
-    IslasGECI/testtools
+    BirdLifeInternational/track2kba,
+    IslasGECI/testtools,
 Type: Package
 Version: 0.7.0
