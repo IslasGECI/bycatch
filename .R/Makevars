@@ -1,0 +1,7 @@
+CXX = g++ -std=gnu++17
+CXX11 = g++
+CXX14 = g++
+CXX17 = g++
+CXXFLAGS += -std=gnu++17
+CXX11FLAGS += -std=gnu++17
+CXX14FLAGS += -std=gnu++17
