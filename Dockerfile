@@ -6,6 +6,6 @@ RUN apt update && apt install --yes \
     libgeos-dev \
     libproj-dev \
     libudunits2-dev \
+    libuv1 \
     netcdf-bin
-
 RUN make install
