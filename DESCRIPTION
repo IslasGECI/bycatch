@@ -25,7 +25,6 @@ Imports:
 LazyData: true
 License: AGPL-3.0-or-later
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 7.3.2
 Suggests:
     covr,
     devtools,
@@ -39,3 +38,4 @@ Remotes:
     r-quantities/units,
 Type: Package
 Version: 0.7.0
+Config/roxygen2/version: 8.0.0
