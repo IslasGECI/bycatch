@@ -101,7 +101,7 @@ Add new `.rds` artifact targets and update dependencies.
 In `R/get_domain_specific_options.R`, add a new CLI option:
 
 ```r
-representative_assess_path <- geci.optparse::character_option(
+representative_assess_path <- gecioptparse::character_option(
   c("", "--representative-assess-path"),
   default = NULL,
   help = "Path to pre-computed representative assessment RDS file (optional)"

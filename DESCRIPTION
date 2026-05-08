@@ -12,7 +12,7 @@ Encoding: UTF-8
 Imports:
     adehabitatHR,
     dplyr,
-    geci.optparse,
+    gecioptparse,
     ggplot2,
     R6,
     readr,

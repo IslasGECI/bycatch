@@ -166,7 +166,7 @@ Each `render_*()` function:
 Add `--artifact-path` to `get_domain_specific_options()` so render functions can read pre-computed artifacts:
 
 ```r
-artifact_path <- geci.optparse::character_option(
+artifact_path <- gecioptparse::character_option(
   c("", "--artifact-path"),
   default = NULL,
   help = "Path to pre-computed artifact (.gpkg or .rds) to render"
