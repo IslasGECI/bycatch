@@ -1,36 +1,3 @@
-#' Plot Usage Area by Individual
-#'
-#' Generates and saves a usage area plot for all individuals based on GPS data and configuration settings.
-#'
-#' This function reads configuration and GPS data from the provided file paths, creates a `Track2KBA_Wrapper` object,
-#' computes a representative assessment for the specified percentage distribution and number of iterations,
-#' derives the site usage area, and saves the resulting plot as a PNG file to the specified output path.
-#'
-#' @param options A named list containing the following elements:
-#'   \describe{
-#'     \item{config-path}{Path to the configuration file (JSON).}
-#'     \item{data-path}{Path to the input GPS data file (CSV).}
-#'     \item{output-path}{Path where the output PNG plot will be saved.}
-#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
-#'     \item{n-iterations}{Integer specifying the number of iterations for the assessment.}
-#'   }
-#'
-#' @return None. Called for its side effect of saving a plot to disk.
-#' @export
-plot_usage_area_by_individual <- function(options) {
-  config_content <- read_config(options[["config-path"]])
-  trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  percentage_distribution <- options[["percentage-distribution"]]
-  n_iterations <- options[["n-iterations"]]
-  smoothing_method <- options[["smoothing-method"]]
-
-  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
-  representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
-  site <- wrapper$get_site(representative_assess, percentage_distribution)
-  grDevices::png(options[["output-path"]])
-  track2KBA::mapSite(site)
-  grDevices::dev.off()
-}
 
 plot_potential_site <- function(options) {
   config_content <- read_config(options[["config-path"]])
