@@ -27,7 +27,6 @@ The style guide defines these as:
 | Artifact | Producing function | Format | Consumers |
 |----------|-------------------|--------|-----------|
 | `representative_assess_[scope].rds` | `create_representative_assessment` | RDS | `plot_representative_assessment` |
-| `usage_observed_[scope].gpkg` | `export_usage_observed` | GeoPackage | `render_usage_observed`, GMT, QGIS |
 | `potential_kba_[scope].gpkg` | `export_potential_kba` | GeoPackage | `render_potential_kba`, GMT, QGIS |
 | `individual_space_use_[scope].gpkg` | `export_individual_space_use` | GeoPackage | `render_individual_space_use`, GMT, QGIS |
 | `trips_[scope].csv` | `write_trips` | CSV | — |
@@ -38,7 +37,6 @@ The style guide defines these as:
 | Figure | Export step | Render step | Output |
 |--------|-----------|-------------|--------|
 | `representative_assessment_[scope].png` | `create_representative_assessment` | `render_representative_assessment` | PNG |
-| `usage_observed_[scope].png` | `export_usage_observed` | `render_usage_observed` | PNG |
 | `potential_kba_[scope].png` | `export_potential_kba` | `render_potential_kba` | PNG |
 | `individual_space_use_[scope].png` | `export_individual_space_use` | `render_individual_space_use` | PNG |
 
@@ -102,11 +100,8 @@ New functions to create:
 
 ### File naming convention
 
-- Script files: verb prefix + snake_case (e.g. `export_usage_observed.R`, `render_potential_kba.R`)
-- Makefile variables: `format_type_species_region` (e.g. `gpkg_usage_observed_guadalupe`)
 - Phony targets: noun or adjective (e.g. `results_first_paper`)
 
-The program name matches the Makefile variable name (format omitted to avoid redundancy). For example, the program called by `png_usage_observed_guadalupe` is `render_usage_observed_guadalupe`.
 
 ## 5. Implementation Steps
 
@@ -163,46 +158,28 @@ artifact_path <- gecioptparse::character_option(
 )
 ```
 
-### Step E: Update `NAMESPACE`
-
-Export all new functions:
-```
-export(export_usage_observed)
-export(export_potential_kba)
-export(export_individual_space_use)
-export(create_representative_assessment)
-export(render_usage_observed)
-export(render_potential_kba)
-export(render_individual_space_use)
-export(render_representative_assessment)
-export(plot_usage_observed)
-export(plot_potential_kba)
-export(plot_representative_assessment)
-export(plot_individual_space_use)
-```
 
 ### Step F: Update Makefile
 
 1. Add Makefile variables for artifact targets (format_type_species_region):
    ```makefile
    rds_representative_assessment_guadalupe = data/processed/representative_assessment_guadalupe.rds
-   gpkg_usage_observed_guadalupe = data/processed/usage_observed_guadalupe.gpkg
    gpkg_potential_kba_guadalupe = data/processed/potential_kba_guadalupe.gpkg
    ```
 
 2. Add two-step targets for each figure:
    ```makefile
-   $(gpkg_usage_observed_guadalupe): ...
-       Rscript -e "bycatch::export_usage_observed(...)"
+   $(gpkg_xxx_guadalupe): ...
+       Rscript -e "bycatch::export_xxx(...)"
 
-   png_usage_observed_guadalupe = reports/figures/usage_observed_guadalupe.png
-   $(png_usage_observed_guadalupe): $(gpkg_usage_observed_guadalupe)
-       Rscript -e "bycatch::render_usage_observed(...)"
+   png_xxx_guadalupe = reports/figures/xxx_guadalupe.png
+   $(png_xxx_guadalupe): $(gpkg_xxx_guadalupe)
+       Rscript -e "bycatch::render_xxx(...)"
    ```
 
 3. Program name matches the Makefile variable name (per style guide):
-   - `png_usage_observed_guadalupe` → script: `render_usage_observed`
-   - `gpkg_usage_observed_guadalupe` → script: `export_usage_observed`
+   - `png_xxx_guadalupe` → script: `render_xxx_observed`
+   - `gpkg_xxx_guadalupe` → script: `export_xxx_observed`
 
 ### Step G: Validation
 
