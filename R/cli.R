@@ -1,4 +1,3 @@
-
 plot_potential_site <- function(options) {
   config_content <- read_config(options[["config-path"]])
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
