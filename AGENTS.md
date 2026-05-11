@@ -1,6 +1,6 @@
 # AGENTS.md — bycatch
 
-R package `bycatch` (v0.7.0) — seabird bycatch risk assessment.
+R package `bycatch` (v0.8.0) — seabird bycatch risk assessment.
 Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 
 ## Commands
@@ -17,6 +17,8 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 | `make tests_file file=<path>` | Run a single test file (no commit/restore) |
 | `make mutants` | Placeholder (not yet implemented) |
 
+> **Note:** `devtools` is only available inside Docker. Run tests via `docker exec bycatch_code_ci make tests`. The suite takes ~4 minutes.
+
 ## TDD workflow (built into Makefile)
 
 - **`make red`** — format tests, run them. If they fail → stage `tests/testthat/*.R` → commit. If they pass → `git restore .`
@@ -25,6 +27,29 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 - **`make red_file file=path`** etc. — single-file TDD cycle.
 
 All three always run `format` first (via `styler`).
+
+### Manual TDD workflow (alternative)
+
+When the Makefile targets are too rigid, phases can be managed manually:
+
+1. Make changes (test or production code).
+2. Stage relevant files with `git add`.
+3. Run tests via `docker exec bycatch_code_ci make tests`.
+4. If tests fail, adjust and repeat. If tests pass, commit.
+
+This gives explicit control over staging boundaries and commit messages.
+
+### Dead-code removal workflow (inverted TDD)
+
+When removing a feature that is no longer needed:
+
+1. Remove dead production code.
+2. Run tests — they should fail (Red-like state).
+3. Remove the corresponding test(s).
+4. Run tests — they should pass (Green-like state).
+5. Commit both changes together.
+
+This is the inverse of test-first: production code is removed first, then the test is removed to restore Green. It is a cleanup cycle distinct from the three standard phases.
 
 ## Package structure
 
@@ -46,6 +71,16 @@ All three always run `format` first (via `styler`).
 ## CI
 
 GitHub Actions (`.github/workflows/actions.yml`): `docker build` → `make check` → `make coverage` → `make mutants` → push Docker images to Docker Hub. Everything runs inside Docker.
+
+## Commit conventions
+
+Each commit message follows this format:
+- **Gitmoji** prefix matching the change type (🔥 remove, 🗑️ deprecate, 📝 docs, 🏁 plan, etc.).
+- **Imperative verb** immediately after the gitmoji.
+- **Summary** under 72 characters.
+- **Blank second line.**
+- **Body** explains motivation (why, not what). Avoid restating the diff.
+- **No Conventional Commits** prefixes (`feat:`, `fix:`, etc.).
 
 ## Repo conventions
 
