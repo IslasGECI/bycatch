@@ -39,40 +39,61 @@ pipeline into three independent layers.
 
 ```
 compute_*           in-memory calculation, no side effects
-export_*            compute + write interoperable format (.gpkg, .csv)
 plot_*              in-memory visualization (no disk I/O)
-render_*            read artifact + plot_* + write PNG
-create_*            compute_* + export_* (one-step convenience)
+write_*             write native format (.rds)
+export_*            write interoperable format (.gpkg, .csv)
+create_*            compute_* + write_* (one-step convenience, controlled exception)
+render_*            read artifact + plot_* + write image (controlled exception)
 ```
 
-### Pipelines to restructure
+### Data flow
 
-| Pipeline | New `compute_*` | New `export_*` | New `plot_*` | Existing `render_*` |
-|----------|----------------|----------------|-------------|-------------------|
-| Representativity | `compute_representative_assessment` | `write_representative_assessment` (.rds) | `plot_representative_assessment` | `render_representative_assessment` |
-| KBA | — (uses `compute_representative_assessment` output) | `export_potential_kba` (.gpkg) | `plot_potential_kba` | `render_potential_kba` |
-| Individual KDE | `estimate_space_use` (already done) | `export_individual_kde` (.gpkg) | `plot_individual_kde` | `render_individual_kde` |
+```
+create_cache(data_path, config_path, levelUD, n_iterations, smoothing_method, rds_path)
+  │
+  ├── compute_space_use(data_path, config_path, levelUD, smoothing_method)
+  │     → list(KDE_surface, colony, tracks)    ← fast (~seconds)
+  │
+  └── compute_representative_assessment(KDE_surface, tracks, levelUD, n_iterations)
+        → data.frame (full iteration results)  ← expensive (~minutes)
+        → repAssess plot suppressed via null device
+        → bootTable = TRUE retains per-iteration data for plot reconstruction
+        → pure compute, no side effects
+
+write_*_rds(list(KDE_surface, colony, tracks, assessment), rds_path)  → .rds
+```
+
+### Consumers of the .rds cache
+
+| Function | Input | Output | Notes |
+|----------|-------|--------|-------|
+| `render_representative_assessment(rds_path, output_path)` | .rds path | PNG | Reconstructs repAssess scatterplot from cached iteration data |
+| `render_potential_kba(rds_path, popSize, output_path)` | .rds path | PNG | Reads KDE_surface + repr$out from cache, runs findSite, maps |
+| `export_potential_kba(rds_path, popSize, gpkg_path)` | .rds path | .gpkg | Reads KDE_surface + repr$out from cache, runs findSite |
+
+### Unchanged pipeline
+
+`render_individual_kde(data_path, config_path, levelUD, smoothing_method, output_path)`
+— no caching benefit (KDE computation is fast), stays monolithic.
 
 ### New functions to create
 
 | Function | Role |
 |----------|------|
-| `create_representative_assessment` | `compute_representative_assessment` + `write_representative_assessment` (`.rds`) |
-| `export_potential_kba` | Calls `compute_potential_kba` + writes `.gpkg` |
-| `export_individual_kde` | Calls `estimate_space_use` + writes `.gpkg` |
-| `plot_representative_assessment` | In-memory visualization of `.rds` |
-| `plot_potential_kba` | In-memory visualization of GeoPackage |
-| `plot_individual_kde` | In-memory visualization of GeoPackage |
+| `compute_space_use` | Standalone: projectTracks + tripSummary + get_scale_parameters + estSpaceUse. Returns `list(KDE_surface, UDPolygons, tracks)`. |
+| `compute_representative_assessment` | Standalone (extracted from R6 method): calls repAssess with bootTable=TRUE + null device. Returns full iteration data.frame. |
+| `create_cache` | Composes `compute_space_use` + `compute_representative_assessment`, writes `.rds`. Takes `rds_path` as last arg. |
+| `export_potential_kba` | Reads `.rds`, runs `findSite`, writes `.gpkg`. |
+| `plot_representative_assessment` | In-memory visualization, called by the render function. |
+| `plot_potential_kba` | In-memory visualization, called by the render function. |
+| `plot_individual_kde` | In-memory visualization, called by the render function. |
 
-### Infrastructure
+### Key design decisions
 
-- Add `--artifact-path` CLI option to `get_domain_specific_options()` so
-  `render_*` functions can read pre-computed artifacts (`.gpkg` or `.rds`).
-- Shared RDS caching: `compute_representative_assessment` writes an `.rds`
-  once per dataset; both `render_representative_assessment` and
-  `render_potential_kba` can reuse it, avoiding duplicate bootstrapping.
-- After Phase 2, `render_*` functions no longer accept `--data-path` or
-  `--config-path` — they read artifacts instead of raw data.
+1. **track2kba is NOT modified** — local clone at `track2kba/` is read-only reference. repAssess plot suppressed by wrapping call in `png(tempfile())` + `dev.off()`.
+2. **No optional arguments** — every parameter is mandatory. No `--artifact-path` in `get_domain_specific_options()`.
+3. **Backwards compatibility is not a concern** — downstream `bycatch_thesis` will be updated separately.
+4. **The `.rds` stores everything downstream needs**: KDE_surface raster, colony tibble, tracks SpatialPointsDataFrame, and full assessment data.frame.
 
 ---
 
