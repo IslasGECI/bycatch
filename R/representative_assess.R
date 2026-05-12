@@ -51,7 +51,7 @@ Track2KBA_Wrapper <- R6::R6Class(
         )
       )
     },
-    get_potential_site = function(repr, percentage_distribution, population_size) {
+    compute_potential_kba = function(repr, percentage_distribution, population_size) {
       Site <- track2KBA::findSite(
         KDE = self$KDE$KDE.Surface,
         represent = repr$out,

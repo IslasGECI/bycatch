@@ -40,8 +40,8 @@ describe("process fisheries data", {
 })
 
 trips_path <- "/workdir/tests/data/trips_5_ids.csv"
-describe("plot potential site", {
-  output_path <- "/workdir/tests/potential_site.png"
+describe("render potential kba", {
+  output_path <- "/workdir/tests/kba.png"
   options <- list(
     "data-path" = trips_path,
     "config-path" = config_path,
@@ -54,7 +54,7 @@ describe("plot potential site", {
   it("write figure", {
     testtools::if_exist_remove(output_path)
     withr::local_options(list(sf_use_s2 = sf::sf_use_s2()))
-    plot_potential_site(options)
+    render_potential_kba(options)
     expect_false(getOption("sf_use_s2"))
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
