@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+### Changed
+- `plot_potential_site()` renamed to `render_potential_kba()`; internal method `get_site()` renamed to `compute_potential_kba()`.
+- `plot_representative_assess()` renamed to `render_representative_assessment()`; internal method `get_assessment()` renamed to `compute_representative_assessment()`.
+- `plot_individual_kernels()` renamed to `render_individual_kde()`; internal method `calculate_space_use()` renamed to `estimate_space_use()`.
+
 ## [0.8.0] - 2026-05-11
 ### Removed
 - Command `plot_usage_area_by_individual()` no longer available.

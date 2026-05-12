@@ -24,23 +24,16 @@
 
 ---
 
-## Phase 1 — Rename (3 commits) ✅
+## Phase 1 — Rename ✅
 
-Each commit renamed one pipeline end to end: the R6 wrapper method,
-the exported CLI function, and the corresponding test. All three
-commits are done, test suite passes.
-
-| Commit | Hash | Summary |
-|--------|------|---------|
-| 1 | `aca705f` | Rename potential_site to potential_kba |
-| 2 | `710259c` | Rename representative_assess to representative_assessment |
-| 3 | `6a3b1f0` | Rename individuals_kernel to individual_kde |
+All three renames committed (see CHANGELOG for details). The R6 wrapper
+methods, exported CLI functions, and tests were updated atomically.
 
 ## Phase 2 — Write / Render Separation
 
 After all renames are done, the current CLI functions still mix
 computation and rendering in a single step. Phase 2 splits each
-pipeline into three independent layers:
+pipeline into three independent layers.
 
 ### Architecture
 

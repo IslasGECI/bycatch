@@ -41,7 +41,7 @@ provided Docker container to avoid path configuration.
 
 ```shell
 # Inside the Docker container:
-Rscript -e "bycatch::plot_potential_site(bycatch::get_domain_specific_options())" \
+Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options())" \
   --data-path /workdir/data/trips.csv \
   --config-path /workdir/config.json \
   --output-path /workdir/output/figure.png

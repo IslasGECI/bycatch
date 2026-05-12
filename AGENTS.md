@@ -86,6 +86,7 @@ Each commit message follows this format:
 
 - **Formatting**: `styler` is mandatory. `make check` enforces it in CI.
 - **Docs**: roxygen2 with `markdown = TRUE`. Run `devtools::document()` (or `make install`) to regenerate `NAMESPACE` and `man/*.Rd`.
+  `NAMESPACE` is gitignored; `man/` files are untracked. Roxygen2 `#'` tags in `R/*.R` are the source of truth — generated files are never committed manually.
 - **OO pattern**: R6 classes (not S3/S4) for stateful workflows like `Track2KBA_Wrapper`.
 - **Spatial**: Set `sf::sf_use_s2(FALSE)` before `track2KBA` / `adehabitatHR` operations incompatible with S2 geometry.
 - **C++**: C++17 via `.R/Makevars`.
