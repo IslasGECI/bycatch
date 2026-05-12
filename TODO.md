@@ -1,478 +1,155 @@
-# Implementation Plan: Restructuring Figure Naming Schema
-
-This plan outlines the steps required to transition the existing figure file naming convention to a more descriptive, consistent, and logic-based schema.
-
-## 1. Objectives
-- Improve clarity of generated figure filenames.
-- Align filenames with their ecological and analytical intent.
-- Standardize the mapping between `track2KBA` functions, `bycatch_code` wrappers, and output filenames.
-
-## 2. Architecture: Write / Render Separation
-
-Each figure is produced by **three steps**:
-
-1. **Compute** — `compute_*()` functions perform calculations in memory and return a result (no disk I/O).
-2. **Export** — `export_*()` functions compute + write to disk in interoperable formats (`.gpkg`, `.csv`). These are Make build targets.
-3. **Render** — `render_*()` functions read pre-computed artifacts, produce a visualization (`plot_*()`), and write PNG. Render tools are swappable (bycatch, GMT, QGIS, Python, etc.).
-
-The style guide defines these as:
-- **`compute_*()`**: in-memory calculation, no side effects. Example: `compute_area()`
-- **`export_*()`**: writes from memory to disk in interoperable formats. Example: `export_area_to_gpkg()`
-- **`create_*()`**: performs `compute_*()` + `export_*()`. Example: `create_area()`
-- **`plot_*()`**: produces a visualization in memory (no disk I/O). Example: `plot_area()`
-- **`render_*()`**: reads from disk + calls `plot_*()` + writes PNG. Example: `render_area()`
-
-### Artifacts (export step output)
-
-| Artifact | Producing function | Format | Consumers |
-|----------|-------------------|--------|-----------|
-| `representative_assess_[scope].rds` | `create_representative_assessment` | RDS | `plot_representative_assessment` |
-| `potential_kba_[scope].gpkg` | `export_potential_kba` | GeoPackage | `render_potential_kba`, GMT, QGIS |
-| `individual_space_use_[scope].gpkg` | `export_individual_space_use` | GeoPackage | `render_individual_space_use`, GMT, QGIS |
-| `trips_[scope].csv` | `write_trips` | CSV | — |
-| `trips_summary_[scope].csv` | `write_trips_summary` | CSV | — |
-
-### Figure targets (render step output)
-
-| Figure | Export step | Render step | Output |
-|--------|-----------|-------------|--------|
-| `representative_assessment_[scope].png` | `create_representative_assessment` | `render_representative_assessment` | PNG |
-| `potential_kba_[scope].png` | `export_potential_kba` | `render_potential_kba` | PNG |
-| `individual_space_use_[scope].png` | `export_individual_space_use` | `render_individual_space_use` | PNG |
-
-## 3. Function Naming Convention
-
-Following the style guide:
-- Verb + object: `compute_area()`, `export_to_gpkg()`, `render_map()`
-- `get_*` only if complementary `set_*` exists
-- `compute_*()`: no disk I/O, in-memory only
-- `export_*()`: writes interoperable formats (`.gpkg`, `.csv`) to disk
-- `create_*()`: performs `compute_*()` + `export_*()`
-- `plot_*()`: in-memory visualization, no disk I/O
-- `render_*()`: reads artifact + calls `plot_*()` + writes PNG
-
-| Current name | New name | Role | File |
-|---|---|---|---|
-| `calculate_kde` | `estimate_space_use` | Compute | `R/representative_assess.R` |
-| `get_representative_assess` | `compute_representative_assessment` | Compute | `R/representative_assess.R` |
-| `get_potential_site` | `compute_potential_kba` | Compute | `R/representative_assess.R` |
-| `get_tracks` | *(internal, no rename)* | — | `R/representative_assess.R` |
-| `get_scale_dictionary` | *(internal, no rename)* | — | `R/representative_assess.R` |
-| `get_summary_of_trips` | *(internal, no rename)* | — | `R/track_example.R` |
-| `get_trips` | *(internal, no rename)* | — | `R/track_example.R` |
-| `get_kernels` | *(internal, no rename)* | — | `R/get_kernels.R` |
-| `plot_representative_assess` | `render_representative_assessment` | Render | `R/cli.R` |
-| `plot_potential_site` | `render_potential_kba` | Render | `R/cli.R` |
-| `plot_individual_kernels` | `render_individual_space_use` | Render | `R/cli.R` |
-| `write_trips` | *(no rename — already clear)* | Write | `R/cli.R` |
-| `write_trips_summary` | *(no rename — already clear)* | Write | `R/cli.R` |
-| `process_fisheries_data` | *(no rename — fisheries pipeline)* | — | `R/cli.R` |
-| `filter_data_between_dates` | *(no rename — utility)* | — | `R/cli.R` |
-
-New functions to create:
-
-| New name | Role | File |
-|---|---|---|
-| `create_representative_assessment` | compute + write `.rds` | `R/cli.R` |
-| `export_potential_kba` | compute + write `.gpkg` | `R/cli.R` |
-| `export_individual_space_use` | compute + write `.gpkg` | `R/cli.R` |
-| `plot_potential_kba` | in-memory visualization | `R/cli.R` |
-| `plot_representative_assessment` | in-memory visualization | `R/cli.R` |
-| `plot_individual_space_use` | in-memory visualization | `R/cli.R` |
-
-## 4. Output Schema
-
-### Artifacts (compute + export)
-
-| Artifact | Function | Makefile target |
-|---|---|---|
-| `representative_assessment_[scope].rds` | `create_representative_assessment` | `rds_representative_assessment_[scope]` |
-| `potential_kba_[scope].gpkg` | `export_potential_kba` | `gpkg_potential_kba_[scope]` |
-| `individual_space_use_[scope].gpkg` | `export_individual_space_use` | `gpkg_individual_space_use_[scope]` |
-
-### Figures (render from artifact)
-
-| Figure | Render function | Makefile variable |
-|---|---|---|
-| `individual_space_use_[scope].png` | `render_individual_space_use` | `png_individual_space_use_[scope]` |
-| `representative_assessment_[scope].png` | `render_representative_assessment` | `png_representative_assessment_[scope]` |
-| `potential_kba_[scope].png` | `render_potential_kba` | `png_potential_kba_[scope]` |
-
-### File naming convention
-
-- Phony targets: noun or adjective (e.g. `results_first_paper`)
-
-
-## 5. Implementation Steps
-
-### Step A: Rename wrapper methods (`R/representative_assess.R`)
-
-| Current | New | Rule |
-|---|---|---|
-| `calculate_kde` | `estimate_space_use` | Verb-object |
-| `get_representative_assess` | `compute_representative_assessment` | get_* → compute_* |
-| `get_potential_site` | `compute_potential_kba` | get_* → compute_* |
-
-All three remain private methods of the R6 class. Update internal calls within the class.
-
-### Step B: Create new files (verb-prefixed script names)
-
-Each new file follows the style guide: starts with verb, snake_case, no abbreviations.
-
-| New file | Function inside | Role |
-|---|---|---|
-| `export_potential_kba.R` | `export_potential_kba()` | Calls `compute_potential_kba()` + writes `.gpkg` |
-| `export_individual_space_use.R` | `export_individual_space_use()` | Calls `estimate_space_use()` + writes `.gpkg` |
-| `create_representative_assessment.R` | `create_representative_assessment()` | Calls `compute_representative_assessment()` + writes `.rds` |
-
-Internal helpers to create:
-
-| File | Function | Role |
-|---|---|---|
-| `R/plot_potential_kba.R` | `plot_potential_kba()` | In-memory visualization of GeoPackage |
-| `R/plot_representative_assessment.R` | `plot_representative_assessment()` | In-memory visualization of `.rds` |
-| `R/plot_individual_space_use.R` | `plot_individual_space_use()` | In-memory visualization of GeoPackage |
-
-### Step C: Rename CLI render functions (`R/cli.R`)
-
-| Current | New | Rule |
-|---|---|---|
-| `plot_representative_assess` | `render_representative_assessment` | plot_* → render_* |
-| `plot_potential_site` | `render_potential_kba` | plot_* → render_* |
-| `plot_individual_kernels` | `render_individual_space_use` | plot_* → render_* |
-
-Each `render_*()` function:
-1. Reads the pre-computed artifact (`.gpkg` or `.rds`)
-2. Calls the corresponding `plot_*()` function
-3. Writes PNG to disk
-
-### Step D: Add `--artifact-path` option
-
-Add `--artifact-path` to `get_domain_specific_options()` so render functions can read pre-computed artifacts:
-
-```r
-artifact_path <- gecioptparse::character_option(
-  c("", "--artifact-path"),
-  default = NULL,
-  help = "Path to pre-computed artifact (.gpkg or .rds) to render"
-)
-```
-
-
-### Step F: Update Makefile
-
-1. Add Makefile variables for artifact targets (format_type_species_region):
-   ```makefile
-   rds_representative_assessment_guadalupe = data/processed/representative_assessment_guadalupe.rds
-   gpkg_potential_kba_guadalupe = data/processed/potential_kba_guadalupe.gpkg
-   ```
-
-2. Add two-step targets for each figure:
-   ```makefile
-   $(gpkg_xxx_guadalupe): ...
-       Rscript -e "bycatch::export_xxx(...)"
-
-   png_xxx_guadalupe = reports/figures/xxx_guadalupe.png
-   $(png_xxx_guadalupe): $(gpkg_xxx_guadalupe)
-       Rscript -e "bycatch::render_xxx(...)"
-   ```
-
-3. Program name matches the Makefile variable name (per style guide):
-   - `png_xxx_guadalupe` → script: `render_xxx_observed`
-   - `gpkg_xxx_guadalupe` → script: `export_xxx_observed`
-
-### Step G: Validation
-
-1. Update tests (`test_representative_assess.R`, `test_cli.R`) to use new function names.
-2. Run `make clean` then `make results_first_paper` — verify all figures build.
-3. Swap a render step for a GMT command to verify tool independence.
-# Plan: Extract common computation into shared RDS artifact
-
-## Goal
-
-Refactor `bycatch` and the thesis `Makefile` so that the expensive `repAssess()` computation runs **once per dataset** instead of three times (once per figure target). The intermediate result is cached as an `.rds` file.
-
-## Current state
-
-### Pipeline chain (per `Rscript` invocation)
-
-```
-read_config()
-readr::read_csv()
-Track2KBA_Wrapper$new()
-  ├─ subset complete_trips
-  ├─ get_tracks()             projectTracks()
-  ├─ get_scale_dictionary()  tripSummary() + findScale()
-  ├─ calculate_kde()          estSpaceUse()           ← expensive I/O
-  └─ get_representative_assess()  repAssess()          ← expensive computation (bootstrapping)
-      └─ get_potential_site() findSite(polyOut=TRUE)
-```
-
-### Makefile duplication for guadalupe (as example)
-
-| Makefile target | `repAssess()` runs? |
-|---|---|
-| `potential_site_guadalupe` | Yes (inside Rscript) |
-| `representative_assess_guadalupe` | Yes (inside Rscript) |
-
-Each invocation independently executes the entire chain from scratch. No intermediate artifacts.
-
-## Proposed structure
-
-### 1. New R function in `R/cli.R`
-
-**Name:** `compute_representative_assess()`
-**Location:** new file `R/compute_representative_assess.R`
-**Exported:** yes (add to NAMESPACE)
-
-```r
-compute_representative_assess <- function(options) {
-  config_content <- read_config(options[["config-path"]])
-  trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  percentage_distribution <- options[["percentage-distribution"]]
-  n_iterations <- options[["n-iterations"]]
-  smoothing_method <- options[["smoothing-method"]]
-
-  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
-  repr <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
-
-  saveRDS(repr, options[["output-path"]])
-}
-```
-
-### 2. Refactor `plot_potential_site()` in `R/cli.R`
-
-Same pattern: accept optional `representative_assess` argument.
-
-```r
-plot_potential_site <- function(options, representative_assess = NULL) {
-  # ... same setup ...
-  if (is.null(representative_assess)) {
-    representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
-  }
-  site <- wrapper$get_potential_site(representative_assess, percentage_distribution,
-                                    population_size = options[["population-size"]])
-  # ... rest unchanged ...
-}
-```
-
-### 4. Update `NAMESPACE`
-
-Add export for the new function:
-```
-export(compute_representative_assess)
-```
-
-### 5. Update thesis `Makefile`
-
-Add new `.rds` artifact targets and update dependencies.
-
-#### 5a. Add `--representative-assess-path` option
-
-In `R/get_domain_specific_options.R`, add a new CLI option:
-
-```r
-representative_assess_path <- gecioptparse::character_option(
-  c("", "--representative-assess-path"),
-  default = NULL,
-  help = "Path to pre-computed representative assessment RDS file (optional)"
-)
-```
-
-Then in `plot_potential_site()`:
-
-```r
-if (!is.null(options[["representative-assess-path"]])) {
-  representative_assess <- readRDS(options[["representative-assess-path"]])
-} else {
-  representative_assess <- wrapper$get_representative_assess(...)
-}
-```
-
-#### 5b. Add representative assess RDS targets
-
-```makefile
-# Guadalupe
-data/processed/representative_assess_guadalupe.rds: \
-	data/processed/trips_geographic_points_guadalupe.csv \
-	config_trips_guadalupe.json
-	$(checkDirectories)
-	Rscript -e "bycatch::compute_representative_assess(bycatch::get_domain_specific_options())" \
-		--data-path data/processed/trips_geographic_points_guadalupe.csv \
-		--config-path config_trips_guadalupe.json \
-		--percentage-distribution 50 \
-		--smoothing-method scale_ARS \
-		--n-iterations 314 \
-		--output-path $@
-
-# All
-data/processed/representative_assess_all.rds: \
-	data/processed/trips_geographic_points_all.csv \
-	config_trips_all.json
-	$(checkDirectories)
-	Rscript -e "bycatch::compute_representative_assess(bycatch::get_domain_specific_options())" \
-		--data-path data/processed/trips_geographic_points_all.csv \
-		--config-path config_trips_all.json \
-		--percentage-distribution 50 \
-		--smoothing-method scale_ARS \
-		--n-iterations 314 \
-		--output-path $@
-```
-
-#### 5c. Update existing figure targets to depend on RDS
-
-```makefile
-reports/figures/gps_albatross_50_percent_potential_site_ars_guadalupe.png: \
-	data/processed/representative_assess_guadalupe.rds \
-	data/processed/trips_geographic_points_guadalupe.csv \
-	config_trips_guadalupe.json
-	$(checkDirectories)
-	Rscript -e "bycatch::plot_potential_site(bycatch::get_domain_specific_options())" \
-		--data-path data/processed/trips_geographic_points_guadalupe.csv \
-		--config-path config_trips_guadalupe.json \
-		--percentage-distribution 50 \
-		--n-iterations 314 \
-		--population-size 4390 \
-		--smoothing-method scale_ARS \
-		--representative-assess-path data/processed/representative_assess_guadalupe.rds \
-		--output-path $@
-```
-
-Do the same for the `_all` variants (with `--representative-assess-path data/processed/representative_assess_all.rds`).
-
-#### 5d. Update result phony targets
-
-```makefile
-results_first_paper: \
-	data/processed/representative_assess_guadalupe.rds \
-	# ... existing deps ...
-
-results_second_paper: \
-	data/processed/representative_assess_all.rds \
-	# ... existing deps ...
-```
-
-## Implementation order
-
-1. **Add `--representative-assess-path` option** to `R/get_domain_specific_options.R`
-2. **Create `R/compute_representative_assess.R`** with new exported function
-3. **Refactor `plot_potential_site()`** to accept optional pre-computed `representative_assess`
-4. **Update `NAMESPACE`** to export `compute_representative_assess`
-6. **Add RDS targets to Makefile** (guadalupe, all)
-7. **Update figure targets** to depend on RDS and pass `--representative-assess-path`
-8. **Update result phony targets** to include RDS dependencies
-9. **Test:** Run `make clean` then `make results_first_paper` and verify all figures build correctly
-
-## Impact summary
-
-| Dataset | Before: `repAssess()` calls | After: `repAssess()` calls |
-|---|---|---|
-| guadalupe | 2 | 1 |
-| all | 2 | 1 |
-
-Total: from 4 calls to 2 calls. Build time should drop significantly since `repAssess()` with 314 iterations is the dominant cost.
+# Implementation Plan: Function Renaming and Architecture Restructuring
+
+## Objectives
+
+- Align function names with the project style guide
+  (verb prefix convention: `compute_*`, `render_*`, `export_*`, etc.)
+- Replace ambiguous or outdated terminology:
+  `potential_site` → `potential_kba` (Key Biodiversity Area),
+  `assess` → `assessment`,
+  `individual_kernels` → `individual_kde`
+- Clearly separate the rename phase from the later write/render restructuring phase
+
+## Style Guide: Function Naming Convention
+
+| Prefix | Role | Side effects |
+|--------|------|-------------|
+| `compute_*` | In-memory calculation | None |
+| `plot_*` | In-memory visualization | None |
+| `export_*` | Write interoperable formats (`.gpkg`, `.csv`) | Disk I/O |
+| `write_*` | Write native format (`.rds`) | Disk I/O |
+| `create_*` | Compute + write (`compute_*` + `write_*` or `export_*`) | Disk I/O |
+| `render_*` | Read artifact + plot + write image | Disk I/O |
+| `get_*` | Only if a complementary `set_*` exists | — |
 
 ---
 
-# Plan: Two-Step Write / Render Architecture
+## Phase 1 — Rename (3 commits)
 
-## Goal
+Each commit renames one pipeline end to end: the R6 wrapper method,
+the exported CLI function, and the corresponding test. The full test
+suite must pass after every commit. No changes to `bycatch_thesis`.
 
-Separate the **data processing** step (bycatch) from the **rendering** step (any tool). bycatch writes standardized artifacts (GeoPackages, CSVs). Any tool can render those artifacts (bycatch, GMT, QGIS, Python, etc.).
+### Commit 1: Rename potential_site to potential_kba
 
-## Why
+**What changes**
 
-### 1. Tool-agnostic rendering
-The write step produces standard open formats — GeoPackages, CSVs, RDS. The render step is just a consumer of those formats. You could render the same GeoPackage with:
-- `bycatch::mapSite()` (R + track2KBA)
-- GMT (`psxy`, `pspcolor`)
-- QGIS
-- Python + matplotlib/geopandas
-- Any future tool
+| File | Symbol | Change |
+|------|--------|--------|
+| `R/cli.R` | `plot_potential_site` | Rename to `render_potential_kba`. Add roxygen2 block with `@export`. |
+| `R/representative_assess.R` | `get_potential_site` | Rename to `compute_potential_kba`. |
+| `tests/testthat/test_cli.R` | Test block "plot potential site" | Rename describe/it strings. Update call from `plot_potential_site(options)` to `render_potential_kba(options)`. Update output path from `potential_site.png` to `kba.png`. |
 
-### 2. bycatch becomes a data pipeline, not a plotting library
-`bycatch` owns **how you compute** things (KDE, repAssess, sites). It does **not** own **how you visualize** them.
+**Test suite status**: passes (internal call to `get_representative_assess` unchanged).
 
-### 3. Independent evolution
-The write layer and the render layer evolve independently. You can update rendering without touching data processing and vice versa.
+**Downstream breakage** (for `bycatch_thesis`, not fixed here):
+- Target `reports/figures/gps_albatross_50_percent_potential_site_ars_guadalupe.png`
+  calls `bycatch::plot_potential_site()` → must become `bycatch::render_potential_kba()`.
+- Same for the `_all` variant.
 
-### 4. Debugging and iteration
-If a figure looks wrong, you inspect the GeoPackage directly — no need to re-run expensive computations.
+---
 
-## What changes
+### Commit 2: Rename representative_assess to representative_assessment
 
-Each Makefile target is split into two steps:
+**What changes**
+
+| File | Symbol | Change |
+|------|--------|--------|
+| `R/cli.R` | `plot_representative_assess` | Rename to `render_representative_assessment`. Update roxygen2 `@export`. |
+| `R/cli.R` | `render_potential_kba` body | Update internal call from `wrapper$get_representative_assess(...)` to `wrapper$compute_representative_assessment(...)`. |
+| `R/representative_assess.R` | `get_representative_assess` | Rename to `compute_representative_assessment`. |
+| `tests/testthat/test_cli.R` | Test block "plot representative assess" | Rename describe/it strings. Update call to `render_representative_assessment(options)`. |
+| `tests/testthat/test_representative_assess.R` | `obtained$get_representative_assess` | Update to `obtained$compute_representative_assessment`. |
+
+**Test suite status**: passes. `render_potential_kba` (Commit 1) and `render_representative_assessment` both call the renamed method.
+
+**Downstream breakage** (for `bycatch_thesis`, not fixed here):
+- Target `reports/figures/gps_albatross_50_percent_representative_assess_ars_guadalupe.png`
+  calls `bycatch::plot_representative_assess()` → must become `bycatch::render_representative_assessment()`.
+- Same for `_all` variant.
+
+---
+
+### Commit 3: Rename individuals_kernel to individual_kde
+
+**What changes**
+
+| File | Symbol | Change |
+|------|--------|--------|
+| `R/cli.R` | `plot_individual_kernels` | Rename to `render_individual_kde`. Update roxygen2 `@export`. |
+| `R/representative_assess.R` | `calculate_kde` | Rename to `estimate_space_use`. |
+| `R/representative_assess.R` | `initialize` body | Update `self$calculate_kde(...)` to `self$estimate_space_use(...)`. |
+| `tests/testthat/test_cli.R` | Test block "plot map of individuals KDE" | Rename describe/it strings. Update call to `render_individual_kde(options)`. |
+| `tests/testthat/test_representative_assess.R` | `obtained$calculate_kde` | Update to `obtained$estimate_space_use`. |
+
+**Test suite status**: passes. All three CLI functions create a `Track2KBA_Wrapper` via `$new()`, which calls `initialize` — now pointing at `estimate_space_use`.
+
+**Downstream breakage** (for `bycatch_thesis`, not fixed here):
+- Targets `reports/figures/gps_albatross_50_percent_individuals_kernel_ars_guadalupe.png`,
+  `_clarion.png`, and `_all.png` call `bycatch::plot_individual_kernels()`
+  → must become `bycatch::render_individual_kde()`.
+
+---
+
+## Phase 2 — Write / Render Separation (future)
+
+After all renames are done, the current CLI functions still mix
+computation and rendering in a single step. Phase 2 splits each
+pipeline into three independent layers:
+
+### Architecture
 
 ```
-artifact.gpkg:          ← WRITE step (bycatch)
-	Rscript -e "bycatch::write_*()"
-
-artifact.png: artifact.gpkg  ← RENDER step (any tool)
-	gmt psxy artifact.gpkg ...
+compute_*           in-memory calculation, no side effects
+export_*            compute + write interoperable format (.gpkg, .csv)
+plot_*              in-memory visualization (no disk I/O)
+render_*            read artifact + plot_* + write PNG
+create_*            compute_* + export_* (one-step convenience)
 ```
 
-### Artifacts produced by bycatch
+### Pipelines to restructure
 
-| Artifact | Source function | Format |
-|----------|----------------|--------|
-| `representative_assess_[scope].rds` | `compute_representative_assess()` | RDS |
-| `potential_site_[scope].gpkg` | `get_potential_site()` (findSite polyOut=TRUE) | GeoPackage (polygons) |
-| `individual_kernel_[scope].gpkg` | `get_representative_assess()` / KDE | GeoPackage (polygons) |
-| `trips_summary_[scope].csv` | Already exists via `write_trips_summary()` | CSV |
+| Pipeline | New `compute_*` | New `export_*` | New `plot_*` | Existing `render_*` |
+|----------|----------------|----------------|-------------|-------------------|
+| Representativity | `compute_representative_assessment` | `write_representative_assessment` (.rds) | `plot_representative_assessment` | `render_representative_assessment` |
+| KBA | — (uses `compute_representative_assessment` output) | `export_potential_kba` (.gpkg) | `plot_potential_kba` | `render_potential_kba` |
+| Individual KDE | `estimate_space_use` (already done) | `export_individual_kde` (.gpkg) | `plot_individual_kde` | `render_individual_kde` |
 
-### New R functions for write step
+### New functions to create
 
-Each `plot_*` function gets a corresponding `write_*` function:
+| Function | Role |
+|----------|------|
+| `create_representative_assessment` | `compute_representative_assessment` + `write_representative_assessment` (`.rds`) |
+| `export_potential_kba` | Calls `compute_potential_kba` + writes `.gpkg` |
+| `export_individual_kde` | Calls `estimate_space_use` + writes `.gpkg` |
+| `plot_representative_assessment` | In-memory visualization of `.rds` |
+| `plot_potential_kba` | In-memory visualization of GeoPackage |
+| `plot_individual_kde` | In-memory visualization of GeoPackage |
 
-```r
-# New file R/write_potential_site.R
-write_potential_site <- function(options) {
-  # ... setup ...
-  site <- wrapper$get_potential_site(representative_assess, percentage_distribution,
-                                      population_size = options[["population-size"]])
-  sf::st_write(site, options[["output-path"]], delete_layer = TRUE)
-}
-```
+### Infrastructure
 
-### Makefile structure
+- Add `--artifact-path` CLI option to `get_domain_specific_options()` so
+  `render_*` functions can read pre-computed artifacts (`.gpkg` or `.rds`).
+- Shared RDS caching: `compute_representative_assessment` writes an `.rds`
+  once per dataset; both `render_representative_assessment` and
+  `render_potential_kba` can reuse it, avoiding duplicate bootstrapping.
+- After Phase 2, `render_*` functions no longer accept `--data-path` or
+  `--config-path` — they read artifacts instead of raw data.
 
-```makefile
-# WRITE step: bycatch produces GeoPackage
-```
+---
 
-### Separation of concerns
+## Downstream Impact (for `bycatch_thesis`)
 
-```
-bycatch_code              bycatch_thesis
-─────────────────────     ─────────────────────────────
-compute_representative_assess()    WRITE → .rds, .gpkg
-write_potential_site()             WRITE → .gpkg
-render_potential_site()    RENDER ← reads .gpkg
-plot_representative_assess()       RENDER ← reads .rds
+The following `bycatch_thesis/Makefile` targets and function calls
+will break after Phase 1 and must be updated (not part of this plan):
 
-GMT / QGIS / Python       RENDER ← reads .gpkg (no bycatch needed)
-```
+| Current call | After Phase 1 | Affected Makefile target(s) |
+|---|---|---|
+| `bycatch::plot_potential_site(...)` | `bycatch::render_potential_kba(...)` | `gps_albatross_50_percent_potential_site_ars_*.png` |
+| `bycatch::plot_representative_assess(...)` | `bycatch::render_representative_assessment(...)` | `gps_albatross_50_percent_representative_assess_ars_*.png` |
+| `bycatch::plot_individual_kernels(...)` | `bycatch::render_individual_kde(...)` | `gps_albatross_50_percent_individuals_kernel_ars_*.png` |
 
-bycatch_code owns:
-- All `compute_*` functions (expensive computation)
-- All `write_*` functions (produces artifacts)
-- Optional `render_*` / `plot_*` functions (bycatch rendering)
-
-bycatch_thesis owns:
-- Which render tool to use (bycatch, GMT, QGIS, etc.)
-- Figure styling and layout
-
-## Implementation order (Phase 2)
-
-1. **Create `R/write_potential_site.R`** — writes `get_potential_site()` output to GeoPackage
-2. **Create `R/export_individual_space_use.R`** — writes KDE output to GeoPackage
-3. **Refactor `plot_potential_site()`** → becomes `render_potential_site()` reading from GeoPackage
-4. **Add write targets to Makefile** (guadalupe, clarion, all for potential_site and individual_space_use)
-5. **Update figure targets** to depend on GeoPackages and use render functions
-6. **Test:** Build figures with bycatch, then swap a render step for a GMT command to verify tool independence
-
-## Open questions
-
-1. Should `results_clarion` also get an RDS? It only generates `individuals_kernel` (which doesn't call `repAssess()`) — so no benefit, but for consistency it's optional.
-2. Do you want to also cache `Track2KBA_Wrapper$new()` result (which includes KDE)? That would save even more time but requires bigger refactor. The RDS would be larger and contain `SpatialPixelsDataFrame` objects.
-3. What render tools do you want to support first — GMT, QGIS, Python? This affects how the GeoPackage schema should be structured (column names, geometry types, etc.).
+After Phase 2, the `render_*` function signatures will change further
+(they will accept `--artifact-path` instead of `--data-path` and
+`--config-path`). This will require additional updates in
+`bycatch_thesis/Makefile` at that time.
