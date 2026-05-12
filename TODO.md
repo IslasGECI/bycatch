@@ -24,74 +24,19 @@
 
 ---
 
-## Phase 1 — Rename (3 commits)
+## Phase 1 — Rename (3 commits) ✅
 
-Each commit renames one pipeline end to end: the R6 wrapper method,
-the exported CLI function, and the corresponding test. The full test
-suite must pass after every commit. No changes to `bycatch_thesis`.
+Each commit renamed one pipeline end to end: the R6 wrapper method,
+the exported CLI function, and the corresponding test. All three
+commits are done, test suite passes.
 
-### Commit 1: Rename potential_site to potential_kba
+| Commit | Hash | Summary |
+|--------|------|---------|
+| 1 | `aca705f` | Rename potential_site to potential_kba |
+| 2 | `710259c` | Rename representative_assess to representative_assessment |
+| 3 | `6a3b1f0` | Rename individuals_kernel to individual_kde |
 
-**What changes**
-
-| File | Symbol | Change |
-|------|--------|--------|
-| `R/cli.R` | `plot_potential_site` | Rename to `render_potential_kba`. Add roxygen2 block with `@export`. |
-| `R/representative_assess.R` | `get_potential_site` | Rename to `compute_potential_kba`. |
-| `tests/testthat/test_cli.R` | Test block "plot potential site" | Rename describe/it strings. Update call from `plot_potential_site(options)` to `render_potential_kba(options)`. Update output path from `potential_site.png` to `kba.png`. |
-
-**Test suite status**: passes (internal call to `get_representative_assess` unchanged).
-
-**Downstream breakage** (for `bycatch_thesis`, not fixed here):
-- Target `reports/figures/gps_albatross_50_percent_potential_site_ars_guadalupe.png`
-  calls `bycatch::plot_potential_site()` → must become `bycatch::render_potential_kba()`.
-- Same for the `_all` variant.
-
----
-
-### Commit 2: Rename representative_assess to representative_assessment
-
-**What changes**
-
-| File | Symbol | Change |
-|------|--------|--------|
-| `R/cli.R` | `plot_representative_assess` | Rename to `render_representative_assessment`. Update roxygen2 `@export`. |
-| `R/cli.R` | `render_potential_kba` body | Update internal call from `wrapper$get_representative_assess(...)` to `wrapper$compute_representative_assessment(...)`. |
-| `R/representative_assess.R` | `get_representative_assess` | Rename to `compute_representative_assessment`. |
-| `tests/testthat/test_cli.R` | Test block "plot representative assess" | Rename describe/it strings. Update call to `render_representative_assessment(options)`. |
-| `tests/testthat/test_representative_assess.R` | `obtained$get_representative_assess` | Update to `obtained$compute_representative_assessment`. |
-
-**Test suite status**: passes. `render_potential_kba` (Commit 1) and `render_representative_assessment` both call the renamed method.
-
-**Downstream breakage** (for `bycatch_thesis`, not fixed here):
-- Target `reports/figures/gps_albatross_50_percent_representative_assess_ars_guadalupe.png`
-  calls `bycatch::plot_representative_assess()` → must become `bycatch::render_representative_assessment()`.
-- Same for `_all` variant.
-
----
-
-### Commit 3: Rename individuals_kernel to individual_kde
-
-**What changes**
-
-| File | Symbol | Change |
-|------|--------|--------|
-| `R/cli.R` | `plot_individual_kernels` | Rename to `render_individual_kde`. Update roxygen2 `@export`. |
-| `R/representative_assess.R` | `calculate_kde` | Rename to `estimate_space_use`. |
-| `R/representative_assess.R` | `initialize` body | Update `self$calculate_kde(...)` to `self$estimate_space_use(...)`. |
-| `tests/testthat/test_cli.R` | Test block "plot map of individuals KDE" | Rename describe/it strings. Update call to `render_individual_kde(options)`. |
-| `tests/testthat/test_representative_assess.R` | `obtained$calculate_kde` | Update to `obtained$estimate_space_use`. |
-
-**Test suite status**: passes. All three CLI functions create a `Track2KBA_Wrapper` via `$new()`, which calls `initialize` — now pointing at `estimate_space_use`.
-
-**Downstream breakage** (for `bycatch_thesis`, not fixed here):
-- Targets `reports/figures/gps_albatross_50_percent_individuals_kernel_ars_guadalupe.png`,
-  `_clarion.png`, and `_all.png` call `bycatch::plot_individual_kernels()`
-  → must become `bycatch::render_individual_kde()`.
-
----
-
-## Phase 2 — Write / Render Separation (future)
+## Phase 2 — Write / Render Separation
 
 After all renames are done, the current CLI functions still mix
 computation and rendering in a single step. Phase 2 splits each
