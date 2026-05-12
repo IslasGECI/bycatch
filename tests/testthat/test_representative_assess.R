@@ -53,7 +53,7 @@ describe("Get representative assess", {
   obtained$tracks <- readRDS("/workdir/tests/data/tracks_20percent_sample.rds")
   obtained$KDE <- readRDS("/workdir/tests/data/kde_20percent_sample.rds")
   n_iterations <- 1
-  obtained_repr <- obtained$get_representative_assess(percentage_distribution, n_iterations)
+  obtained_repr <- obtained$compute_representative_assessment(percentage_distribution, n_iterations)
   it("get representative assess with percentage distribution", {
     expect_true(inherits(obtained_repr, "data.frame"))
     expected_rep_out <- 59.30424

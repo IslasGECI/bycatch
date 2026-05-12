@@ -25,20 +25,17 @@ render_potential_kba <- function(options) {
 
   sf::sf_use_s2(FALSE)
   wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
-  representative_assess <- wrapper$get_representative_assess(percentage_distribution, n_iterations)
+  representative_assess <- wrapper$compute_representative_assessment(percentage_distribution, n_iterations)
   site <- wrapper$compute_potential_kba(representative_assess, percentage_distribution, population_size = options[["population-size"]])
   valid_site <- sf::st_make_valid(site)
   track2KBA::mapSite(valid_site)
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
 }
 
-#' Plot Representative Assessment
+#' Render Representative Assessment
 #'
-#' Generates and saves a representative assessment plot based on GPS data and configuration settings.
-#'
-#' This function reads configuration and GPS data from the provided file paths, creates a `Track2KBA_Wrapper` object,
-#' and generates a representative assessment plot for the specified percentage distribution and number of iterations.
-#' The plot is saved as a PNG file to the specified output path.
+#' Reads GPS data and configuration, computes the representative assessment,
+#' and saves the resulting plot as a PNG file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
@@ -51,7 +48,7 @@ render_potential_kba <- function(options) {
 #'
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
-plot_representative_assess <- function(options) {
+render_representative_assessment <- function(options) {
   config_content <- read_config(options[["config-path"]])
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
@@ -59,7 +56,7 @@ plot_representative_assess <- function(options) {
 
   wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
   grDevices::png(options[["output-path"]])
-  wrapper$get_representative_assess(percentage_distribution, options[["n-iterations"]])
+  wrapper$compute_representative_assessment(percentage_distribution, options[["n-iterations"]])
   grDevices::dev.off()
 }
 

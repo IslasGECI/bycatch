@@ -38,7 +38,7 @@ Track2KBA_Wrapper <- R6::R6Class(
       )
       return(KDE)
     },
-    get_representative_assess = function(percentage_distribution, n_iterations) {
+    compute_representative_assessment = function(percentage_distribution, n_iterations) {
       seed <- 2
       withr::with_seed(
         seed,

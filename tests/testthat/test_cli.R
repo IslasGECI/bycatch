@@ -61,8 +61,8 @@ describe("render potential kba", {
   })
 })
 
-describe("plot representative assess", {
-  output_path <- "/workdir/tests/representative_assess.png"
+describe("render representative assessment", {
+  output_path <- "/workdir/tests/representative_assessment.png"
   options <- list(
     "data-path" = trips_path,
     "config-path" = config_path,
@@ -73,7 +73,7 @@ describe("plot representative assess", {
   )
   it("write figure", {
     testtools::if_exist_remove(output_path)
-    plot_representative_assess(options)
+    render_representative_assessment(options)
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
   })
