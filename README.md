@@ -66,7 +66,8 @@ Results can also be fed into GIS tools (QGIS, GMT) for custom cartography.
   files; visualisation becomes tool-agnostic (bycatch, GMT, QGIS, Python).
 - Shared RDS caching: expensive bootstrapping runs once per dataset instead of
   three times, cutting build time significantly.
-- `create_representative_assessment()`: one-step compute-and-export command.
-- `export_potential_kba()` and `export_individual_space_use()`: direct
+- `create_cache()`: one-step compute-and-cache command; runs the expensive
+  bootstrap once and shares the result across all figure pipelines.
+- `export_potential_kba()` and `export_individual_kde()`: direct
   GeoPackage output for the two remaining figure pipelines.
 
