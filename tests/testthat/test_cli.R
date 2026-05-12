@@ -79,8 +79,8 @@ describe("render representative assessment", {
   })
 })
 
-describe("plot map of individuals KDE", {
-  output_path <- "/workdir/tests/kde_map.png"
+describe("render individual kde", {
+  output_path <- "/workdir/tests/individual_kde.png"
   trips_path <- "/workdir/tests/data/trips.csv"
   options <- list(
     "data-path" = trips_path,
@@ -91,7 +91,7 @@ describe("plot map of individuals KDE", {
   )
   it("write figure", {
     testtools::if_exist_remove(output_path)
-    plot_individual_kernels(options)
+    render_individual_kde(options)
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
   })

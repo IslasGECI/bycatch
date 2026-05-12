@@ -30,7 +30,7 @@ describe("Check representativity", {
     obtained$tracks <- readRDS("/workdir/tests/data/tracks.rds")
     obtained$smoothing_method <- "log_median"
     percentage_distribution <- 50
-    obtained_kde <- obtained$calculate_kde(percentage_distribution)
+    obtained_kde <- obtained$estimate_space_use(percentage_distribution)
     expect_true(all(c("KDE.Surface", "UDPolygons") %in% names(obtained_kde)))
     number_of_individuals <- 3
     expect_equal(nrow(obtained_kde$UDPolygons), number_of_individuals)
@@ -39,7 +39,7 @@ describe("Check representativity", {
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)
 
     percentage_distribution <- 75
-    obtained_kde <- obtained$calculate_kde(percentage_distribution)
+    obtained_kde <- obtained$estimate_space_use(percentage_distribution)
     obtained_area <- sum(obtained_kde$UDPolygons$area)
     expected_area <- 44250
     expect_equal(obtained_area, expected_area, tolerance = 1e-3)

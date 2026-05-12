@@ -60,12 +60,10 @@ render_representative_assessment <- function(options) {
   grDevices::dev.off()
 }
 
-#' Plot Individual Kernels
+#' Render Individual KDE
 #'
-#' Generates and saves a plot of individual kernel density estimates (KDEs) for GPS data based on configuration settings.
-#'
-#' This function reads configuration and GPS data from the provided file paths, creates a `Track2KBA_Wrapper` object,
-#' computes the KDEs for the specified percentage distribution, and saves the resulting plot as a PNG file to the specified output path.
+#' Reads GPS data and configuration, computes kernel density estimates (KDEs)
+#' for each tracked individual, and saves the resulting map as a PNG file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
@@ -77,7 +75,7 @@ render_representative_assessment <- function(options) {
 #'
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
-plot_individual_kernels <- function(options) {
+render_individual_kde <- function(options) {
   config_content <- read_config(options[["config-path"]])
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
