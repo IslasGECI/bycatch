@@ -364,27 +364,48 @@ Each rename is 3 micro-steps: Add new → Switch caller → Delete old. 12 commi
 
 ### Sprint 2 — Add standalone compute functions (alongside R6 class)
 
-All added to `R/representative_assess.R`. Nothing calls them yet. R6 class unchanged.
+Each function follows **test-first**: 2 sub-steps per function. The test goes in `tests/testthat/test_compute.R` (new file). Pre-computed RDS fixtures (`tracks.rds`, `kde_20percent_sample.rds`, etc.) are reused from `test_representative_assess.R`.
 
-**Step 13 — Add `compute_space_use`**
+**Step 13a — Red: add test for `compute_space_use`**
+- File: `tests/testthat/test_compute.R`
+- Action: Add test that calls `compute_space_use(...)` and asserts returned list has expected structure (KDE_surface, UDPolygons, colony, tracks)
+- Expected failure: `could not find function "compute_space_use"` — the function doesn't exist yet
+- Test: `make tests_fast`
+
+**Step 13b — Green: add `compute_space_use`**
 - File: `R/representative_assess.R`
 - Action: Add standalone function extracting the full `projectTracks` + `tripSummary` + `get_scale_parameters` + `estSpaceUse` pipeline
 - Signature: `(data, config, levelUD, smoothing_method)` → `list(KDE_surface, UDPolygons, colony, tracks)`
 - Test: `make tests_fast`
 
-**Step 14 — Add `compute_representative_assessment`**
+**Step 14a — Red: add test for `compute_representative_assessment`**
+- File: `tests/testthat/test_compute.R`
+- Action: Add test that loads KDE surface + tracks RDS, calls `compute_representative_assessment(...)`, asserts result is data.frame with expected values
+- Test: `make tests_fast`
+
+**Step 14b — Green: add `compute_representative_assessment`**
 - File: `R/representative_assess.R`
 - Action: Add standalone function wrapping `repAssess(bootTable = FALSE)`
 - Signature: `(KDE_surface, tracks, levelUD, n_iterations)` → `data.frame`
 - Test: `make tests_fast`
 
-**Step 15 — Add `compute_potential_kba`**
+**Step 15a — Red: add test for `compute_potential_kba`**
+- File: `tests/testthat/test_compute.R`
+- Action: Add test that loads KDE surface, calls `compute_potential_kba(...)`, asserts result is sf object
+- Test: `make tests_fast`
+
+**Step 15b — Green: add `compute_potential_kba`**
 - File: `R/representative_assess.R`
 - Action: Add standalone function wrapping `findSite()`
 - Signature: `(KDE_surface, represent, popSize, levelUD)` → `sf` object
 - Test: `make tests_fast`
 
-**Step 16 — Add `compute_cache`**
+**Step 16a — Red: add test for `compute_cache`**
+- File: `tests/testthat/test_compute.R`
+- Action: Add test that calls `compute_cache(...)`, asserts returned list has all expected elements (KDE_surface, UDPolygons, colony, assessment_detail)
+- Test: `make tests_fast`
+
+**Step 16b — Green: add `compute_cache`**
 - File: `R/representative_assess.R`
 - Action: Add standalone function composing `compute_space_use` + `compute_representative_assessment`
 - Returns: full result list (KDE_surface, UDPolygons, colony, assessment_detail)
@@ -392,38 +413,68 @@ All added to `R/representative_assess.R`. Nothing calls them yet. R6 class uncha
 
 ### Sprint 3 — Add plot layer (new file `R/plot.R`)
 
-Pure ggplot2 functions. No I/O. No callers yet.
+Each function follows **test-first**: 2 sub-steps per function. Tests go in `tests/testthat/test_plot.R` (new file). Assert the returned object is a ggplot2 object.
 
-**Step 17 — Add `plot_representative_assessment`**
+**Step 17a — Red: add test for `plot_representative_assessment`**
+- File: `tests/testthat/test_plot.R`
+- Action: Add test calling `plot_representative_assessment(...)` with a mock data.frame, asserts `expect_s3_class(result, "ggplot")`
+- Test: `make tests_fast`
+
+**Step 17b — Green: add `plot_representative_assessment`**
 - File: `R/plot.R` (new)
 - Action: Add function taking assessment_detail data.frame → returns ggplot2 scatterplot
 - Test: `make tests_fast`
 
-**Step 18 — Add `plot_potential_kba`**
+**Step 18a — Red: add test for `plot_potential_kba`**
+- File: `tests/testthat/test_plot.R`
+- Action: Add test calling `plot_potential_kba(...)` with mock sf polygons, asserts ggplot class
+- Test: `make tests_fast`
+
+**Step 18b — Green: add `plot_potential_kba`**
 - File: `R/plot.R`
 - Action: Add function taking sf polygons + colony → returns ggplot2 map
 - Test: `make tests_fast`
 
-**Step 19 — Add `plot_individual_kde`**
+**Step 19a — Red: add test for `plot_individual_kde`**
+- File: `tests/testthat/test_plot.R`
+- Action: Add test calling `plot_individual_kde(...)` with mock UDPolygons, asserts ggplot class
+- Test: `make tests_fast`
+
+**Step 19b — Green: add `plot_individual_kde`**
 - File: `R/plot.R`
 - Action: Add function taking UDPolygons + colony → returns ggplot2 map
 - Test: `make tests_fast`
 
 ### Sprint 4 — Add new cache-based exported functions
 
-New exports added to `R/cli.R` alongside existing functions. No callers yet.
+Each function follows **test-first**: 2 sub-steps per function. Tests go in `tests/testthat/test_cache.R` (new file). Since these perform disk I/O, test with `tempfile()` paths.
 
-**Step 20 — Add `write_processed_data`**
+**Step 20a — Red: add test for `write_processed_data`**
+- File: `tests/testthat/test_cache.R`
+- Action: Add test that creates a temp RDS path, calls `write_processed_data(...)`, asserts file exists and is valid RDS
+- Test: `make tests_fast`
+
+**Step 20b — Green: add `write_processed_data`**
 - File: `R/cli.R`
 - Action: Add exported function: read CSV + config → `compute_cache(...)` → `saveRDS()`
 - Test: `make tests_fast`
 
-**Step 21 — Add `export_potential_kba`**
+**Step 21a — Red: add test for `export_potential_kba`**
+- File: `tests/testthat/test_cache.R`
+- Action: Add test that writes a mock `.rds` cache, calls `export_potential_kba(...)`, asserts GPKG file exists
+- Test: `make tests_fast`
+
+**Step 21b — Green: add `export_potential_kba`**
 - File: `R/cli.R`
 - Action: Add exported function: `readRDS()` → `compute_potential_kba(...)` → `st_write()`
 - Test: `make tests_fast`
 
-**Step 22 — Add `export_representative_assessment`**
+**Step 22a — Red: add test for `export_representative_assessment`**
+- File: `tests/testthat/test_cache.R`
+- Action: Add test that writes a mock `.rds` cache, calls `export_representative_assessment(...)`, asserts CSV + datapackage.json exist
+- Test: `make tests_fast`
+
+**Step 22b — Green: add `export_representative_assessment`**
 - File: `R/cli.R`
 - Action: Add exported function: `readRDS()` → format → `write_csv()` + `datapackage.json`
 - Test: `make tests_fast`
@@ -497,10 +548,10 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|---|
 | 1 — Rename 4 exports | 1–12 | ✅ 12 done | 0 | 12 |
-| 2 — Add compute layer | 13–16 | 4 | 0 | 4 |
-| 3 — Add plot layer | 17–19 | 3 | 0 | 3 |
-| 4 — Add cache exports | 20–22 | 3 | 0 | 3 |
+| 2 — Add compute layer | 13a–16b | ✅ test-first: red → green per function | 0 | 8 |
+| 3 — Add plot layer | 17a–19b | ✅ test-first: red → green per function | 0 | 6 |
+| 4 — Add cache exports | 20a–22b | ✅ test-first: red → green per function | 0 | 6 |
 | **5 — Restructure renders** | **23–25** | **0** | **3** | **3** |
 | 6 — Strangle R6 | 26–29 | 4 | 0 | 4 |
 | **7 — Signature cleanup** | **30–32** | **0** | **3** | **3** |
-| **Total** | **1–32** | **26 fast** | **6 full** | **32 commits** |
+| **Total** | **1–42** | **36 fast** | **6 full** | **42 commits** |
