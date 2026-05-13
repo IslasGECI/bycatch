@@ -182,3 +182,29 @@ filter_data_between_dates <- function(options) {
   filtered_data |>
     readr::write_csv(options[["output-path"]])
 }
+
+#' Export Filtered GPS Data Between Dates
+#'
+#' Reads GPS data, filters it between two dates, and writes the result to a CSV file.
+#'
+#' @param options A named list with elements:
+#'   \describe{
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{start}{Start date (inclusive).}
+#'     \item{end}{End date (inclusive).}
+#'     \item{date-column-name}{Name of the date column.}
+#'     \item{output-path}{Path for the output CSV file.}
+#'   }
+#' @return None. Called for its side effect of writing filtered data to disk.
+#' @export
+export_filtered_gps_between_dates <- function(options) {
+  raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  filtered_data <- raw_data |>
+    filter_between_dates(
+      start = options[["start"]],
+      end = options[["end"]],
+      !!rlang::sym(options[["date-column-name"]])
+    )
+  filtered_data |>
+    readr::write_csv(options[["output-path"]])
+}
