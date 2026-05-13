@@ -9,8 +9,8 @@ describe("compute_space_use", {
 
     expect_type(result, "list")
     expect_true(all(c("KDE_surface", "UDPolygons", "colony", "tracks") %in% names(result)))
-    expect_true(inherits(result$KDE_surface, "RasterLayer"))
-    expect_true(inherits(result$UDPolygons, "SpatialPolygonsDataFrame"))
+    expect_true(inherits(result$KDE_surface, "estUDm"))
+    expect_true(inherits(result$UDPolygons, "sf"))
     expect_true(inherits(result$tracks, "SpatialPointsDataFrame"))
     expect_s3_class(result$colony, "tbl_df")
     number_of_individuals <- 3
