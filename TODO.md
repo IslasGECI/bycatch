@@ -67,7 +67,7 @@ read from or write to disk — all I/O is pushed to the exported layer.
 The class serves as a state container and workflow orchestrator. After Phase 2,
 standalone `compute_*` functions replace both roles:
 - `compute_space_use()` projects tracks, estimates scale, computes KDE → returns list
-- `compute_representative_assessment()` wraps `repAssess(bootTable=TRUE)` → returns data.frame
+- `compute_representative_assessment()` wraps `repAssess(bootTable=TRUE)` → returns `list(assessment_summary, assessment_detail)`
 - `compute_potential_kba()` wraps `findSite()` → returns sf object
 
 These are internal functions. The state is passed explicitly as parameters instead
@@ -102,7 +102,7 @@ All live in `R/` files outside `R/cli.R`.
 | Function | Signature | Role | Location |
 |---|---|---|---|
 | `compute_space_use` | `(data, config, levelUD, smoothing_method)` | `projectTracks` + `tripSummary` + `get_scale_parameters` + `estSpaceUse` → `list(KDE_surface, UDPolygons, colony, tracks)` | `R/representative_assess.R` |
-| `compute_representative_assessment` | `(KDE_surface, tracks, levelUD, n_iterations)` | `repAssess(bootTable=TRUE)` with null device → full iteration data.frame | `R/representative_assess.R` |
+| `compute_representative_assessment` | `(KDE_surface, tracks, levelUD, n_iterations)` | `repAssess(bootTable=TRUE)` with null device → `list(assessment_summary, assessment_detail)` (two data.frames) | `R/representative_assess.R` |
 | `compute_potential_kba` | `(KDE_surface, represent, popSize, levelUD)` | `findSite()` → sf polygons | `R/representative_assess.R` |
 | `compute_cache` | `(data, config, levelUD, smoothing_method, n_iterations)` | Composes `compute_space_use` + `compute_representative_assessment` → full result list | `R/representative_assess.R` |
 
@@ -110,8 +110,8 @@ All live in `R/` files outside `R/cli.R`.
 
 ```
 list(
-  KDE_surface       = <RasterLayer>,               # from estSpaceUse
-  UDPolygons        = <SpatialPolygonsDataFrame>,   # from estSpaceUse
+  KDE_surface       = <estUDm>,                     # from estSpaceUse (adehabitatHR)
+  UDPolygons        = <sf>,                          # from estSpaceUse (track2KBA)
   colony            = <tibble>,                     # from config
   assessment_summary = <data.frame>,                # single-row: out, asym, Rep70, Rep95
   assessment_detail  = <data.frame>                 # full iteration table (bootTable=TRUE)
@@ -366,27 +366,34 @@ Each rename is 3 micro-steps: Add new → Switch caller → Delete old. 12 commi
 
 Each function follows **test-first**: 2 sub-steps per function. The test goes in `tests/testthat/test_compute.R` (new file). Pre-computed RDS fixtures (`tracks.rds`, `kde_20percent_sample.rds`, etc.) are reused from `test_representative_assess.R`.
 
-**Step 13a — Red: add test for `compute_space_use`**
+**✅ Step 13a — Red: add test for `compute_space_use`**
 - File: `tests/testthat/test_compute.R`
 - Action: Add test that calls `compute_space_use(...)` and asserts returned list has expected structure (KDE_surface, UDPolygons, colony, tracks)
 - Expected failure: `could not find function "compute_space_use"` — the function doesn't exist yet
 - Test: `make tests_fast`
+- Commit: `56609f5` 🛑🧪🧩🚧
 
-**Step 13b — Green: add `compute_space_use`**
+**✅ Step 13b — Green: add `compute_space_use`**
 - File: `R/representative_assess.R`
 - Action: Add standalone function extracting the full `projectTracks` + `tripSummary` + `get_scale_parameters` + `estSpaceUse` pipeline
 - Signature: `(data, config, levelUD, smoothing_method)` → `list(KDE_surface, UDPolygons, colony, tracks)`
 - Test: `make tests_fast`
+- Commit: `d8c7d62` ✅🧩🚧
+
+**⚠️ Step 13b fix — Corrected test class assertions**
+- File: `tests/testthat/test_compute.R`
+- Action: `KDE_surface` is `estUDm` (not `RasterLayer`), `UDPolygons` is `sf` (not `SpatialPolygonsDataFrame`)
+- Commit: `b0a4596` 🔧🧪
 
 **Step 14a — Red: add test for `compute_representative_assessment`**
 - File: `tests/testthat/test_compute.R`
-- Action: Add test that loads KDE surface + tracks RDS, calls `compute_representative_assessment(...)`, asserts result is data.frame with expected values
+- Action: Add test that loads KDE surface + tracks RDS, calls `compute_representative_assessment(...)`, asserts result is a list with two data.frames: `assessment_summary` and `assessment_detail`. Check `assessment_summary$out ≈ 59.30424`.
 - Test: `make tests_fast`
 
 **Step 14b — Green: add `compute_representative_assessment`**
 - File: `R/representative_assess.R`
-- Action: Add standalone function wrapping `repAssess(bootTable = FALSE)`
-- Signature: `(KDE_surface, tracks, levelUD, n_iterations)` → `data.frame`
+- Action: Add standalone function wrapping `repAssess(bootTable = TRUE)` and extracting both summary and detail elements from the returned list
+- Signature: `(KDE_surface, tracks, levelUD, n_iterations)` → `list(assessment_summary, assessment_detail)`
 - Test: `make tests_fast`
 
 **Step 15a — Red: add test for `compute_potential_kba`**
@@ -402,13 +409,13 @@ Each function follows **test-first**: 2 sub-steps per function. The test goes in
 
 **Step 16a — Red: add test for `compute_cache`**
 - File: `tests/testthat/test_compute.R`
-- Action: Add test that calls `compute_cache(...)`, asserts returned list has all expected elements (KDE_surface, UDPolygons, colony, assessment_detail)
+- Action: Add test that calls `compute_cache(...)`, asserts returned list has all expected elements (KDE_surface, UDPolygons, colony, assessment_summary, assessment_detail)
 - Test: `make tests_fast`
 
 **Step 16b — Green: add `compute_cache`**
 - File: `R/representative_assess.R`
 - Action: Add standalone function composing `compute_space_use` + `compute_representative_assessment`
-- Returns: full result list (KDE_surface, UDPolygons, colony, assessment_detail)
+- Returns: full result list (KDE_surface, UDPolygons, colony, assessment_summary, assessment_detail)
 - Test: `make tests_fast`
 
 ### Sprint 3 — Add plot layer (new file `R/plot.R`)
@@ -546,12 +553,12 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|---|
+|---|---|---|---|---|---|---|
 | 1 — Rename 4 exports | 1–12 | ✅ 12 done | 0 | 12 |
-| 2 — Add compute layer | 13a–16b | ✅ test-first: red → green per function | 0 | 8 |
+| 2 — Add compute layer | 13a–13b ✅, **14a–16b** | ✅ **13a–13b done** (3 commits incl. fix), **6 remaining** | 0 | **3 done / 9 total** |
 | 3 — Add plot layer | 17a–19b | ✅ test-first: red → green per function | 0 | 6 |
 | 4 — Add cache exports | 20a–22b | ✅ test-first: red → green per function | 0 | 6 |
 | **5 — Restructure renders** | **23–25** | **0** | **3** | **3** |
 | 6 — Strangle R6 | 26–29 | 4 | 0 | 4 |
 | **7 — Signature cleanup** | **30–32** | **0** | **3** | **3** |
-| **Total** | **1–42** | **36 fast** | **6 full** | **42 commits** |
+| **Total** | **1–42** | **15 done / 37 planned** | **0 done / 6 planned** | **15 done / 42 planned** |
