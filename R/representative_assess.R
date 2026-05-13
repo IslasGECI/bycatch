@@ -85,7 +85,6 @@ compute_space_use <- function(data, config, levelUD, smoothing_method) {
   list(
     KDE_surface = KDE$KDE.Surface,
     UDPolygons = KDE$UDPolygons,
-    colony = colony,
     tracks = tracks
   )
 }
