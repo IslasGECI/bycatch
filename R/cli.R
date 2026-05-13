@@ -170,19 +170,6 @@ process_fisheries_data <- function(options) {
     readr::write_csv(options[["output-path"]])
 }
 
-#' @export
-filter_data_between_dates <- function(options) {
-  raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  filtered_data <- raw_data |>
-    filter_between_dates(
-      start = options[["start"]],
-      end = options[["end"]],
-      !!rlang::sym(options[["date-column-name"]])
-    )
-  filtered_data |>
-    readr::write_csv(options[["output-path"]])
-}
-
 #' Export Filtered GPS Data Between Dates
 #'
 #' Reads GPS data, filters it between two dates, and writes the result to a CSV file.
