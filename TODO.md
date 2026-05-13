@@ -286,3 +286,221 @@ After Phase 2, the `render_*` and `export_*` function signatures change further.
 They will accept artifact paths (`.rds`, `.gpkg`, colony file) instead of raw
 `data-path` and `config-path`. This will require additional updates in
 `bycatch_thesis/Makefile` at that time.
+
+---
+
+## Phase 2 — Micro-Step Execution Plan
+
+### Test runner reference
+
+| Command | What it runs | When to use |
+|---|---|---|
+| `make tests_fast` | All tests except `test_cli_slow.R` (~22s) | Every step that does NOT touch `render_*` functions |
+| `make tests` | `tests_fast` + `tests_slow` (~5min) | Every step that touches a `render_*` function or its test |
+
+### Sprint 1 — Rename 4 CLI functions (one at a time)
+
+Each rename is 3 micro-steps: Add new → Switch caller → Delete old. 12 commits total.
+
+**Step 1 — Add `export_filtered_gps_between_dates`**
+- File: `R/cli.R`
+- Action: Add new function with same body as `filter_data_between_dates`
+- Test: `make tests_fast`
+
+**Step 2 — Switch test to `export_filtered_gps_between_dates`**
+- File: `tests/testthat/test_cli.R`
+- Action: Change test caller from `filter_data_between_dates` to `export_filtered_gps_between_dates`
+- Test: `make tests_fast`
+
+**Step 3 — Delete `filter_data_between_dates`**
+- File: `R/cli.R`
+- Action: Remove old function definition
+- Test: `make tests_fast`
+
+**Step 4 — Add `export_filtered_fisheries`**
+- File: `R/cli.R`
+- Action: Add new function with same body as `process_fisheries_data`
+- Test: `make tests_fast`
+
+**Step 5 — Switch test to `export_filtered_fisheries`**
+- File: `tests/testthat/test_cli.R`
+- Action: Change test caller from `process_fisheries_data` to `export_filtered_fisheries`
+- Test: `make tests_fast`
+
+**Step 6 — Delete `process_fisheries_data`**
+- File: `R/cli.R`
+- Action: Remove old function definition
+- Test: `make tests_fast`
+
+**Step 7 — Add `export_trips_summary`**
+- File: `R/cli.R`
+- Action: Add new function with same body as `write_trips_summary`
+- Test: `make tests_fast`
+
+**Step 8 — Switch test to `export_trips_summary`**
+- File: `tests/testthat/test_cli.R`
+- Action: Change test caller from `write_trips_summary` to `export_trips_summary`
+- Test: `make tests_fast`
+
+**Step 9 — Delete `write_trips_summary`**
+- File: `R/cli.R`
+- Action: Remove old function definition
+- Test: `make tests_fast`
+
+**Step 10 — Add `export_trips`**
+- File: `R/cli.R`
+- Action: Add new function with same body as `write_trips`
+- Test: `make tests_fast`
+
+**Step 11 — Switch test to `export_trips`**
+- File: `tests/testthat/test_cli.R`
+- Action: Change test caller from `write_trips` to `export_trips`
+- Test: `make tests_fast`
+
+**Step 12 — Delete `write_trips`**
+- File: `R/cli.R`
+- Action: Remove old function definition
+- Test: `make tests_fast`
+
+### Sprint 2 — Add standalone compute functions (alongside R6 class)
+
+All added to `R/representative_assess.R`. Nothing calls them yet. R6 class unchanged.
+
+**Step 13 — Add `compute_space_use`**
+- File: `R/representative_assess.R`
+- Action: Add standalone function extracting the full `projectTracks` + `tripSummary` + `get_scale_parameters` + `estSpaceUse` pipeline
+- Signature: `(data, config, levelUD, smoothing_method)` → `list(KDE_surface, UDPolygons, colony, tracks)`
+- Test: `make tests_fast`
+
+**Step 14 — Add `compute_representative_assessment`**
+- File: `R/representative_assess.R`
+- Action: Add standalone function wrapping `repAssess(bootTable = FALSE)`
+- Signature: `(KDE_surface, tracks, levelUD, n_iterations)` → `data.frame`
+- Test: `make tests_fast`
+
+**Step 15 — Add `compute_potential_kba`**
+- File: `R/representative_assess.R`
+- Action: Add standalone function wrapping `findSite()`
+- Signature: `(KDE_surface, represent, popSize, levelUD)` → `sf` object
+- Test: `make tests_fast`
+
+**Step 16 — Add `compute_cache`**
+- File: `R/representative_assess.R`
+- Action: Add standalone function composing `compute_space_use` + `compute_representative_assessment`
+- Returns: full result list (KDE_surface, UDPolygons, colony, assessment_detail)
+- Test: `make tests_fast`
+
+### Sprint 3 — Add plot layer (new file `R/plot.R`)
+
+Pure ggplot2 functions. No I/O. No callers yet.
+
+**Step 17 — Add `plot_representative_assessment`**
+- File: `R/plot.R` (new)
+- Action: Add function taking assessment_detail data.frame → returns ggplot2 scatterplot
+- Test: `make tests_fast`
+
+**Step 18 — Add `plot_potential_kba`**
+- File: `R/plot.R`
+- Action: Add function taking sf polygons + colony → returns ggplot2 map
+- Test: `make tests_fast`
+
+**Step 19 — Add `plot_individual_kde`**
+- File: `R/plot.R`
+- Action: Add function taking UDPolygons + colony → returns ggplot2 map
+- Test: `make tests_fast`
+
+### Sprint 4 — Add new cache-based exported functions
+
+New exports added to `R/cli.R` alongside existing functions. No callers yet.
+
+**Step 20 — Add `write_processed_data`**
+- File: `R/cli.R`
+- Action: Add exported function: read CSV + config → `compute_cache(...)` → `saveRDS()`
+- Test: `make tests_fast`
+
+**Step 21 — Add `export_potential_kba`**
+- File: `R/cli.R`
+- Action: Add exported function: `readRDS()` → `compute_potential_kba(...)` → `st_write()`
+- Test: `make tests_fast`
+
+**Step 22 — Add `export_representative_assessment`**
+- File: `R/cli.R`
+- Action: Add exported function: `readRDS()` → format → `write_csv()` + `datapackage.json`
+- Test: `make tests_fast`
+
+### Sprint 5 — Restructure render functions to skip R6 class
+
+These steps change the 3 functions that `test_cli_slow.R` tests. **Each requires `make tests`.**
+
+**Step 23 — Switch `render_representative_assessment` to standalone functions**
+- File: `R/cli.R`
+- Action: Replace `Track2KBA_Wrapper$new(...)` + `wrapper$compute_representative_assessment(...)` with `compute_space_use(...)` + `compute_representative_assessment(...)`. Still accepts `options` list. Still writes PNG via `png()`/`dev.off()`.
+- Test: `make tests`
+
+**Step 24 — Switch `render_potential_kba` to standalone functions**
+- File: `R/cli.R`
+- Action: Replace R6 class usage with `compute_space_use(...)` + `compute_representative_assessment(...)` + `compute_potential_kba(...)` + `mapSite()`. Still accepts `options` list.
+- Test: `make tests`
+
+**Step 25 — Switch `render_individual_kde` to standalone functions**
+- File: `R/cli.R`
+- Action: Replace R6 class usage with `compute_space_use(...)` + `mapKDE()`. Still accepts `options` list.
+- Test: `make tests`
+
+### Sprint 6 — Strangle R6 class
+
+R6 class is no longer used by CLI (Sprint 5 removed those callers). Only `test_representative_assess.R` (fast) exercises R6 methods directly via `Wrapper_Tester`.
+
+**Step 26 — Make R6 `initialize` delegate to `compute_space_use`**
+- File: `R/representative_assess.R`
+- Action: Change R6 `initialize` to call `compute_space_use()` internally. Individual methods (`get_tracks`, `get_scale_dictionary`, `estimate_space_use`) remain unchanged.
+- Test: `make tests_fast`
+
+**Step 27 — Make R6 `compute_representative_assessment` delegate to standalone**
+- File: `R/representative_assess.R`
+- Action: Change R6 method body to call standalone `compute_representative_assessment()`
+- Test: `make tests_fast`
+
+**Step 28 — Make R6 `compute_potential_kba` delegate to standalone**
+- File: `R/representative_assess.R`
+- Action: Change R6 method body to call standalone `compute_potential_kba()`
+- Test: `make tests_fast`
+
+**Step 29 — Remove R6 class, update tests**
+- File: `R/representative_assess.R`, `tests/testthat/test_representative_assess.R`
+- Action: Delete `Track2KBA_Wrapper` definition. Update `test_representative_assess.R` to call standalone functions directly instead of through `Wrapper_Tester`.
+- Test: `make tests_fast`
+
+### Sprint 7 — Signature cleanup
+
+Change function signatures from `(options)` to explicit artifact paths. **Each requires `make tests` because slow tests exercise these functions.**
+
+**Step 30 — Update `render_representative_assessment` signature**
+- File: `R/cli.R`, `tests/testthat/slow/test_cli_slow.R`
+- Action: Change from `(options)` to `(rds_path, png_path)`. Update slow test.
+- Test: `make tests`
+
+**Step 31 — Update `render_potential_kba` signature**
+- File: `R/cli.R`, `tests/testthat/slow/test_cli_slow.R`
+- Action: Change from `(options)` to `(gpkg_path, colony_path, png_path)`. Update slow test.
+- Test: `make tests`
+
+**Step 32 — Update `render_individual_kde` signature**
+- File: `R/cli.R`, `tests/testthat/slow/test_cli_slow.R`
+- Action: Change from `(options)` to `(rds_path, png_path)`. Update slow test.
+- Test: `make tests`
+
+---
+
+### Phase 2 summary
+
+| Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
+|---|---|---|---|---|
+| 1 — Rename 4 exports | 1–12 | 12 | 0 | 12 |
+| 2 — Add compute layer | 13–16 | 4 | 0 | 4 |
+| 3 — Add plot layer | 17–19 | 3 | 0 | 3 |
+| 4 — Add cache exports | 20–22 | 3 | 0 | 3 |
+| **5 — Restructure renders** | **23–25** | **0** | **3** | **3** |
+| 6 — Strangle R6 | 26–29 | 4 | 0 | 4 |
+| **7 — Signature cleanup** | **30–32** | **0** | **3** | **3** |
+| **Total** | **1–32** | **26 fast** | **6 full** | **32 commits** |
