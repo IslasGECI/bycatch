@@ -318,99 +318,20 @@ and `config-path`. This will require additional updates in
 | `make tests_fast` | All tests except `test_cli_slow.R` (~22s) | Every step that does NOT touch `render_*` functions |
 | `make tests` | `tests_fast` + `tests_slow` (~5min) | Every step that touches a `render_*` function or its test |
 
-### Sprint 1 — Rename 4 CLI functions (one at a time)
+### Sprint 1 — Rename 4 CLI functions ✅
 
-Each rename is 3 micro-steps: Add new → Switch caller → Delete old. 12 commits total.
-
-**✅ Step 1 — Add `export_filtered_gps_between_dates`**
-- File: `R/cli.R`
-- Action: Add new function with same body as `filter_data_between_dates`
-- Test: `make tests_fast`
-
-**✅ Step 2 — Switch test to `export_filtered_gps_between_dates`**
-- File: `tests/testthat/test_cli.R`
-- Action: Change test caller from `filter_data_between_dates` to `export_filtered_gps_between_dates`
-- Test: `make tests_fast`
-
-**✅ Step 3 — Delete `filter_data_between_dates`**
-- File: `R/cli.R`
-- Action: Remove old function definition
-- Test: `make tests_fast`
-
-**✅ Step 4 — Add `export_filtered_fisheries`**
-- File: `R/cli.R`
-- Action: Add new function with same body as `process_fisheries_data`
-- Test: `make tests_fast`
-
-**✅ Step 5 — Switch test to `export_filtered_fisheries`**
-- File: `tests/testthat/test_cli.R`
-- Action: Change test caller from `process_fisheries_data` to `export_filtered_fisheries`
-- Test: `make tests_fast`
-
-**✅ Step 6 — Delete `process_fisheries_data`**
-- File: `R/cli.R`
-- Action: Remove old function definition
-- Test: `make tests_fast`
-
-**✅ Step 7 — Add `export_trips_summary`**
-- File: `R/cli.R`
-- Action: Add new function with same body as `write_trips_summary`
-- Test: `make tests_fast`
-
-**✅ Step 8 — Switch test to `export_trips_summary`**
-- File: `tests/testthat/test_cli.R`
-- Action: Change test caller from `write_trips_summary` to `export_trips_summary`
-- Test: `make tests_fast`
-
-**✅ Step 9 — Delete `write_trips_summary`**
-- File: `R/cli.R`
-- Action: Remove old function definition
-- Test: `make tests_fast`
-
-**✅ Step 10 — Add `export_trips`**
-- File: `R/cli.R`
-- Action: Add new function with same body as `write_trips`
-- Test: `make tests_fast`
-
-**✅ Step 11 — Switch test to `export_trips`**
-- File: `tests/testthat/test_cli.R`
-- Action: Change test caller from `write_trips` to `export_trips`
-- Test: `make tests_fast`
-
-**✅ Step 12 — Delete `write_trips`**
-- File: `R/cli.R`
-- Action: Remove old function definition
-- Test: `make tests_fast`
+**✅ Steps 1–12 (12 commits):** `filter_data_between_dates` → `export_filtered_gps_between_dates`,
+`process_fisheries_data` → `export_filtered_fisheries`,
+`write_trips_summary` → `export_trips_summary`,
+`write_trips` → `export_trips`.
 
 ### Sprint 2 — Add standalone compute functions (alongside R6 class)
 
 Each function follows **test-first**: 2 sub-steps per function. The test goes in `tests/testthat/test_compute.R` (new file). Pre-computed RDS fixtures (`tracks.rds`, `kde_20percent_sample.rds`, etc.) are reused from `test_representative_assess.R`.
 
-**✅ Step 13a — Red: add test for `compute_space_use`**
-- File: `tests/testthat/test_compute.R`
-- Action: Add test that calls `compute_space_use(...)` and asserts returned list has expected structure (KDE_surface, UDPolygons, tracks)
-- Expected failure: `could not find function "compute_space_use"` — the function doesn't exist yet
-- Test: `make tests_fast`
-- Commit: `56609f5` 🛑🧪🧩🚧
-
-**✅ Step 13b — Green: add `compute_space_use`**
-- File: `R/representative_assess.R`
-- Action: Add standalone function extracting the full `projectTracks` + `tripSummary` + `get_scale_parameters` + `estSpaceUse` pipeline
-- Signature: `(data, config, levelUD, smoothing_method)` → `list(KDE_surface, UDPolygons, tracks)`
-- Test: `make tests_fast`
-- Commit: `d8c7d62` ✅🧩🚧
-
-**⚠️ Step 13b fix — Corrected test class assertions**
-- File: `tests/testthat/test_compute.R`
-- Action: `KDE_surface` is `estUDm` (not `RasterLayer`), `UDPolygons` is `sf` (not `SpatialPolygonsDataFrame`)
-- Commit: `b0a4596` 🔧🧪
-
-**✅ Step 13c — Remove colony from `compute_space_use` return value**
-- File: `R/representative_assess.R`, `tests/testthat/test_compute.R`
-- Action: Drop `colony = colony` from the return list in `compute_space_use`. Remove `"colony"` from the expected names vector and drop `expect_s3_class(result$colony, "tbl_df")` from the test. Colony remains an internal variable (still passed to `tripSummary`) but is no longer returned.
-- Rationale: Colony is only needed inside `compute_space_use` for `tripSummary`. No downstream function needs it. Removing it from the return value keeps the cache lean and avoids passing unnecessary data through the pipeline.
-- Test: `make tests_fast`
-- Commit: `588a661` 🔥
+**✅ Steps 13a–13c (4 commits):** `compute_space_use` function created (red → green),
+class assertions corrected (`estUDm`, `sf`), colony removed from return value.
+Commits: `56609f5`, `d8c7d62`, `b0a4596`, `588a661`.
 
 **Step 14a — Red: add test for `compute_representative_assessment`**
 - File: `tests/testthat/test_compute.R`
@@ -580,12 +501,12 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|---|---|
-| 1 — Rename 4 exports | 1–12 | ✅ 12 done | 0 | 12 |
-| 2 — Add compute layer | ✅ **13a–13c**, **14a–16b** | ✅ **13a–13c done** (4 commits incl. fix + cleanup), **6 remaining** | 0 | **4 done / 10 total** |
-| 3 — Add plot layer | 17a–19b | ✅ test-first: red → green per function | 0 | 6 |
-| 4 — Add cache exports | 20a–22b | ✅ test-first: red → green per function | 0 | 6 |
-| **5 — Restructure renders** | **23–25** | **0** | **3** | **3** |
-| 6 — Strangle R6 | 26–29 | 4 | 0 | 4 |
-| **7 — Signature cleanup** | **30–32** | **0** | **3** | **3** |
+|---|---|---|---|---|---|---|---|
+| 1 — Rename 4 exports | 1–12 | ✅ done | — | 12 |
+| 2 — Add compute layer | ✅ **13a–13c**, **14a–16b** | **4 done / 6 remaining** | — | **4 / 10** |
+| 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
+| 4 — Add cache exports | 20a–22b | 6 ahead | — | 6 |
+| **5 — Restructure renders** | **23–25** | — | **3 ahead** | **3** |
+| 6 — Strangle R6 | 26–29 | 4 ahead | — | 4 |
+| **7 — Signature cleanup** | **30–32** | — | **3 ahead** | **3** |
 | **Total** | **1–44** | **16 done / 38 planned** | **0 done / 6 planned** | **16 done / 44 planned** |

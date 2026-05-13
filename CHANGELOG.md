@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- `filter_data_between_dates()` renamed to `export_filtered_gps_between_dates()`.
+- `process_fisheries_data()` renamed to `export_filtered_fisheries()`.
+- `write_trips_summary()` renamed to `export_trips_summary()`.
+- `write_trips()` renamed to `export_trips()`.
+- New internal function `compute_space_use()` extracts the project-then-estimate-space-use pipeline as a standalone pure function.
+- Colony is no longer returned by `compute_space_use()` — it is only used internally for trip summary calculations.
+
 ## [0.8.0] - 2026-05-11
 ### Changed
 - `plot_potential_site()` renamed to `render_potential_kba()`; internal method `get_site()` renamed to `compute_potential_kba()`.

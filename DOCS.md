@@ -47,7 +47,7 @@ for each tracked individual, and saves the resulting map as a PNG file.
     - `percentage-distribution` (integer) — percentage distribution for the KDE.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
 
-### `write_trips_summary(options)`
+### `export_trips_summary(options)`
 
 Generates a summary of trips from GPS data and configuration, and writes it to
 a CSV file.
@@ -60,7 +60,7 @@ a CSV file.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 - **Notes:** The output CSV contains columns `tripID`, `n_locs`, `departure`, `return`, `duration`, `total_dist`.
 
-### `write_trips(options, config_content)`
+### `export_trips(options, config_content)`
 
 Extracts individual foraging trips from GPS data and writes the result to a
 CSV file.
@@ -74,7 +74,7 @@ CSV file.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 - **Notes:** The output CSV contains columns `tripID`, `Latitude`, `Longitude`.
 
-### `process_fisheries_data(options)`
+### `export_filtered_fisheries(options)`
 
 Filters raw fisheries GPS data by date range and geographic bounding box, then
 writes the filtered data to a CSV file.
@@ -91,7 +91,7 @@ writes the filtered data to a CSV file.
     - `lon-max` (numeric) — maximum longitude for filtering.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 
-### `filter_data_between_dates(options)`
+### `export_filtered_gps_between_dates(options)`
 
 Filters GPS data between two inclusive dates and writes the result to a CSV file.
 
@@ -110,6 +110,60 @@ Defines and returns a named list of command-line options for use in CLI tools.
 
 - **Parameters:** None.
 - **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `smoothing-method`, `date-column-name`.
+
+---
+
+## Compute layer (standalone)
+
+### `compute_space_use(data, config, levelUD, smoothing_method)`
+
+Projects tracks, estimates smoothing scale, and computes kernel density estimates
+(KDE) for each tracked individual.
+
+- **Parameters:**
+  - `data` (data.frame) — GPS tracking data with a `Returns` column.
+  - `config` (list) — configuration with `colony` (tibble of `Longitude`, `Latitude`).
+  - `levelUD` (numeric) — percentage contour level for KDE polygons.
+  - `smoothing_method` (character) — smoothing method for KDE. One of `"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`.
+- **Returns:** A list with elements `KDE_surface` (estUDm), `UDPolygons` (sf), and `tracks` (SpatialPointsDataFrame).
+
+### `compute_representative_assessment(KDE_surface, tracks, levelUD, n_iterations)`
+
+Bootstraps across individuals to assess how representative the sample is.
+Wraps `track2KBA::repAssess` with `bootTable=TRUE`. Suppresses the inline base R
+plot.
+
+- **Parameters:**
+  - `KDE_surface` (estUDm) — kernel density estimates from `compute_space_use`.
+  - `tracks` (SpatialPointsDataFrame) — projected tracking data.
+  - `levelUD` (numeric) — percentage contour level.
+  - `n_iterations` (integer) — number of bootstrap iterations.
+- **Returns:** A list with elements `assessment_summary` (data.frame, single row with columns `out`, `asym`, `Rep70`, `Rep95`) and `assessment_detail` (data.frame, full iteration table).
+
+### `compute_potential_kba(KDE_surface, represent, popSize, levelUD)`
+
+Identifies potential Key Biodiversity Areas (KBAs) based on the representative
+assessment. Wraps `track2KBA::findSite`.
+
+- **Parameters:**
+  - `KDE_surface` (estUDm) — kernel density estimates.
+  - `represent` (numeric) — representativity value (from `assessment_summary$out`).
+  - `popSize` (numeric) — population size for the KBA criterion.
+  - `levelUD` (numeric) — percentage contour level.
+- **Returns:** An sf object with polygon data (columns `N_IND`, `N_animals`, `potentialSite`).
+
+### `compute_cache(data, config, levelUD, smoothing_method, n_iterations)`
+
+Composes `compute_space_use` + `compute_representative_assessment`. Calls
+`repAssess` exactly once. Returns only the bootstrap output for caching.
+
+- **Parameters:**
+  - `data` (data.frame) — GPS tracking data with a `Returns` column.
+  - `config` (list) — configuration with `colony` (tibble).
+  - `levelUD` (numeric) — percentage contour level.
+  - `smoothing_method` (character) — smoothing method for KDE.
+  - `n_iterations` (integer) — number of bootstrap iterations.
+- **Returns:** A list with elements `assessment_summary` and `assessment_detail` (same as `compute_representative_assessment`).
 
 ---
 

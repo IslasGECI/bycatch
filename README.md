@@ -9,7 +9,7 @@ parameter](https://github.com/IslasGECI/bycatch/actions/workflows/actions.yml/ba
 ![commits](https://img.shields.io/github/commit-activity/y/IslasGECI/bycatch)
 ![R-version](https://img.shields.io/github/r-package/v/IslasGECI/bycatch)
 
-**Assess the risk that seabirds foraging near fishing vessels will get caught as bycatch.**
+**Assess where seabirds forage, where fishing vessels operate, and where they overlap — to prevent bycatch.**
 
 bycatch ingests GPS tracking data from seabird colonies, computes their foraging
 areas and key biodiversity areas (KBAs), and compares those areas against fishing
@@ -41,10 +41,27 @@ provided Docker container to avoid path configuration.
 
 ```shell
 # Inside the Docker container:
+
+# Export a filtered dataset
+Rscript -e "bycatch::export_filtered_gps_between_dates(bycatch::get_domain_specific_options())" \
+  --data-path /workdir/data/gps.csv \
+  --output-path /workdir/data/gps_filtered.csv \
+  --start 2024-01-01 --end 2024-12-31 \
+  --date-column-name DateTime
+
+# Export trip summaries
+Rscript -e "bycatch::export_trips_summary(bycatch::get_domain_specific_options())" \
+  --data-path /workdir/data/trips.csv \
+  --config-path /workdir/config.json \
+  --output-path /workdir/output/trips_summary.csv
+
+# Render a KBA map from GPS data and configuration
 Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options())" \
   --data-path /workdir/data/trips.csv \
   --config-path /workdir/config.json \
-  --output-path /workdir/output/figure.png
+  --output-path /workdir/output/kba.png
+
+(Coming soon: cache-based pipeline where the expensive bootstrap runs once.)
 ```
 
 ## Core concept
@@ -62,12 +79,14 @@ Results can also be fed into GIS tools (QGIS, GMT) for custom cartography.
 
 ## Coming soon
 
-- Full write/render separation: bycatch will produce interoperable GeoPackage
-  files; visualisation becomes tool-agnostic (bycatch, GMT, QGIS, Python).
-- Shared RDS caching: expensive bootstrapping runs once per dataset instead of
-  three times, cutting build time significantly.
-- `create_cache()`: one-step compute-and-cache command; runs the expensive
-  bootstrap once and shares the result across all figure pipelines.
-- `export_potential_kba()` and `export_individual_kde()`: direct
-  GeoPackage output for the two remaining figure pipelines.
+- **`write_processed_data()`** — one-step compute-and-cache command that runs the
+  expensive bootstrap once and saves results for all figure pipelines.
+- **`export_potential_kba()`** — GeoPackage export for KBA polygons (combines
+  cached bootstrap results with fast-recomputed kernel densities).
+- **`export_representative_assessment()`** — Tabular Data Package export (CSV +
+  `datapackage.json` schema) of the full bootstrap iteration results.
+- **`plot_potential_kba()`** and **`plot_individual_kde()`** — ggplot2-based
+  replacements for `track2KBA::mapSite` and `track2KBA::mapKDE`.
+- **Shared RDS caching** — the expensive `repAssess` bootstrap runs once per
+  dataset; all downstream figures and exports read cached results.
 
