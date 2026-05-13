@@ -170,6 +170,39 @@ process_fisheries_data <- function(options) {
     readr::write_csv(options[["output-path"]])
 }
 
+#' Export Filtered Fisheries Data
+#'
+#' Reads fisheries GPS data, filters by date and geographic boundaries,
+#' and writes the result to a CSV file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{data-path}{Path to the input fisheries GPS data file (CSV).}
+#'     \item{output-path}{Path where the filtered output CSV file will be saved.}
+#'     \item{start}{Start date for filtering (inclusive).}
+#'     \item{end}{End date for filtering (inclusive).}
+#'     \item{lat-min}{Minimum latitude for filtering.}
+#'     \item{lat-max}{Maximum latitude for filtering.}
+#'     \item{lon-min}{Minimum longitude for filtering.}
+#'     \item{lon-max}{Maximum longitude for filtering.}
+#'   }
+#' @return None. Called for its side effect of writing filtered data to disk.
+#' @export
+export_filtered_fisheries <- function(options) {
+  fisheries_raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  fisheries_data <- fisheries_raw_data |>
+    filter_fisheries_by_date_and_lat_lon(
+      start = options[["start"]],
+      end = options[["end"]],
+      lat_min = options[["lat-min"]],
+      lat_max = options[["lat-max"]],
+      lon_min = options[["lon-min"]],
+      lon_max = options[["lon-max"]]
+    )
+  fisheries_data |>
+    readr::write_csv(options[["output-path"]])
+}
+
 #' Export Filtered GPS Data Between Dates
 #'
 #' Reads GPS data, filters it between two dates, and writes the result to a CSV file.
