@@ -63,3 +63,29 @@ Track2KBA_Wrapper <- R6::R6Class(
     }
   )
 )
+
+compute_space_use <- function(data, config, levelUD, smoothing_method) {
+  complete_trips <- data[data$Returns == "Yes", ]
+  colony <- config$colony
+  tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
+  sumTrips <- track2KBA::tripSummary(trips = complete_trips, colony = colony)
+  scale_parameters <- get_scale_parameters(tracks, sumTrips)
+  scale_dictionary <- list(
+    "log_median" = scale_parameters$mag,
+    "reference_bandwidth" = scale_parameters$href,
+    "scale_ARS" = scale_parameters$scaleARS
+  )
+  scale <- scale_dictionary[[smoothing_method]]
+  KDE <- track2KBA::estSpaceUse(
+    tracks = tracks,
+    scale = scale,
+    levelUD = levelUD,
+    polyOut = TRUE
+  )
+  list(
+    KDE_surface = KDE$KDE.Surface,
+    UDPolygons = KDE$UDPolygons,
+    colony = colony,
+    tracks = tracks
+  )
+}
