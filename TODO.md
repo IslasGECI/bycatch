@@ -347,17 +347,17 @@ Each rename is 3 micro-steps: Add new → Switch caller → Delete old. 12 commi
 - Action: Remove old function definition
 - Test: `make tests_fast`
 
-**Step 10 — Add `export_trips`**
+**✅ Step 10 — Add `export_trips`**
 - File: `R/cli.R`
 - Action: Add new function with same body as `write_trips`
 - Test: `make tests_fast`
 
-**Step 11 — Switch test to `export_trips`**
+**✅ Step 11 — Switch test to `export_trips`**
 - File: `tests/testthat/test_cli.R`
 - Action: Change test caller from `write_trips` to `export_trips`
 - Test: `make tests_fast`
 
-**Step 12 — Delete `write_trips`**
+**✅ Step 12 — Delete `write_trips`**
 - File: `R/cli.R`
 - Action: Remove old function definition
 - Test: `make tests_fast`
@@ -496,7 +496,7 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|---|
-| 1 — Rename 4 exports | 1–12 | ✅ 9 done / 3 remain | 0 | 12 |
+| 1 — Rename 4 exports | 1–12 | ✅ 12 done | 0 | 12 |
 | 2 — Add compute layer | 13–16 | 4 | 0 | 4 |
 | 3 — Add plot layer | 17–19 | 3 | 0 | 3 |
 | 4 — Add cache exports | 20–22 | 3 | 0 | 3 |
