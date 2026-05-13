@@ -13,6 +13,8 @@ all: check coverage
     red \
     refactor \
     setup \
+    tests_fast \
+    tests_slow \
     tests
 
 check:
@@ -97,5 +99,10 @@ refactor_file: format
 tests_file:
 	Rscript -e "devtools::test_active_file('${file}',stop_on_failure = TRUE)"
 
-tests:
+tests_fast:
 	Rscript -e "devtools::test(stop_on_failure = TRUE)"
+
+tests_slow:
+	Rscript -e "devtools::load_all(); testthat::test_dir('tests/testthat/slow', reporter = 'summary', stop_on_failure = TRUE)"
+
+tests: tests_fast tests_slow
