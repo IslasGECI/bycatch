@@ -148,6 +148,32 @@ write_trips <- function(options, config_content) {
     readr::write_csv(options[["output-path"]])
 }
 
+#' Export Trips
+#'
+#' Extracts and writes trip data based on GPS data and configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths,
+#' extracts trip data using `get_trips`, and writes the resulting data to the
+#' specified output CSV file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output CSV file will be saved.}
+#'   }
+#' @param config_content The configuration content as a list (optional, will be overwritten by reading from config-path).
+#'
+#' @return None. Called for its effect of writing trip data to disk.
+#' @export
+export_trips <- function(options, config_content) {
+  config_content <- read_config(options[["config-path"]])
+  trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
+    get_trips(config_content)
+  trips@data |>
+    readr::write_csv(options[["output-path"]])
+}
+
 #' Export Filtered Fisheries Data
 #'
 #' Reads fisheries GPS data, filters by date and geographic boundaries,
