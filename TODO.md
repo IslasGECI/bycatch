@@ -405,11 +405,12 @@ Each function follows **test-first**: 2 sub-steps per function. The test goes in
 - Action: `KDE_surface` is `estUDm` (not `RasterLayer`), `UDPolygons` is `sf` (not `SpatialPolygonsDataFrame`)
 - Commit: `b0a4596` 🔧🧪
 
-**Step 13c — Remove colony from `compute_space_use` return value**
+**✅ Step 13c — Remove colony from `compute_space_use` return value**
 - File: `R/representative_assess.R`, `tests/testthat/test_compute.R`
 - Action: Drop `colony = colony` from the return list in `compute_space_use`. Remove `"colony"` from the expected names vector and drop `expect_s3_class(result$colony, "tbl_df")` from the test. Colony remains an internal variable (still passed to `tripSummary`) but is no longer returned.
 - Rationale: Colony is only needed inside `compute_space_use` for `tripSummary`. No downstream function needs it. Removing it from the return value keeps the cache lean and avoids passing unnecessary data through the pipeline.
 - Test: `make tests_fast`
+- Commit: `588a661` 🔥
 
 **Step 14a — Red: add test for `compute_representative_assessment`**
 - File: `tests/testthat/test_compute.R`
@@ -581,10 +582,10 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|---|---|
 | 1 — Rename 4 exports | 1–12 | ✅ 12 done | 0 | 12 |
-| 2 — Add compute layer | **13c**, **14a–16b** | ✅ **13a–13b done** (3 commits incl. fix), **1 cleanup**, **6 remaining** | 0 | **4 done / 10 total** |
+| 2 — Add compute layer | ✅ **13a–13c**, **14a–16b** | ✅ **13a–13c done** (4 commits incl. fix + cleanup), **6 remaining** | 0 | **4 done / 10 total** |
 | 3 — Add plot layer | 17a–19b | ✅ test-first: red → green per function | 0 | 6 |
 | 4 — Add cache exports | 20a–22b | ✅ test-first: red → green per function | 0 | 6 |
 | **5 — Restructure renders** | **23–25** | **0** | **3** | **3** |
 | 6 — Strangle R6 | 26–29 | 4 | 0 | 4 |
 | **7 — Signature cleanup** | **30–32** | **0** | **3** | **3** |
-| **Total** | **1–43** | **16 done / 37 planned** | **0 done / 6 planned** | **16 done / 43 planned** |
+| **Total** | **1–44** | **16 done / 38 planned** | **0 done / 6 planned** | **16 done / 44 planned** |
