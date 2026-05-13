@@ -302,47 +302,47 @@ They will accept artifact paths (`.rds`, `.gpkg`, colony file) instead of raw
 
 Each rename is 3 micro-steps: Add new → Switch caller → Delete old. 12 commits total.
 
-**Step 1 — Add `export_filtered_gps_between_dates`**
+**✅ Step 1 — Add `export_filtered_gps_between_dates`**
 - File: `R/cli.R`
 - Action: Add new function with same body as `filter_data_between_dates`
 - Test: `make tests_fast`
 
-**Step 2 — Switch test to `export_filtered_gps_between_dates`**
+**✅ Step 2 — Switch test to `export_filtered_gps_between_dates`**
 - File: `tests/testthat/test_cli.R`
 - Action: Change test caller from `filter_data_between_dates` to `export_filtered_gps_between_dates`
 - Test: `make tests_fast`
 
-**Step 3 — Delete `filter_data_between_dates`**
+**✅ Step 3 — Delete `filter_data_between_dates`**
 - File: `R/cli.R`
 - Action: Remove old function definition
 - Test: `make tests_fast`
 
-**Step 4 — Add `export_filtered_fisheries`**
+**✅ Step 4 — Add `export_filtered_fisheries`**
 - File: `R/cli.R`
 - Action: Add new function with same body as `process_fisheries_data`
 - Test: `make tests_fast`
 
-**Step 5 — Switch test to `export_filtered_fisheries`**
+**✅ Step 5 — Switch test to `export_filtered_fisheries`**
 - File: `tests/testthat/test_cli.R`
 - Action: Change test caller from `process_fisheries_data` to `export_filtered_fisheries`
 - Test: `make tests_fast`
 
-**Step 6 — Delete `process_fisheries_data`**
+**✅ Step 6 — Delete `process_fisheries_data`**
 - File: `R/cli.R`
 - Action: Remove old function definition
 - Test: `make tests_fast`
 
-**Step 7 — Add `export_trips_summary`**
+**✅ Step 7 — Add `export_trips_summary`**
 - File: `R/cli.R`
 - Action: Add new function with same body as `write_trips_summary`
 - Test: `make tests_fast`
 
-**Step 8 — Switch test to `export_trips_summary`**
+**✅ Step 8 — Switch test to `export_trips_summary`**
 - File: `tests/testthat/test_cli.R`
 - Action: Change test caller from `write_trips_summary` to `export_trips_summary`
 - Test: `make tests_fast`
 
-**Step 9 — Delete `write_trips_summary`**
+**✅ Step 9 — Delete `write_trips_summary`**
 - File: `R/cli.R`
 - Action: Remove old function definition
 - Test: `make tests_fast`
@@ -495,8 +495,8 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|
-| 1 — Rename 4 exports | 1–12 | 12 | 0 | 12 |
+|---|---|---|---|---|---|
+| 1 — Rename 4 exports | 1–12 | ✅ 9 done / 3 remain | 0 | 12 |
 | 2 — Add compute layer | 13–16 | 4 | 0 | 4 |
 | 3 — Add plot layer | 17–19 | 3 | 0 | 3 |
 | 4 — Add cache exports | 20–22 | 3 | 0 | 3 |
