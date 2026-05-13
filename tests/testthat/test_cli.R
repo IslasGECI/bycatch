@@ -15,7 +15,7 @@ describe("filter gps data between dates", {
   )
   it("write figure", {
     testtools::if_exist_remove(output_path)
-    filter_data_between_dates(options)
+    export_filtered_gps_between_dates(options)
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
   })
