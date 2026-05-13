@@ -501,7 +501,7 @@ Change function signatures from `(options)` to explicit artifact paths. **Each r
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|---|---|---|
+|---|---|---|---|---|
 | 1 — Rename 4 exports | 1–12 | ✅ done | — | 12 |
 | 2 — Add compute layer | ✅ **13a–13c**, **14a–16b** | **4 done / 6 remaining** | — | **4 / 10** |
 | 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
