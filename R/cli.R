@@ -107,10 +107,46 @@ write_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     get_summary_of_trips(config_content) |>
+  readr::write_csv(options[["output-path"]])
+}
+
+#' Export Trips Summary
+#'
+#' Generates and writes a summary of trips based on GPS data and configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths, summarizes the trips using `get_summary_of_trips`,
+#' and writes the summary to the specified output CSV file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output CSV summary will be saved.}
+#'   }
+#'
+#' @return None. Called for its side effect of writing a summary to disk.
+#' @export
+export_trips_summary <- function(options) {
+  config_content <- read_config(options[["config-path"]])
+  readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
+    get_summary_of_trips(config_content) |>
     readr::write_csv(options[["output-path"]])
 }
 
 #' Write Trips
+#'
+#' Extracts and writes trip data based on GPS data and configuration settings.
+#'
+#' This function reads configuration and GPS data from the provided file paths, extracts trip data using `get_trips`,
+#' and writes the resulting data to the specified output CSV file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output CSV file will be saved.}
+#'   }
+#' @param config_content The configuration content as a list (optional, will be overwritten by reading from config-path).
 #'
 #' Extracts and writes trip data based on GPS data and configuration settings.
 #'
