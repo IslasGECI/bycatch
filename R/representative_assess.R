@@ -22,7 +22,7 @@ Track2KBA_Wrapper <- R6::R6Class(
     },
     get_scale_dictionary = function() {
       sumTrips <- track2KBA::tripSummary(trips = self$complete_trips, colony = self$colony)
-      scale_parameters <- get_scale_parameters(self$tracks, sumTrips)
+      scale_parameters <- compute_scale_parameters(self$tracks, sumTrips)
       scale_dictionary <- list("log_median" = scale_parameters$mag, "reference_bandwidth" = scale_parameters$href, "scale_ARS" = scale_parameters$scaleARS)
       return(scale_dictionary)
     },
@@ -69,7 +69,7 @@ compute_individual_kde <- function(data, config, levelUD, smoothing_method) {
   colony <- config$colony
   tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
   sumTrips <- track2KBA::tripSummary(trips = complete_trips, colony = colony)
-  scale_parameters <- get_scale_parameters(tracks, sumTrips)
+  scale_parameters <- compute_scale_parameters(tracks, sumTrips)
   scale_dictionary <- list(
     "log_median" = scale_parameters$mag,
     "reference_bandwidth" = scale_parameters$href,

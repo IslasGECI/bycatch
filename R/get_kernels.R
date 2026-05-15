@@ -1,4 +1,4 @@
-get_scale_parameters <- function(tracks, trips_summary) {
+compute_scale_parameters <- function(tracks, trips_summary) {
   hVals <- track2KBA::findScale(
     tracks = tracks,
     scaleARS = TRUE,
