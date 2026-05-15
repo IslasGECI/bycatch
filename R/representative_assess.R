@@ -118,3 +118,8 @@ compute_potential_kba <- function(KDE_surface, represent, popSize, levelUD) {
     polyOut = TRUE
   )
 }
+
+compute_cache <- function(data, config, levelUD, smoothing_method, n_iterations) {
+  kde_result <- compute_individual_kde(data, config, levelUD, smoothing_method)
+  compute_representative_assessment(kde_result$KDE_surface, kde_result$tracks, levelUD, n_iterations)
+}
