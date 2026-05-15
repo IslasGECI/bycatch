@@ -64,7 +64,7 @@ Track2KBA_Wrapper <- R6::R6Class(
   )
 )
 
-compute_space_use <- function(data, config, levelUD, smoothing_method) {
+compute_individual_kde <- function(data, config, levelUD, smoothing_method) {
   complete_trips <- data[data$Returns == "Yes", ]
   colony <- config$colony
   tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)

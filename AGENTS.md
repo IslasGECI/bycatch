@@ -93,7 +93,7 @@ Each commit message follows this format:
   `NAMESPACE` is gitignored; `man/` files are untracked. Roxygen2 `#'` tags in `R/*.R` are the source of truth — generated files are never committed manually.
 - **OO pattern**: R6 classes (not S3/S4) for stateful workflows like `Track2KBA_Wrapper`. Being gradually replaced by standalone `compute_*` functions (Phase 2).
 - **Compute/plot layer**: `compute_*` functions are pure (no I/O, no side effects), return lists or data.frames. `plot_*` functions are pure, return ggplot2 objects. Disk I/O lives only in exported `write_*` / `export_*` / `render_*` functions in `R/cli.R`.
-- **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_space_use` but never returned or cached.
+- **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
 - **Spatial**: Set `sf::sf_use_s2(FALSE)` before `track2KBA` / `adehabitatHR` operations incompatible with S2 geometry.
 - **C++**: C++17 via `.R/Makevars`.
 - **License**: AGPL-3.0-or-later.

@@ -115,7 +115,7 @@ Defines and returns a named list of command-line options for use in CLI tools.
 
 ## Compute layer (standalone)
 
-### `compute_space_use(data, config, levelUD, smoothing_method)`
+### `compute_individual_kde(data, config, levelUD, smoothing_method)`
 
 Projects tracks, estimates smoothing scale, and computes kernel density estimates
 (KDE) for each tracked individual.
@@ -134,7 +134,7 @@ Wraps `track2KBA::repAssess` with `bootTable=TRUE`. Suppresses the inline base R
 plot.
 
 - **Parameters:**
-  - `KDE_surface` (estUDm) — kernel density estimates from `compute_space_use`.
+  - `KDE_surface` (estUDm) — kernel density estimates from `compute_individual_kde`.
   - `tracks` (SpatialPointsDataFrame) — projected tracking data.
   - `levelUD` (numeric) — percentage contour level.
   - `n_iterations` (integer) — number of bootstrap iterations.
@@ -154,7 +154,7 @@ assessment. Wraps `track2KBA::findSite`.
 
 ### `compute_cache(data, config, levelUD, smoothing_method, n_iterations)`
 
-Composes `compute_space_use` + `compute_representative_assessment`. Calls
+Composes `compute_individual_kde` + `compute_representative_assessment`. Calls
 `repAssess` exactly once. Returns only the bootstrap output for caching.
 
 - **Parameters:**
