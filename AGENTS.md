@@ -69,7 +69,7 @@ This is the inverse of test-first: production code is removed first, then the te
 
 ## Package structure
 
-- **`R/`** — 8 files. Entrypoint: `cli.R` (exported CLI wrappers). Core logic: `representative_assess.R` (R6 class `Track2KBA_Wrapper` + standalone `compute_*` functions). Scale parameters: `get_kernels.R`. Fisheries data processing: `fisheries_process.R`.
+- **`R/`** — 8 files. Entrypoint: `cli.R` (exported CLI wrappers). Core logic: `representative_assess.R` (R6 class `Track2KBA_Wrapper` + standalone `compute_*` functions). Scale parameters: `get_kernels.R` (defines `compute_scale_parameters`). Fisheries data processing: `fisheries_process.R`.
 - **`tests/testthat/`** — 9 test files (8 fast, 4 slow in `slow/`). Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions.
   - `test_compute_individual_kde.R`, `test_compute_representative_assessment.R` — fast standalone `compute_*` tests.
   - `slow/test_compute_potential_kba.R` — slow standalone compute test (uses `findSite` with 10 individuals).

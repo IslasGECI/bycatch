@@ -202,9 +202,10 @@ Generates a summary table of trip characteristics from a `tripSplit` output.
   - `config_content` (list) — configuration list with element `colony` (tibble).
 - **Returns:** A data.frame with one row per trip and columns including trip ID, completeness status, and derived metrics.
 
-### `get_scale_parameters(tracks, trips_summary)`
+### `compute_scale_parameters(tracks, trips_summary)`
 
 Computes candidate smoothing parameter values for kernel density estimation.
+Wraps `track2KBA::findScale`.
 
 - **Parameters:**
   - `tracks` (SpatialPointsDataFrame) — projected tracking data.

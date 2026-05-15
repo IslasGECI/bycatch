@@ -1,21 +1,13 @@
 # Implementation Plan: Function Renaming and Architecture Restructuring
 
-## Objectives
-
-- Align function names with the project style guide
-  (verb prefix convention: `compute_*`, `plot_*`, `write_*`, `export_*`, `render_*`, etc.)
-- Replace ambiguous or outdated terminology:
-  `potential_site` → `potential_kba` (Key Biodiversity Area),
-  `assess` → `assessment`,
-  `individual_kernels` → `individual_kde`
-- Clearly separate the rename phase from the later write/render restructuring phase
-- Only exported functions are Disk I/O functions (`write_*`, `export_*`, `render_*`)
-- Internal pure functions (`compute_*`, `plot_*`) are never exposed in `R/cli.R`
-- The expensive bootstrap (`repAssess`) runs once; downstream functions consume cached results
+**Gold:** Complete Sprint 3 — add plot layer (`R/plot.R` with `plot_representative_assessment`, `plot_potential_kba`, `plot_individual_kde`).
 
 ## Style Guide: Function Naming Convention
 
-Reference: https://islas.dev/guia_de_estilo/STYLEGUIDE
+References:
+
+- https://islas.dev/guia_de_estilo/STYLEGUIDE
+- https://islas.dev/2026/03/20/desacoplamiento
 
 | Prefix | Role | Side effects | Scope |
 |--------|------|-------------|-------|
@@ -322,62 +314,6 @@ and `config-path`. This will require additional updates in
 | `make tests_fast` | All tests except `slow/` (~37s) | Every step that does NOT touch `render_*` functions |
 | `make tests` | `tests_fast` + `tests_slow` (~12min) | Every step that touches a `render_*` function or its test |
 
-### Sprint 1 — Rename 4 CLI functions ✅
-
-**✅ Steps 1–12 (12 commits):** `filter_data_between_dates` → `export_filtered_gps_between_dates`,
-`process_fisheries_data` → `export_filtered_fisheries`,
-`write_trips_summary` → `export_trips_summary`,
-`write_trips` → `export_trips`.
-
-### Sprint 2 — Add standalone compute functions (alongside R6 class)
-
-Each function follows **test-first**: 2 sub-steps per function. Tests live in individual `tests/testthat/test_compute_*.R` files (one per function). Pre-computed RDS fixtures (`tracks.rds`, `kde_20percent_sample.rds`, etc.) are reused from `test_representative_assess.R`.
-
-**✅ Steps 13a–13c (4 commits):** `compute_individual_kde` function originally
-created as `compute_space_use` (red → green), class assertions corrected
-(`estUDm`, `sf`), colony removed from return value.
-Commits: `56609f5`, `d8c7d62`, `b0a4596`, `588a661`.
-
-**Step 13d — Refactor: rename `compute_space_use` → `compute_individual_kde`**
-- File: `R/representative_assess.R`, `tests/testthat/test_compute_individual_kde.R`, `DOCS.md`
-- Action: Rename the standalone function to match the naming chain
-  (`compute_*` → `export_*` → `plot_*` → `render_*` for individual KDE).
-  Update all callers and docs.
-- Test: `make tests_fast`
-
-**Step 14a — Red: add test for `compute_representative_assessment`**
-- File: `tests/testthat/test_compute_representative_assessment.R`
-- Action: Add test that loads KDE surface + tracks RDS, calls `compute_representative_assessment(...)`, asserts result is a list with two data.frames: `assessment_summary` and `assessment_detail`. Check `assessment_summary$out ≈ 59.30424`.
-- Test: `make tests_fast`
-
-**Step 14b — Green: add `compute_representative_assessment`**
-- File: `R/representative_assess.R`
-- Action: Add standalone function wrapping `repAssess(bootTable = TRUE)` and extracting both summary and detail elements from the returned list
-- Signature: `(KDE_surface, tracks, levelUD, n_iterations)` → `list(assessment_summary, assessment_detail)`
-- Test: `make tests_fast`
-
-**Step 15a — Red: add test for `compute_potential_kba`**
-- File: `tests/testthat/slow/test_compute_potential_kba.R` (slow: uses `findSite` with 10 birds)
-- Action: Add test that loads KDE surface, calls `compute_potential_kba(...)`, asserts result is sf object
-- Test: `make tests_fast`
-
-**Step 15b — Green: add `compute_potential_kba`**
-- File: `R/representative_assess.R`
-- Action: Add standalone function wrapping `findSite()`
-- Signature: `(KDE_surface, represent, popSize, levelUD)` → `sf` object
-- Test: `make tests_fast`
-
-**Step 16a — Red: add test for `compute_cache`**
-- File: `tests/testthat/test_compute_cache.R`
-- Action: Add test that calls `compute_cache(...)`, asserts returned list has expected elements (assessment_summary, assessment_detail)
-- Test: `make tests_fast`
-
-**Step 16b — Green: add `compute_cache`**
-- File: `R/representative_assess.R`
-- Action: Add standalone function composing `compute_individual_kde` + `compute_representative_assessment`. Returns only the repAssess output — the cache is purely for avoiding re-running the expensive bootstrap. KDE_surface, UDPolygons, and tracks are NOT stored in the cache.
-- Returns: `list(assessment_summary, assessment_detail)`
-- Test: `make tests_fast`
-
 ### Sprint 3 — Add plot layer (new file `R/plot.R`)
 
 Each function follows **test-first**: 2 sub-steps per function. Tests go in `tests/testthat/test_plot.R` (new file). Assert the returned object is a ggplot2 object.
@@ -530,21 +466,12 @@ exercise these functions.**
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|
-| 1 — Rename 4 exports | 1–12 | ✅ done | — | 12 |
-| 2 — Add compute layer | ✅ **13a–16b** | **12 done** ✅ | — | **12** |
-| 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
+| 3 — Add plot layer (current) | 17a–19b | 6 ahead | — | 6 |
 | 4 — Add cache exports (incl. `export_individual_kde`) | 20a–23b | 8 ahead | — | 8 |
 | **5 — Restructure renders (artifact-read, no compute)** | **24–26** | — | **3 ahead** | **3** |
 | 6 — Remove R6 | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixture finalization** | **28–31** | — | **4 ahead** | **4** |
-| **Total** | **1–47** | **24 done / 22 planned** | **0 done / 7 planned** | **24 done / 46 planned** |
+| **Remaining** | **17–47** | **15 ahead** | **7 ahead** | **22 total** |
 
-**Key changes vs. original plan:**
-- Step 13d: Rename `compute_space_use` → `compute_individual_kde` (aligns naming chain).
-- Sprint 4 grows by 2 steps: `export_individual_kde` added so `render_individual_kde` never computes.
-- Sprint 5 rewritten: all three render functions read artifacts, not compute from scratch.
-  Runs after Sprint 4 (serial dependency). Slow tests use end-to-end artifact creation during migration.
-- Sprint 6: single step (R6 deleted directly, no delegation proxies).
-- Sprint 7: `render_individual_kde` signature is `(gpkg_path, png_path)` like the other two.
-  Step 31 finalizes pre-computed fixture artifacts, replacing the end-to-end preamble.
-- Sprint 5 depends on Sprint 4; all other sprints are independent.
+- Sprint 5 depends on Sprint 4 (serial dependency).
+- Sprint 7 depends on Sprint 5 (slow test files refer to render functions).
