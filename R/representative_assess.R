@@ -108,3 +108,13 @@ compute_representative_assessment <- function(KDE_surface, tracks, levelUD, n_it
     assessment_detail = result[[2]]
   )
 }
+
+compute_potential_kba <- function(KDE_surface, represent, popSize, levelUD) {
+  track2KBA::findSite(
+    KDE = KDE_surface,
+    represent = represent,
+    levelUD = levelUD,
+    popSize = popSize,
+    polyOut = TRUE
+  )
+}
