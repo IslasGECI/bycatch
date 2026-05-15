@@ -88,3 +88,23 @@ compute_individual_kde <- function(data, config, levelUD, smoothing_method) {
     tracks = tracks
   )
 }
+
+compute_representative_assessment <- function(KDE_surface, tracks, levelUD, n_iterations) {
+  seed <- 2
+  grDevices::png(tempfile())
+  result <- withr::with_seed(
+    seed,
+    track2KBA::repAssess(
+      tracks = tracks,
+      KDE = KDE_surface,
+      levelUD = levelUD,
+      iteration = n_iterations,
+      bootTable = TRUE
+    )
+  )
+  grDevices::dev.off()
+  list(
+    assessment_summary = result[[1]],
+    assessment_detail = result[[2]]
+  )
+}
