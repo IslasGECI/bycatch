@@ -269,7 +269,7 @@ export_filtered_gps_between_dates(gps_csv, output_csv, ...)
    no auto-detection, no magical caching. Fail gracefully on missing inputs.
 
 3. **No `render_*` computes** — Every `render_*` function reads a pre-computed
-   artifact and never calls `compute_*` or `plot_*` with fresh computation. The
+   artifact and never calls `compute_*`. The
    create phase (`export_*`, `write_*`) produces the artifact; the render phase
    (`render_*`) consumes it. `render_*` never resolves its own dependencies — an
    orchestrator (Make in `bycatch_thesis`) runs the create phase before the render
@@ -284,7 +284,7 @@ export_filtered_gps_between_dates(gps_csv, output_csv, ...)
 5. **Backwards compatibility is not a concern** — downstream `bycatch_thesis`
    will be updated separately.
 
-6. **The `.rds` stores ONLY the `repAssess` output**: `assessment_summary`
+6. **The `.rds` stores ONLY the `repAssess` output and ALL the `repAssess` output**: `assessment_summary`
    data.frame (single row: `out`, `asym`, `Rep70`, `Rep95`) and `assessment_detail`
    data.frame (full iteration table). KDE_surface, UDPolygons, and tracks are
    fast to recompute and are never cached. Colony is only used internally by

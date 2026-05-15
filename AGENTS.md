@@ -79,7 +79,7 @@ GitHub Actions (`.github/workflows/actions.yml`): `docker build` → `make check
 ## Commit conventions
 
 Each commit message follows this format:
-- **Gitmoji** prefix matching the change type (🔥 remove, 🗑️ deprecate, 📝 docs, 🏁 plan, etc.).
+- **Gitmoji** prefix matching the change type (🔥 remove, 🗑️ deprecate, 📝 docs, 🧩 🚧 small step or a bigger plan, etc.).
 - **Imperative verb** immediately after the gitmoji.
 - **Summary** under 72 characters.
 - **Blank second line.**
