@@ -319,8 +319,8 @@ and `config-path`. This will require additional updates in
 
 | Command | What it runs | When to use |
 |---|---|---|
-| `make tests_fast` | All tests except `test_cli_slow.R` (~22s) | Every step that does NOT touch `render_*` functions |
-| `make tests` | `tests_fast` + `tests_slow` (~5min) | Every step that touches a `render_*` function or its test |
+| `make tests_fast` | All tests except `slow/` (~37s) | Every step that does NOT touch `render_*` functions |
+| `make tests` | `tests_fast` + `tests_slow` (~12min) | Every step that touches a `render_*` function or its test |
 
 ### Sprint 1 — Rename 4 CLI functions ✅
 
@@ -331,7 +331,7 @@ and `config-path`. This will require additional updates in
 
 ### Sprint 2 — Add standalone compute functions (alongside R6 class)
 
-Each function follows **test-first**: 2 sub-steps per function. The test goes in `tests/testthat/test_compute.R` (new file). Pre-computed RDS fixtures (`tracks.rds`, `kde_20percent_sample.rds`, etc.) are reused from `test_representative_assess.R`.
+Each function follows **test-first**: 2 sub-steps per function. Tests live in individual `tests/testthat/test_compute_*.R` files (one per function). Pre-computed RDS fixtures (`tracks.rds`, `kde_20percent_sample.rds`, etc.) are reused from `test_representative_assess.R`.
 
 **✅ Steps 13a–13c (4 commits):** `compute_individual_kde` function originally
 created as `compute_space_use` (red → green), class assertions corrected
@@ -339,14 +339,14 @@ created as `compute_space_use` (red → green), class assertions corrected
 Commits: `56609f5`, `d8c7d62`, `b0a4596`, `588a661`.
 
 **Step 13d — Refactor: rename `compute_space_use` → `compute_individual_kde`**
-- File: `R/representative_assess.R`, `tests/testthat/test_compute.R`, `DOCS.md`
+- File: `R/representative_assess.R`, `tests/testthat/test_compute_individual_kde.R`, `DOCS.md`
 - Action: Rename the standalone function to match the naming chain
   (`compute_*` → `export_*` → `plot_*` → `render_*` for individual KDE).
   Update all callers and docs.
 - Test: `make tests_fast`
 
 **Step 14a — Red: add test for `compute_representative_assessment`**
-- File: `tests/testthat/test_compute.R`
+- File: `tests/testthat/test_compute_representative_assessment.R`
 - Action: Add test that loads KDE surface + tracks RDS, calls `compute_representative_assessment(...)`, asserts result is a list with two data.frames: `assessment_summary` and `assessment_detail`. Check `assessment_summary$out ≈ 59.30424`.
 - Test: `make tests_fast`
 
@@ -357,7 +357,7 @@ Commits: `56609f5`, `d8c7d62`, `b0a4596`, `588a661`.
 - Test: `make tests_fast`
 
 **Step 15a — Red: add test for `compute_potential_kba`**
-- File: `tests/testthat/test_compute.R`
+- File: `tests/testthat/slow/test_compute_potential_kba.R` (slow: uses `findSite` with 10 birds)
 - Action: Add test that loads KDE surface, calls `compute_potential_kba(...)`, asserts result is sf object
 - Test: `make tests_fast`
 
@@ -368,7 +368,7 @@ Commits: `56609f5`, `d8c7d62`, `b0a4596`, `588a661`.
 - Test: `make tests_fast`
 
 **Step 16a — Red: add test for `compute_cache`**
-- File: `tests/testthat/test_compute.R`
+- File: `tests/testthat/test_compute_cache.R`
 - Action: Add test that calls `compute_cache(...)`, asserts returned list has expected elements (assessment_summary, assessment_detail)
 - Test: `make tests_fast`
 
@@ -486,8 +486,8 @@ temp artifacts). After Sprint 7, swap to pre-computed fixture files in
 R6 class is no longer used by CLI (Sprint 5 removed those callers). Only `test_representative_assess.R` (fast) exercises R6 methods via `Wrapper_Tester`.
 
 **Step 27 — Delete R6 class and consolidate tests**
-- File: `R/representative_assess.R`, `tests/testthat/test_representative_assess.R`, `tests/testthat/test_compute.R`
-- Action: Delete the `Track2KBA_Wrapper` definition and `Wrapper_Tester`. Move unique assertions from `test_representative_assess.R` into `test_compute.R`:
+- File: `R/representative_assess.R`, `tests/testthat/test_representative_assess.R`
+- Action: Delete the `Track2KBA_Wrapper` definition and `Wrapper_Tester`. Move unique assertions from `test_representative_assess.R` into the per-function `test_compute_*.R` files:
   - Area checks from "Get KDE" (`expected_area = 17929`, `expected_area = 44250`) → into the `compute_individual_kde` test block.
   - `out ≈ 59.30424` check → into the `compute_representative_assessment` test block.
   - Scale dictionary name check (`"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`) → into the `get_scale_parameters` test block in `test_kernels.R`.
@@ -502,22 +502,22 @@ first, output last). **Steps 28–30 require `make tests` because slow tests
 exercise these functions.**
 
 **Step 28 — Update `render_representative_assessment` signature**
-- File: `R/cli.R`, `tests/testthat/slow/test_cli_slow.R`
+- File: `R/cli.R`, `tests/testthat/slow/test_render_representative_assessment.R`
 - Action: Change from `(options)` to `(rds_path, png_path)`. Update slow test.
 - Test: `make tests`
 
 **Step 29 — Update `render_potential_kba` signature**
-- File: `R/cli.R`, `tests/testthat/slow/test_cli_slow.R`
+- File: `R/cli.R`, `tests/testthat/slow/test_render_potential_kba.R`
 - Action: Change from `(options)` to `(gpkg_path, png_path)`. Update slow test.
 - Test: `make tests`
 
 **Step 30 — Update `render_individual_kde` signature**
-- File: `R/cli.R`, `tests/testthat/slow/test_cli_slow.R`
+- File: `R/cli.R`, `tests/testthat/slow/test_render_individual_kde.R`
 - Action: Change from `(options)` to `(gpkg_path, png_path)`. Update slow test.
 - Test: `make tests`
 
 **Step 31 — Replace end-to-end test artifacts with pre-computed fixtures**
-- File: `tests/testthat/slow/test_cli_slow.R`, new files in `tests/data/`
+- File: `tests/testthat/slow/test_render_*.R`, new files in `tests/data/`
 - Action: Create fixture `.rds` (assessment_detail) and fixture `.gpkg` files
   (KBA polygons, UDPolygons) in `tests/data/`. Replace the Sprint 5 end-to-end
   artifact-creation preamble in each slow test with a direct path to the fixture.
@@ -531,13 +531,13 @@ exercise these functions.**
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|
 | 1 — Rename 4 exports | 1–12 | ✅ done | — | 12 |
-| 2 — Add compute layer | ✅ **13a–13c**, **13d–16b** | **4 done / 8 remaining** | — | **5 / 12** |
+| 2 — Add compute layer | ✅ **13a–16b** | **12 done** ✅ | — | **12** |
 | 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
 | 4 — Add cache exports (incl. `export_individual_kde`) | 20a–23b | 8 ahead | — | 8 |
 | **5 — Restructure renders (artifact-read, no compute)** | **24–26** | — | **3 ahead** | **3** |
 | 6 — Remove R6 | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixture finalization** | **28–31** | — | **4 ahead** | **4** |
-| **Total** | **1–47** | **19 done / 28 planned** | **0 done / 7 planned** | **19 done / 46 planned** |
+| **Total** | **1–47** | **24 done / 22 planned** | **0 done / 7 planned** | **24 done / 46 planned** |
 
 **Key changes vs. original plan:**
 - Step 13d: Rename `compute_space_use` → `compute_individual_kde` (aligns naming chain).
