@@ -503,6 +503,11 @@ from `tests/data/` — no mocks.
 - Action: Add function taking UDPolygons → returns ggplot2 map (replaces `mapKDE`, no colony)
 - Test: `make tests_fast`
 
+**Step 19c — Update `bycatch_thesis` to-do list**
+- File: `../bycatch_thesis/TODO.md`
+- Action: Add note: Sprint 3 adds three `plot_*` functions (internal, not exported). `render_*` functions will be restructured in Sprint 5 to use these instead of `track2KBA` base-R plots. No immediate Makefile impact.
+- Test: N/A
+
 ### Sprint 4 — Add new `create_*` exported functions
 
 Each function follows **test-first**: 2 sub-steps per function. Tests go in
@@ -560,6 +565,11 @@ test with `tempfile()` paths.
   `datapackage.json`
 - Test: `make tests_fast`
 
+**Step 23c — Update `bycatch_thesis` to-do list**
+- File: `../bycatch_thesis/TODO.md`
+- Action: Add note: Sprint 4 adds four `create_*` exported functions (`create_individual_kde`, `create_processed_data`, `create_potential_kba`, `create_representative_assessment`). These are new CLI entry points for data artifact generation. The Makefile may add targets for them.
+- Test: N/A
+
 ### Sprint 5 — Restructure render functions to skip R6 class
 
 Runs **after Sprint 4** (serial dependency). The create-phase functions from
@@ -585,12 +595,17 @@ temp artifacts). After Sprint 7, swap to pre-computed fixture files in
   `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
 - Test: `make tests`
 
-**Step 26 — Switch `render_individual_kde` to artifact-reading**
+**Step 26a — Switch `render_individual_kde` to artifact-reading**
 - File: `R/cli.R`
 - Action: Replace R6 class usage + `mapKDE()` with `sf::st_read(gpkg_path)` →
   `plot_individual_kde(UDPolygons)` + `ggsave()`. Still accepts `options` list (which now must
   contain `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
 - Test: `make tests`
+
+**Step 26b — Update `bycatch_thesis` to-do list**
+- File: `../bycatch_thesis/TODO.md`
+- Action: Add note: Sprint 5 restructures `render_*` functions to read pre-computed artifacts instead of running the R6 class. The options list now requires `rds-path` or `gpkg-path` in addition to `output-path`. The `data-path` and `config-path` arguments are no longer needed for render calls.
+- Test: N/A
 
 ### Sprint 6 — Remove R6 class and consolidate to `R/compute.R`
 
@@ -625,6 +640,11 @@ R6 class is no longer used by CLI (Sprint 5 removed those callers). Only
 `test_fisheries_process.R`, `test_kernels.R`) — only the function locations under
 test change. Renaming test files is optional and not required.
 
+**Step 27b — Update `bycatch_thesis` to-do list**
+- File: `../bycatch_thesis/TODO.md`
+- Action: Add note: Sprint 6 removes the R6 class `Track2KBA_Wrapper` and consolidates all `compute_*` functions into `R/compute.R`. No direct impact on exported function signatures.
+- Test: N/A
+
 ### Sprint 7 — Signature cleanup and fixture finalization
 
 Change function signatures from `(options)` to explicit artifact paths (input
@@ -653,6 +673,11 @@ exercise these functions.**
   artifact-creation preamble in each slow test with a direct path to the fixture.
   The slow test now only tests the render pipeline: fixture → plot → PNG.
 - Test: `make tests`
+
+**Step 32 — Update `bycatch_thesis` to-do list**
+- File: `../bycatch_thesis/TODO.md`
+- Action: Add note: Sprint 7 changes `render_*` signatures from `(options)` to explicit parameters: `render_potential_kba(gpkg_path, png_path)`, `render_representative_assessment(rds_path, png_path)`, `render_individual_kde(gpkg_path, png_path)`. The Makefile `Rscript -e` calls must be updated to pass artifact paths directly instead of the options list. Also, the slow render tests now read pre-computed fixture files instead of calling `create_*` in the preamble.
+- Test: N/A
 
 ---
 
