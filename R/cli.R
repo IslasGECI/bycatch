@@ -1,3 +1,12 @@
+.adapt_config <- function(config_path) {
+  json_content <- rjson::fromJSON(file = config_path)
+  json_content$colony <- tibble::tibble(
+    Longitude = json_content$lon_colony,
+    Latitude  = json_content$lat_colony
+  )
+  json_content
+}
+
 #' Render Potential KBA
 #'
 #' Reads GPS data and configuration, computes the representative assessment and
@@ -17,7 +26,7 @@
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 render_potential_kba <- function(options) {
-  config_content <- read_config(options[["config-path"]])
+  config_content <- .adapt_config(options[["config-path"]])
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
   n_iterations <- options[["n-iterations"]]
@@ -49,7 +58,7 @@ render_potential_kba <- function(options) {
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 render_representative_assessment <- function(options) {
-  config_content <- read_config(options[["config-path"]])
+  config_content <- .adapt_config(options[["config-path"]])
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
   smoothing_method <- options[["smoothing-method"]]
@@ -76,7 +85,7 @@ render_representative_assessment <- function(options) {
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 render_individual_kde <- function(options) {
-  config_content <- read_config(options[["config-path"]])
+  config_content <- .adapt_config(options[["config-path"]])
   trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   percentage_distribution <- options[["percentage-distribution"]]
   smoothing_method <- options[["smoothing-method"]]
@@ -104,7 +113,7 @@ render_individual_kde <- function(options) {
 #' @return None. Called for its side effect of writing a summary to disk.
 #' @export
 create_trips_summary <- function(options) {
-  config_content <- read_config(options[["config-path"]])
+  config_content <- .adapt_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     compute_trips_summary(config_content) |>
     readr::write_csv(options[["output-path"]])
@@ -129,7 +138,7 @@ create_trips_summary <- function(options) {
 #' @return None. Called for its effect of writing trip data to disk.
 #' @export
 create_trips <- function(options, config_content) {
-  config_content <- read_config(options[["config-path"]])
+  config_content <- .adapt_config(options[["config-path"]])
   trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     compute_trips(config_content)
   trips@data |>
