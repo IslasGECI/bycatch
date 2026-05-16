@@ -87,7 +87,7 @@ render_individual_kde <- function(options) {
   ggplot2::ggsave(filename = options[["output-path"]], device = "png")
 }
 
-#' Export Trips Summary
+#' Create Trips Summary
 #'
 #' Generates and writes a summary of trips based on GPS data and configuration settings.
 #'
@@ -103,19 +103,19 @@ render_individual_kde <- function(options) {
 #'
 #' @return None. Called for its side effect of writing a summary to disk.
 #' @export
-export_trips_summary <- function(options) {
+create_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     get_summary_of_trips(config_content) |>
     readr::write_csv(options[["output-path"]])
 }
 
-#' Export Trips
+#' Create Trips
 #'
 #' Extracts and writes trip data based on GPS data and configuration settings.
 #'
 #' This function reads configuration and GPS data from the provided file paths,
-#' extracts trip data using `get_trips`, and writes the resulting data to the
+#' extracts trip data using `compute_trips`, and writes the resulting data to the
 #' specified output CSV file.
 #'
 #' @param options A named list containing the following elements:
@@ -128,7 +128,7 @@ export_trips_summary <- function(options) {
 #'
 #' @return None. Called for its effect of writing trip data to disk.
 #' @export
-export_trips <- function(options, config_content) {
+create_trips <- function(options, config_content) {
   config_content <- read_config(options[["config-path"]])
   trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     get_trips(config_content)
@@ -136,7 +136,7 @@ export_trips <- function(options, config_content) {
     readr::write_csv(options[["output-path"]])
 }
 
-#' Export Filtered Fisheries Data
+#' Create Filtered Fisheries Data
 #'
 #' Reads fisheries GPS data, filters by date and geographic boundaries,
 #' and writes the result to a CSV file.
@@ -154,7 +154,7 @@ export_trips <- function(options, config_content) {
 #'   }
 #' @return None. Called for its side effect of writing filtered data to disk.
 #' @export
-export_filtered_fisheries <- function(options) {
+create_filtered_fisheries <- function(options) {
   fisheries_raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   fisheries_data <- fisheries_raw_data |>
     filter_fisheries_by_date_and_lat_lon(
@@ -169,7 +169,7 @@ export_filtered_fisheries <- function(options) {
     readr::write_csv(options[["output-path"]])
 }
 
-#' Export Filtered GPS Data Between Dates
+#' Create Filtered GPS Data Between Dates
 #'
 #' Reads GPS data, filters it between two dates, and writes the result to a CSV file.
 #'
@@ -183,7 +183,7 @@ export_filtered_fisheries <- function(options) {
 #'   }
 #' @return None. Called for its side effect of writing filtered data to disk.
 #' @export
-export_filtered_gps_between_dates <- function(options) {
+create_filtered_gps_between_dates <- function(options) {
   raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   filtered_data <- raw_data |>
     filter_between_dates(

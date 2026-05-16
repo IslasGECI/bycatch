@@ -15,7 +15,7 @@ describe("filter gps data between dates", {
   )
   it("write figure", {
     testtools::if_exist_remove(output_path)
-    export_filtered_gps_between_dates(options)
+    create_filtered_gps_between_dates(options)
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
   })
@@ -33,7 +33,7 @@ describe("process fisheries data", {
   options <- list("data-path" = fisheries_path, "start" = start, "end" = end, "lat-min" = lat_min, "lat-max" = lat_max, "lon-min" = lon_min, "lon-max" = lon_max, "output-path" = output_path)
   it("write figure", {
     testtools::if_exist_remove(output_path)
-    export_filtered_fisheries(options)
+    create_filtered_fisheries(options)
     expect_true(testtools::exist_output_file(output_path))
     testtools::if_exist_remove(output_path)
   })
@@ -45,7 +45,7 @@ describe("Write trips summary", {
     trips_path <- "/workdir/tests/data/trips.csv"
     options <- list("data-path" = trips_path, "config-path" = config_path, "output-path" = output_path)
     testtools::if_exist_remove(output_path)
-    export_trips_summary(options)
+    create_trips_summary(options)
     expect_true(testtools::exist_output_file(output_path))
     obtained <- readr::read_csv(output_path, show_col_types = FALSE)
     expected_columns <- c("tripID", "n_locs", "departure", "return", "duration", "total_dist")
@@ -60,7 +60,7 @@ describe("Write trips geographic points", {
     gps_path <- "/workdir/tests/data/raw_gps_albatros_guadalupe.csv"
     options <- list("data-path" = gps_path, "config-path" = config_path, "output-path" = output_path)
     testtools::if_exist_remove(output_path)
-    export_trips(options)
+    create_trips(options)
     expect_true(testtools::exist_output_file(output_path))
     obtained <- readr::read_csv(output_path, show_col_types = FALSE)
     expected_columns <- c("tripID", "Latitude", "Longitude")
