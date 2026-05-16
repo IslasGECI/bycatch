@@ -20,6 +20,7 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 > **Note:** `devtools` is only available inside Docker. Run tests via `docker exec bycatch_code_ci make tests`. The suite takes ~12 minutes.
 > Fast tests (~37s) can be run with `make tests_fast`, which skips the slow tests
 > in `tests/testthat/slow/`. Slow tests require `make tests` (or `make tests_slow`).
+> After changing any file in `R/`, rebuild the package with `docker exec bycatch_code_ci make install` — the container has a stale installed version by default.
 >
 > Slow test timing (individual files, via `testthat::test_file`):
 >
@@ -138,6 +139,15 @@ Colony is kept only inside `compute_*` calls to `track2KBA` algorithms (`tripSpl
 - `make tests_file file=<path>` runs a single test file without commit/restore.
 - Coverage script: `tests/testthat/coverage.R` (uses `covr`, sends to codecov).
 - All paths in tests are `/workdir/…` — to run outside Docker, symlink or adjust paths.
+
+## Fixture scripts
+
+- `tests/src/create_test_fixtures.R` generates `.rds` fixture files in `tests/data/`.
+  Not part of the test suite — run once, commit the `.rds` files. Rerun when test
+  fixtures need regeneration: `docker exec bycatch_code_ci Rscript tests/src/create_test_fixtures.R`.
+- The script calls internal `compute_*` functions via `bycatch:::` (e.g.,
+  `bycatch:::compute_individual_kde()`). Internal functions are never exported;
+  use `bycatch:::` outside the package namespace.
 
 ## CI
 

@@ -68,21 +68,14 @@ methods, exported CLI functions, and tests were updated atomically.
 
 | Sprint | Status |
 |--------|--------|
-| Sprint 1 — Compute layer foundation | ✅ Done |
-| Sprint 2 — Additional preparation | ✅ Done |
-| Pre-work Step P1 — Rename `export_*` to `create_*` | ✅ Done |
-| Pre-work Step P2 — Rename `get_*` to `compute_*` | ✅ Done |
-| Pre-work Step P3 — Rename `filter_*` to `compute_filtered_*` | ✅ Done |
-| Pre-work Step P4 — Replace `read_config` with `.adapt_config` | ✅ Done |
-| Pre-work Step P5 — Add `sf_use_s2` save/restore to `compute_*` | ✅ Done |
-| Pre-work Step P6 — Remove colony from `render_individual_kde` | ⬜ Next |
-| Pre-work Step P7 — Create fixture generation script | ⬜ Pending |
-| Pre-work Step P8 — Note for `bycatch_thesis` | ⬜ Pending |
-| Sprint 3 — Add plot layer | ⬜ Pending |
-| Sprint 4 — Add new `create_*` exported functions | ⬜ Pending |
-| Sprint 5 — Restructure render functions to skip R6 class | ⬜ Pending |
-| Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ Pending |
-| Sprint 7 — Signature cleanup and fixture finalization | ⬜ Pending |
+| Pre-work Step P6 — Remove colony from `render_individual_kde` | 🗑️ Skipped |
+| Pre-work Step P7 — Create fixture generation script | ✅ Done |
+| Pre-work Step P8 — Note for `bycatch_thesis` | ✅ Done |
+| Sprint 3 — Add plot layer | ⬜ Next |
+| Sprint 4 — Add new `create_*` exported functions | ⬜ |
+| Sprint 5 — Restructure render functions to skip R6 class | ⬜ |
+| Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ |
+| Sprint 7 — Signature cleanup and fixture finalization | ⬜ |
 | Sprint 8 (potential) — Inline `compute_cache` into `create_processed_data` | ⬜ Maybe |
 
 ---
@@ -444,12 +437,14 @@ No behavioral changes, no new functionality. Run `make tests_fast` after each st
 - Note: `compute_cache` delegates to other `compute_*` functions and does NOT need its own save/restore
 - Test: `make tests_fast`
 
-**Step P6 — Remove colony from `render_individual_kde`**
+**Step P6 — Remove colony from `render_individual_kde`** 🗑️ Skipped
 - File: `R/cli.R`
-- Action: Change `track2KBA::mapKDE(KDE = ..., colony = config_content$colony)` to `track2KBA::mapKDE(KDE = ...)` (drop colony argument)
-- Test: `make tests_fast`
+- Action: Dropped from plan. The colony-in-presentation problem is solved structurally
+  when Sprint 5 replaces `track2KBA::mapKDE` with `plot_individual_kde` (which has no
+  colony parameter). No separate intermediate step needed.
+- Test: N/A
 
-**Step P7 — Create test fixture generation script**
+**Step P7 — Create test fixture generation script** ✅ Done
 - File: `tests/src/create_test_fixtures.R` (new)
 - Action: One-time script that runs the real `compute_*` functions once and saves outputs:
   - `tests/data/assessment_detail.rds` — from `compute_representative_assessment`
@@ -458,7 +453,7 @@ No behavioral changes, no new functionality. Run `make tests_fast` after each st
 - This script is not part of the test suite — run once, commit fixtures
 - Test: N/A
 
-**Step P8 — Bycatch thesis note**
+**Step P8 — Bycatch thesis note** ✅ Done
 - File: `../bycatch_thesis/TODO.md`
 - Action: Add a note listing all renamed exported functions so `bycatch_thesis` can update its calls later
 - Test: N/A
@@ -684,21 +679,16 @@ exercise these functions.**
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|---|
-| Pre-work P1 — `export_*` to `create_*` | P1 | 1 | — | 1 ✅ |
-| Pre-work P2 — `get_*` to `compute_*` | P2 | 1 | — | 1 ✅ |
-| Pre-work P3 — `filter_*` to `compute_filtered_*` | P3 | 1 | — | 1 ✅ |
-| Pre-work P4 — `read_config` to `.adapt_config` | P4 | 1 | — | 1 ✅ |
-| Pre-work P5 — `sf_use_s2` guards | P5 | 1 | — | 1 ✅ |
-| Pre-work P6 — Colony removal | P6 | — | — | 1 ⬜ |
-| Pre-work P7 — Fixture script | P7 | — | — | 1 ⬜ |
-| Pre-work P8 — Thesis note | P8 | — | — | 1 ⬜ |
+|---|---|---|---|---|
+| Pre-work P6 — Colony removal | skipped | — | — | 🗑️ |
+| Pre-work P7 — Fixture script | done | — | — | ✅ |
+| Pre-work P8 — Thesis note | done | — | — | ✅ |
 | 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
 | 4 — Add cache exports | 20a–23b | 8 ahead | — | 8 |
 | **5 — Restructure renders** | **24–26** | — | **3 ahead** | **3** |
 | 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
-| **Remaining** | **P6–31** | **15 ahead** | **7 ahead** | **24 total** |
+| **Remaining** | **S3–S7** | **15 ahead** | **7 ahead** | **22 total** |
 
 - Sprint 5 depends on Sprint 4 (serial dependency).
 - Sprint 7 depends on Sprint 5 (slow test files refer to render functions).
