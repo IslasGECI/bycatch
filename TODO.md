@@ -2,47 +2,96 @@
 
 **Gold:** Complete Sprint 3 — add plot layer (`R/plot.R` with `plot_representative_assessment`, `plot_potential_kba`, `plot_individual_kde`).
 
+## Architecture Reference
+
+These three references define the architecture:
+
+- [Arquitectura en niveles y capas](https://islas.dev/2026/05/15/arquitectura)
+- [Guía de estilo](https://islas.dev/guia_de_estilo/STYLEGUIDE)
+- [Desacoplamiento de análisis y visualización](https://islas.dev/2026/03/20/desacoplamiento)
+
+### Levels
+
+| Level | Layer | Prefixes | Rules |
+|-------|-------|----------|-------|
+| **Level 1** | **Pure** (in-memory) | `compute_*`, `plot_*` | No I/O, no side effects. Cannot call Level 1 I/O. |
+| **Level 1** | **I/O** (disk) | `read_*`, `write_*`, `import_*`, `export_*` | Only I/O, no calculation. Cannot call Level 1 pure. |
+| **Level 2** | **Artifact** | `create_*`, `render_*` | Read → pure → write. Can call Level 1. Cannot call other Level 2. |
+
+Level 1 pure and Level 1 I/O are completely independent — they never call each other.
+
+Level 2 functions (`create_*`, `render_*`) compose Level 1 functions. Only Make orchestrates Level 2 calls.
+
 ## Style Guide: Function Naming Convention
 
-References:
+| Prefix | Role | Side effects | Scope | Level |
+|--------|------|-------------|-------|-------|
+| `compute_*` | In-memory calculation | None | Internal | 1 — Pure |
+| `plot_*` | In-memory visualization | None | Internal | 1 — Pure |
+| `create_*` | Read → compute → write | Disk I/O | Exported (`R/cli.R`) | 2 — Artifact |
+| `render_*` | Read → `plot_*` → write image | Disk I/O | Exported (`R/cli.R`) | 2 — Artifact |
+| `_*` | Private helper (underscore prefix) | Varies | Internal, called only by Level 2 | 2 — Helper |
 
-- https://islas.dev/guia_de_estilo/STYLEGUIDE
-- https://islas.dev/2026/03/20/desacoplamiento
-
-| Prefix | Role | Side effects | Scope |
-|--------|------|-------------|-------|
-| `compute_*` | In-memory calculation | None | Internal |
-| `plot_*` | In-memory visualization | None | Internal |
-| `export_*` | Write interoperable format (`.csv`, `.gpkg`) | Disk I/O | Exported (`R/cli.R`) |
-| `write_*` | Write native format (`.rds`) | Disk I/O | Exported (`R/cli.R`) |
-| `render_*` | Read artifact → `plot_*` → write image | Disk I/O | Exported (`R/cli.R`) |
-| `get_*` | Only if a complementary `set_*` exists | — | Internal |
-| `read_*` / `import_*` | Read from disk | Disk I/O | Internal |
+Level 1 I/O prefixes (`read_*`, `write_*`, `import_*`, `export_*`) are used by third-party packages directly — this project does not add new wrappers around them.
 
 Controlled exceptions:
 - `get_domain_specific_options()` — exported despite being a pure function (CLI helper).
 
+### `sf_use_s2(FALSE)` rule
+
+Only `compute_*` functions that call `track2KBA` operations get:
+```r
+previous_s2_setting <- sf::sf_use_s2(FALSE)
+on.exit(sf::sf_use_s2(previous_s2_setting))
+```
+
+`plot_*` functions never set `sf_use_s2` (they only use ggplot2).
+
+`create_*` / `render_*` are completely unaware of S2 state — `compute_*` self-manages.
+
+### Colony rule
+
+Colony is kept only inside `compute_*` functions that call `track2KBA` algorithms
+(`tripSplit`, `tripSummary`). Colony is removed from all presentation layers:
+`plot_*` and `render_*` functions never receive or use colony.
+
 ---
 
-## Phase 1 — Rename ✅
+## Sprint Progress
+
+### Phase 1 — Rename ✅
 
 All three renames committed (see CHANGELOG for details). The R6 wrapper
 methods, exported CLI functions, and tests were updated atomically.
 
+### Phase 2 — Write / Render Separation (Sprints 1–7)
+
+| Sprint | Status |
+|--------|--------|
+| Sprint 1 — Compute layer foundation | ✅ Done |
+| Sprint 2 — Additional preparation | ✅ Done |
+| Pre-work — Naming alignment | ⬜ Next |
+| Sprint 3 — Add plot layer | ⬜ Pending |
+| Sprint 4 — Add new `create_*` exported functions | ⬜ Pending |
+| Sprint 5 — Restructure render functions to skip R6 class | ⬜ Pending |
+| Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ Pending |
+| Sprint 7 — Signature cleanup and fixture finalization | ⬜ Pending |
+| Sprint 8 (potential) — Inline `compute_cache` into `create_processed_data` | ⬜ Maybe |
+
 ---
 
-## Phase 2 — Write / Render Separation
+## Core Architecture
 
-### Core principle: only Disk I/O is exported
+### Core principle: only Level 2 (create/render) is exported
 
-`R/cli.R` exposes **only** functions that perform Disk I/O: `write_*`, `export_*`, and
-`render_*`. Every exported function follows the **three-line pattern**:
+`R/cli.R` exposes **only** Level 2 functions: `create_*` and `render_*`.
+Every exported function follows the **three-line pattern**:
 
 ```
 exported_function <- function(options) {
-  input  <- read_from_disk(...)        # 1. Read
+  input  <- read_from_disk(...)        # 1. Read (3rd-party I/O call)
   result <- internal_function(input)   # 2. Internal pure call (one or zero)
-  write_to_disk(result, ...)           # 3. Write
+  write_to_disk(result, ...)           # 3. Write (3rd-party I/O call)
 }
 ```
 
@@ -52,7 +101,7 @@ cached results — the key constraint is that no internal call runs `repAssess`.
 write per exported function.
 
 Internal functions (`compute_*`, `plot_*`) have **no side effects**. They never
-read from or write to disk — all I/O is pushed to the exported layer.
+read from or write to disk — all I/O is pushed to the Level 2 layer.
 
 ### What changes
 
@@ -65,42 +114,43 @@ standalone `compute_*` functions replace both roles:
 - `compute_potential_kba()` wraps `findSite()` → returns sf object
 
 These are internal functions. The state is passed explicitly as parameters instead
-of being stored in an object. The R6 class file (`R/representative_assess.R`) is
-replaced by standalone functions.
+of being stored in an object. The R6 class is removed in Sprint 6.
 
-#### Existing function renames
+#### All `compute_*` functions consolidate to `R/compute.R`
 
-| Current name | New name | Reason |
-|---|---|---|
-| `write_trips` | `export_trips` | Writes CSV (interoperable) |
-| `write_trips_summary` | `export_trips_summary` | Writes CSV (interoperable) |
-| `process_fisheries_data` | `export_filtered_fisheries` | Writes CSV (interoperable) |
-| `filter_data_between_dates` | `export_filtered_gps_between_dates` | Writes CSV (interoperable) |
+After Sprint 6, all Level 1 pure compute functions live in a single file.
 
-The pure transform logic inside `process_fisheries_data` and
-`filter_data_between_dates` is extracted into internal `compute_*` functions so
-the exported layer follows the three-line pattern.
+### Internal functions (not exported, Level 1 — Pure)
 
-#### `create_*` prefix is not used
-
-The style guide defines `create_*` as "compute + write". This project does not
-use `create_*`. `compute_cache` is internal and pure (no Disk I/O). The exported
-function that serialises it is `write_processed_data`.
-
-### Internal functions (not exported)
-
-All live in `R/` files outside `R/cli.R`.
+All live in `R/compute.R` (after Sprint 6 consolidation).
 
 #### Compute layer
 
-| Function | Signature | Role | Location |
-|---|---|---|---|
-| `compute_individual_kde` | `(data, config, levelUD, smoothing_method)` | `projectTracks` + `tripSummary` + `get_scale_parameters` + `estSpaceUse` → `list(KDE_surface, UDPolygons, tracks)` | `R/representative_assess.R` |
-| `compute_representative_assessment` | `(KDE_surface, tracks, levelUD, n_iterations)` | `repAssess(bootTable=TRUE)` with null device → `list(assessment_summary, assessment_detail)` (two data.frames) | `R/representative_assess.R` |
-| `compute_potential_kba` | `(KDE_surface, represent, popSize, levelUD)` | `findSite()` → sf polygons | `R/representative_assess.R` |
-| `compute_cache` | `(data, config, levelUD, smoothing_method, n_iterations)` | Composes `compute_individual_kde` + `compute_representative_assessment` → `list(assessment_summary, assessment_detail)` | `R/representative_assess.R` |
+| Function | Signature | Role |
+|---|---|---|
+| `compute_individual_kde` | `(data, config, levelUD, smoothing_method)` | `projectTracks` + `tripSummary` + `compute_scale_parameters` + `estSpaceUse` → `list(KDE_surface, UDPolygons, tracks)` |
+| `compute_representative_assessment` | `(KDE_surface, tracks, levelUD, n_iterations)` | `repAssess(bootTable=TRUE)` with null device → `list(assessment_summary, assessment_detail)` |
+| `compute_potential_kba` | `(KDE_surface, represent, popSize, levelUD)` | `findSite()` → sf polygons |
+| `compute_cache` | `(data, config, levelUD, smoothing_method, n_iterations)` | Composes `compute_individual_kde` + `compute_representative_assessment` → `list(assessment_summary, assessment_detail)` |
+| `compute_trips` | `(data, config_content)` | `formatFields` + `tripSplit` → SpatialPointsDataFrame |
+| `compute_trips_summary` | `(trips, config_content)` | `tripSummary` → data.frame |
+| `compute_scale_parameters` | `(tracks, trips_summary)` | `findScale` → list(mag, href, scaleARS) |
+| `compute_filtered_fisheries_by_date_and_lat_lon` | `(fisheries_data, start, end, lat_min, lat_max, lon_min, lon_max)` | Date + lat/lon filtering pipeline |
+| `compute_filtered_fisheries_by_date` | `(fisheries_data, start, end)` | Date filter wrapper |
+| `compute_filtered_fisheries_by_lat_lon` | `(fisheries_data, lat_min, lat_max, lon_min, lon_max)` | Lat/lon filter |
+| `compute_filtered_between_dates` | `(data, start, end, date_column)` | Generic date filter |
 
-#### What `compute_cache` returns
+#### Plot layer
+
+| Function | Input | Output | Replaces |
+|---|---|---|---|
+| `plot_representative_assessment` | Full iteration data.frame | ggplot2 scatterplot | `repAssess` inline plot |
+| `plot_potential_kba` | sf polygons | ggplot2 map | `track2KBA::mapSite` (no colony) |
+| `plot_individual_kde` | UDPolygons | ggplot2 map | `track2KBA::mapKDE` (no colony) |
+
+All three live in `R/plot.R`.
+
+### What `compute_cache` returns
 
 The cache stores ONLY the output of `repAssess` — the expensive bootstrap.
 Everything else (KDE_surface, UDPolygons, tracks) is fast to recompute and
@@ -115,59 +165,52 @@ list(
 
 **Main objective achieved:** `repAssess` runs once inside `compute_cache`. Every
 downstream function (`compute_potential_kba`, `render_representative_assessment`,
-`export_representative_assessment`) reads `assessment_summary` or `assessment_detail`
+`create_representative_assessment`) reads `assessment_summary` or `assessment_detail`
 from cache — the expensive bootstrap never runs twice. Functions that only need
 fast computations (`compute_individual_kde` results) recompute them on demand from
 raw data.
 
-#### Plot layer
-
-All `plot_*` functions receive already-computed objects (no computation, no I/O).
-They return a ggplot2 object.
-
-| Function | Input | Output | Replaces |
-|---|---|---|---|
-| `plot_representative_assessment` | Full iteration data.frame | ggplot2 scatterplot | `repAssess` inline plot |
-| `plot_potential_kba` | sf polygons | ggplot2 map | `track2KBA::mapSite` |
-| `plot_individual_kde` | UDPolygons | ggplot2 map | `track2KBA::mapKDE` |
-
-All three live in `R/plot.R`.
-
-### Exported functions in `R/cli.R`
+### Exported functions in `R/cli.R` (Level 2)
 
 Every exported function follows the three-line pattern.
+
+#### Private helper
+
+| Function | Purpose | Calls |
+|---|---|---|
+| `_adapt_config` | Read raw JSON config + build colony tibble | `rjson::fromJSON` + `tibble::tibble` |
 
 #### Pipeline: processed data (cache)
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `write_processed_data` | raw CSV + config | `compute_cache(...)` → `repAssess` output | `.rds` (assessment_summary + assessment_detail) |
+| `create_processed_data` | raw CSV + config | `compute_cache(...)` → `repAssess` output | `.rds` (assessment_summary + assessment_detail) |
 
 #### Pipeline: trips
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `export_trips` | raw CSV + config | `get_trips(...)` | `.csv` |
-| `export_trips_summary` | raw CSV + config | `get_summary_of_trips(...)` | `.csv` |
+| `create_trips` | raw CSV + config | `compute_trips(...)` | `.csv` |
+| `create_trips_summary` | raw CSV + config | `compute_trips_summary(...)` | `.csv` |
 
 #### Pipeline: fisheries filtering
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `export_filtered_fisheries` | fisheries CSV | `filter_fisheries_by_date_and_lat_lon(...)` | `.csv` |
-| `export_filtered_gps_between_dates` | GPS CSV | `filter_between_dates(...)` | `.csv` |
+| `create_filtered_fisheries` | fisheries CSV | `compute_filtered_fisheries_by_date_and_lat_lon(...)` | `.csv` |
+| `create_filtered_gps_between_dates` | GPS CSV | `compute_filtered_between_dates(...)` | `.csv` |
 
 #### Pipeline: representative assessment
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `export_representative_assessment` | `.rds` cache | extract + format | `.csv` + `datapackage.json` |
+| `create_representative_assessment` | `.rds` cache | extract + format | `.csv` + `datapackage.json` |
 | `render_representative_assessment` | `.rds` cache | `plot_representative_assessment(assessment_detail)` | `.png` |
 
 Both read ONLY the `.rds` cache (assessment_summary + assessment_detail). No
 raw data needed. No computation re-run.
 
-`export_representative_assessment` writes the full iteration results as a
+`create_representative_assessment` writes the full iteration results as a
 [Tabular Data Package](https://specs.frictionlessdata.io/tabular-data-package/)
 (CSV + `datapackage.json` with field schemas and summary metadata). This enables
 external tools (Python, gnuplot) to reproduce the assessment scatterplot.
@@ -176,10 +219,10 @@ external tools (Python, gnuplot) to reproduce the assessment scatterplot.
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `export_potential_kba` | `.rds` cache + raw CSV + config | `compute_individual_kde` (fast) → `compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)` | `.gpkg` |
-| `render_potential_kba` | `.gpkg` (from export) | `plot_potential_kba(site)` | `.png` |
+| `create_potential_kba` | `.rds` cache + raw CSV + config | `compute_individual_kde` (fast) → `compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)` | `.gpkg` |
+| `render_potential_kba` | `.gpkg` (from create) | `plot_potential_kba(site)` | `.png` |
 
-`export_potential_kba` reads the cache for `assessment_summary$out` (the bootstrap
+`create_potential_kba` reads the cache for `assessment_summary$out` (the bootstrap
 result), then recomputes KDE_surface cheaply via `compute_individual_kde`, and passes
 both to `compute_potential_kba`. The expensive `repAssess` is never re-run.
 
@@ -187,68 +230,88 @@ both to `compute_potential_kba`. The expensive `repAssess` is never re-run.
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `export_individual_kde` | raw CSV + config | `compute_individual_kde` (fast, no bootstrap) | `.gpkg` (UDPolygons) |
-| `render_individual_kde` | `.gpkg` (from export) | `plot_individual_kde(UDPolygons)` | `.png` |
+| `create_individual_kde` | raw CSV + config | `compute_individual_kde` (fast, no bootstrap) | `.gpkg` (UDPolygons) |
+| `render_individual_kde` | `.gpkg` (from create) | `plot_individual_kde(UDPolygons)` | `.png` |
 
-`export_individual_kde` recomputes `compute_individual_kde` from raw data each
+`create_individual_kde` recomputes `compute_individual_kde` from raw data each
 time because the pipeline is fast (no `repAssess`). `render_individual_kde` reads
 the pre-computed artifact — it never calls `compute_*`.
 
 ### Data flow diagram
 
-```                                                 
-write_processed_data(data_path, config_path, rds_path, ...)                    
-  ├── read_csv(data_path) + read_config(config_path)                           
+```
+create_processed_data(data_path, config_path, rds_path, ...)                    
+  ├── rjson::fromJSON(config_path) + tibble::tibble   (via _adapt_config)
+  ├── readr::read_csv(data_path)                           
   ├── compute_cache(data, config, ...)          # internal, pure: runs repAssess ONCE
   │     ├── compute_individual_kde(...)               # fast: projectTracks → estSpaceUse             
   │     └── compute_representative_assessment(...)   # expensive: repAssess(bootTable=TRUE)      
   │                                                                                            
-  └── write_rds(                                                                               
+  └── saveRDS(                                                                               
         list(assessment_summary, assessment_detail),  # ONLY repAssess output cached            
         rds_path)                                                                               
-                                                                                                
-export_potential_kba(rds_path, data_path, config_path, popSize, levelUD, smoothing_method, gpkg_path)
+                                                                                                 
+create_potential_kba(rds_path, data_path, config_path, popSize, levelUD, smoothing_method, gpkg_path)
   ├── readRDS(rds_path)                         # reads assessment_summary$out                 
-  ├── read_csv(data_path) + read_config(config_path)                                           
+  ├── rjson::fromJSON + tibble::tibble          # via _adapt_config
+  ├── readr::read_csv(data_path)                                           
   ├── compute_individual_kde(data, config, levelUD, smoothing_method)  # fast, no repAssess          
   ├── compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)              
-  └── st_write(site, gpkg_path)                                                                
-                                                                                                
+  └── sf::st_write(site, gpkg_path)                                                                
+                                                                                                 
 render_potential_kba(gpkg_path, png_path)                                                      
-  ├── st_read(gpkg_path)                                                                        
+  ├── sf::st_read(gpkg_path)                                                                        
   ├── plot_potential_kba(site)                   # replaces mapSite (no colony)                
-  └── ggsave(png_path)                                                                          
-                                                                                                
+  └── ggplot2::ggsave(png_path)                                                                          
+                                                                                                 
 render_representative_assessment(rds_path, png_path)                                           
   ├── readRDS(rds_path)                         # reads assessment_detail                      
   ├── plot_representative_assessment(assessment_detail)  # reconstructs scatterplot             
-  └── ggsave(png_path)                                                                          
-                                                                                                
-export_individual_kde(data_path, config_path, levelUD, smoothing_method, gpkg_path)              
-  ├── read_csv(data_path) + read_config(config_path)                                            
+  └── ggplot2::ggsave(png_path)                                                                          
+                                                                                                 
+create_individual_kde(data_path, config_path, levelUD, smoothing_method, gpkg_path)              
+  ├── rjson::fromJSON + tibble::tibble          # via _adapt_config
+  ├── readr::read_csv(data_path)                                            
   ├── compute_individual_kde(data, config, levelUD, smoothing_method)  # fast, no repAssess          
-  └── st_write(UDPolygons, gpkg_path)                                                           
+  └── sf::st_write(UDPolygons, gpkg_path)                                                           
 
 render_individual_kde(gpkg_path, png_path)                                                      
-  ├── st_read(gpkg_path)                                                                        
+  ├── sf::st_read(gpkg_path)                                                                        
   ├── plot_individual_kde(UDPolygons)            # replaces mapKDE (no colony)                 
-  └── ggsave(png_path)                                                                          
-                                                                                                
-export_representative_assessment(rds_path, output_dir)                                         
+  └── ggplot2::ggsave(png_path)                                                                          
+                                                                                                 
+create_representative_assessment(rds_path, output_dir)                                         
   ├── readRDS(rds_path)                         # reads assessment_summary + assessment_detail 
   ├── (format iteration data + summary)                                                        
-  └── write_csv + write_datapackage_json                                                       
-                                                                                                
-export_filtered_fisheries(fisheries_csv, output_csv, ...)                                      
-  ├── read_csv                                                                                  
-  ├── filter_fisheries_by_date_and_lat_lon(...)  # internal pure transform                     
-  └── write_csv                                                                                 
-                                                                                                
-export_filtered_gps_between_dates(gps_csv, output_csv, ...)                                    
-  ├── read_csv                                                                                  
-  ├── filter_between_dates(...)                  # internal pure transform                     
-  └── write_csv                                                                                 
+  └── readr::write_csv + write_datapackage_json                                                       
+                                                                                                 
+create_filtered_fisheries(fisheries_csv, output_csv, ...)                                      
+  ├── readr::read_csv                                                                                  
+  ├── compute_filtered_fisheries_by_date_and_lat_lon(...)  # internal pure transform                     
+  └── readr::write_csv                                                                                 
+                                                                                                 
+create_filtered_gps_between_dates(gps_csv, output_csv, ...)                                    
+  ├── readr::read_csv                                                                                  
+  ├── compute_filtered_between_dates(...)                  # internal pure transform                     
+  └── readr::write_csv                                                                                 
 ```
+
+### Final file layout (after Sprint 7)
+
+```
+R/
+  compute.R              # ALL compute_* functions (Level 1 pure)
+  plot.R                 # ALL plot_* functions (Level 1 pure)
+  cli.R                  # ALL create_* + render_* + _adapt_config (Level 2)
+  get_domain_specific_options.R   # exported exception
+```
+
+Files removed during Phase 2:
+- `R/read_config.R` → replaced by `_adapt_config` in `R/cli.R` (pre-work)
+- `R/representative_assess.R` → folded into `R/compute.R` (Sprint 6)
+- `R/track_example.R` → folded into `R/compute.R` (Sprint 6)
+- `R/fisheries_process.R` → folded into `R/compute.R` (Sprint 6)
+- `R/get_kernels.R` → folded into `R/compute.R` (Sprint 6)
 
 ### Key design decisions
 
@@ -262,28 +325,40 @@ export_filtered_gps_between_dates(gps_csv, output_csv, ...)
 
 3. **No `render_*` computes** — Every `render_*` function reads a pre-computed
    artifact and never calls `compute_*`. The
-   create phase (`export_*`, `write_*`) produces the artifact; the render phase
+   create phase (`create_*`) produces the artifact; the render phase
    (`render_*`) consumes it. `render_*` never resolves its own dependencies — an
    orchestrator (Make in `bycatch_thesis`) runs the create phase before the render
    phase. If a pre-computed artifact is missing, the function errors with a message
-   telling the user which `write_*` or `export_*` to run first.
+   telling the user which `create_*` to run first.
 
 4. **`no side effects` is strict** — `compute_*` and `plot_*` functions never
    read or write files, never print to devices, never modify global state. All
-   I/O is the responsibility of the exported `write_*` / `export_*` / `render_*`
-   layer.
+   I/O is the responsibility of the Level 2 `create_*` / `render_*` layer.
 
-5. **Backwards compatibility is not a concern** — downstream `bycatch_thesis`
+5. **`sf_use_s2(FALSE)` is self-managed by `compute_*` functions** — Each
+   `compute_*` that calls `track2KBA` saves the previous setting, disables S2,
+   and restores on exit. `plot_*` and `create_*`/`render_*` are completely
+   unaware of S2 state.
+
+6. **Colony removed from presentation** — Colony is kept only inside `compute_*`
+   calls to `track2KBA` algorithms (`tripSplit`, `tripSummary`). `plot_*` and
+   `render_*` never receive or use colony.
+
+7. **Backwards compatibility is not a concern** — downstream `bycatch_thesis`
    will be updated separately.
 
-6. **The `.rds` stores ONLY the `repAssess` output and ALL the `repAssess` output**: `assessment_summary`
+8. **The `.rds` stores ONLY the `repAssess` output and ALL the `repAssess` output**: `assessment_summary`
    data.frame (single row: `out`, `asym`, `Rep70`, `Rep95`) and `assessment_detail`
    data.frame (full iteration table). KDE_surface, UDPolygons, and tracks are
    fast to recompute and are never cached. Colony is only used internally by
    `compute_individual_kde` to call `tripSummary`.
 
-7. **`plot_*` functions receive already-computed objects** — no computation, no
+9. **`plot_*` functions receive already-computed objects** — no computation, no
    I/O. They are called by `render_*` functions which read artifacts from disk.
+
+10. **Tests use real fixture files, not mocks** — plot tests read pre-computed
+    `.rds` fixtures from `tests/data/`. The one-time script
+    `tests/src/create_test_fixtures.R` generates them from real `compute_*` calls.
 
 ---
 
@@ -298,7 +373,7 @@ will break after Phase 1 and must be updated (not part of this plan):
 | `bycatch::plot_representative_assess(...)` | `bycatch::render_representative_assessment(...)` | `gps_albatross_50_percent_representative_assess_ars_*.png` |
 | `bycatch::plot_individual_kernels(...)` | `bycatch::render_individual_kde(...)` | `gps_albatross_50_percent_individuals_kernel_ars_*.png` |
 
-After Phase 2, the `render_*` and `export_*` function signatures change further.
+After Phase 2, the `render_*` and `create_*` function signatures change further.
 They will accept artifact paths (`.rds`, `.gpkg`) instead of raw `data-path`
 and `config-path`. This will require additional updates in
 `bycatch_thesis/Makefile` at that time.
@@ -314,13 +389,84 @@ and `config-path`. This will require additional updates in
 | `make tests_fast` | All tests except `slow/` (~37s) | Every step that does NOT touch `render_*` functions |
 | `make tests` | `tests_fast` + `tests_slow` (~12min) | Every step that touches a `render_*` function or its test |
 
+### Pre-Work — Naming alignment
+
+Before Sprint 3, rename all functions to match the architecture references.
+No behavioral changes, no new functionality. Run `make tests_fast` after each step.
+
+**Step P1 — Rename `export_*` to `create_*` (current functions)**
+- File: `R/cli.R`, `tests/testthat/test_cli.R`
+- Changes:
+  - `export_filtered_fisheries` → `create_filtered_fisheries`
+  - `export_filtered_gps_between_dates` → `create_filtered_gps_between_dates`
+  - `export_trips` → `create_trips`
+  - `export_trips_summary` → `create_trips_summary`
+- Test: `make tests_fast`
+
+**Step P2 — Rename `get_*` to `compute_*`**
+- File: `R/track_example.R`, `R/cli.R`, `tests/testthat/test_track_example.R`
+- Changes:
+  - `get_trips` → `compute_trips` (update callers in `create_trips`)
+  - `get_summary_of_trips` → `compute_trips_summary` (update callers in `create_trips_summary`)
+- Test: `make tests_fast`
+
+**Step P3 — Rename `filter_*` to `compute_filtered_*`**
+- File: `R/fisheries_process.R`, `R/cli.R`, `tests/testthat/test_fisheries_process.R`
+- Changes:
+  - `filter_fisheries_by_date_and_lat_lon` → `compute_filtered_fisheries_by_date_and_lat_lon`
+  - `filter_fisheries_by_date` → `compute_filtered_fisheries_by_date`
+  - `filter_fisheries_by_lat_lon` → `compute_filtered_fisheries_by_lat_lon`
+  - `filter_between_dates` → `compute_filtered_between_dates`
+- Update callers in `create_filtered_fisheries` and `create_filtered_gps_between_dates`
+- Test: `make tests_fast`
+
+**Step P4 — Replace `read_config` with `_adapt_config`**
+- File: Create `_adapt_config` in `R/cli.R`, delete `R/read_config.R`, delete `tests/testthat/test_config.R`
+- Action: `_adapt_config` does the same JSON read + colony tibble build as `read_config`, but lives in `R/cli.R` as a private Level 2 helper (underscore prefix)
+- Update all callers in `R/cli.R` to use `_adapt_config`
+- Test: `make tests_fast`
+
+**Step P5 — Add `sf_use_s2` save/restore to `compute_*` functions calling `track2KBA`**
+- File: `R/representative_assess.R`, `R/track_example.R`, `R/get_kernels.R`
+- Action: At the top of each `compute_*` that calls a `track2KBA` function, add:
+  ```r
+  previous_s2_setting <- sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(previous_s2_setting))
+  ```
+- Affected functions: `compute_individual_kde`, `compute_representative_assessment`, `compute_potential_kba`, `compute_trips`, `compute_trips_summary`, `compute_scale_parameters`
+- Note: `compute_cache` delegates to other `compute_*` functions and does NOT need its own save/restore
+- Test: `make tests_fast`
+
+**Step P6 — Remove colony from `render_individual_kde`**
+- File: `R/cli.R`
+- Action: Change `track2KBA::mapKDE(KDE = ..., colony = config_content$colony)` to `track2KBA::mapKDE(KDE = ...)` (drop colony argument)
+- Test: `make tests_fast`
+
+**Step P7 — Create test fixture generation script**
+- File: `tests/src/create_test_fixtures.R` (new)
+- Action: One-time script that runs the real `compute_*` functions once and saves outputs:
+  - `tests/data/assessment_detail.rds` — from `compute_representative_assessment`
+  - `tests/data/kba_polygons.rds` — from `compute_potential_kba`
+  - `tests/data/ud_polygons.rds` — UDPolygons extracted from KDE output
+- This script is not part of the test suite — run once, commit fixtures
+- Test: N/A
+
+**Step P8 — Bycatch thesis note**
+- File: `../bycatch_thesis/TODO.md`
+- Action: Add a note listing all renamed exported functions so `bycatch_thesis` can update its calls later
+- Test: N/A
+
 ### Sprint 3 — Add plot layer (new file `R/plot.R`)
 
-Each function follows **test-first**: 2 sub-steps per function. Tests go in `tests/testthat/test_plot.R` (new file). Assert the returned object is a ggplot2 object.
+Each function follows **test-first**: 2 sub-steps per function. Tests go in
+`tests/testthat/test_plot.R` (new file). Tests use real fixture `.rds` files
+from `tests/data/` — no mocks.
 
 **Step 17a — Red: add test for `plot_representative_assessment`**
 - File: `tests/testthat/test_plot.R`
-- Action: Add test calling `plot_representative_assessment(...)` with a mock data.frame, asserts `expect_s3_class(result, "ggplot")`
+- Action: Add test that reads `tests/data/assessment_detail.rds`, calls
+  `plot_representative_assessment(assessment_detail)`, asserts
+  `expect_s3_class(result, "ggplot")`
 - Test: `make tests_fast`
 
 **Step 17b — Green: add `plot_representative_assessment`**
@@ -330,7 +476,8 @@ Each function follows **test-first**: 2 sub-steps per function. Tests go in `tes
 
 **Step 18a — Red: add test for `plot_potential_kba`**
 - File: `tests/testthat/test_plot.R`
-- Action: Add test calling `plot_potential_kba(...)` with mock sf polygons, asserts ggplot class
+- Action: Add test that reads `tests/data/kba_polygons.rds`, calls
+  `plot_potential_kba(site)`, asserts `expect_s3_class(result, "ggplot")`
 - Test: `make tests_fast`
 
 **Step 18b — Green: add `plot_potential_kba`**
@@ -340,7 +487,8 @@ Each function follows **test-first**: 2 sub-steps per function. Tests go in `tes
 
 **Step 19a — Red: add test for `plot_individual_kde`**
 - File: `tests/testthat/test_plot.R`
-- Action: Add test calling `plot_individual_kde(...)` with mock UDPolygons, asserts ggplot class
+- Action: Add test that reads `tests/data/ud_polygons.rds`, calls
+  `plot_individual_kde(UDPolygons)`, asserts `expect_s3_class(result, "ggplot")`
 - Test: `make tests_fast`
 
 **Step 19b — Green: add `plot_individual_kde`**
@@ -348,48 +496,61 @@ Each function follows **test-first**: 2 sub-steps per function. Tests go in `tes
 - Action: Add function taking UDPolygons → returns ggplot2 map (replaces `mapKDE`, no colony)
 - Test: `make tests_fast`
 
-### Sprint 4 — Add new cache-based exported functions
+### Sprint 4 — Add new `create_*` exported functions
 
-Each function follows **test-first**: 2 sub-steps per function. Tests go in `tests/testthat/test_cache.R` (new file). Since these perform disk I/O, test with `tempfile()` paths.
+Each function follows **test-first**: 2 sub-steps per function. Tests go in
+`tests/testthat/test_cache.R` (new file). Since these perform disk I/O,
+test with `tempfile()` paths.
 
-**Step 20a — Red: add test for `export_individual_kde`**
+**Step 20a — Red: add test for `create_individual_kde`**
 - File: `tests/testthat/test_cache.R`
-- Action: Add test that creates a temp GPKG path, calls `export_individual_kde(...)` with paths to mock data + config, asserts GPKG file exists and is valid
+- Action: Add test that creates a temp GPKG path, calls `create_individual_kde(...)`
+  with paths to mock data + config, asserts GPKG file exists and is valid
 - Test: `make tests_fast`
 
-**Step 20b — Green: add `export_individual_kde`**
+**Step 20b — Green: add `create_individual_kde`**
 - File: `R/cli.R`
-- Action: Add exported function: read CSV + config → `compute_individual_kde(data, config, levelUD, smoothing_method)` → `st_write(UDPolygons, gpkg_path)`. This function recomputes the fast pipeline from scratch (no bootstrap).
+- Action: Add exported function: read CSV + config → `compute_individual_kde(...)` →
+  `sf::st_write(UDPolygons, gpkg_path)`. Recomputes fast pipeline from scratch (no bootstrap).
 - Test: `make tests_fast`
 
-**Step 21a — Red: add test for `write_processed_data`**
+**Step 21a — Red: add test for `create_processed_data`**
 - File: `tests/testthat/test_cache.R`
-- Action: Add test that creates a temp RDS path, calls `write_processed_data(...)`, asserts file exists and is valid RDS
+- Action: Add test that creates a temp RDS path, calls `create_processed_data(...)`,
+  asserts file exists and is valid RDS
 - Test: `make tests_fast`
 
-**Step 21b — Green: add `write_processed_data`**
+**Step 21b — Green: add `create_processed_data`**
 - File: `R/cli.R`
-- Action: Add exported function: read CSV + config → `compute_cache(...)` → `saveRDS()`. The RDS stores only assessment_summary + assessment_detail (the repAssess output). This is the ONLY function that runs the expensive bootstrap.
+- Action: Add exported function: read CSV + config → `compute_cache(...)` → `saveRDS()`.
+  The RDS stores only assessment_summary + assessment_detail (the repAssess output).
+  This is the ONLY function that runs the expensive bootstrap.
 - Test: `make tests_fast`
 
-**Step 22a — Red: add test for `export_potential_kba`**
+**Step 22a — Red: add test for `create_potential_kba`**
 - File: `tests/testthat/test_cache.R`
-- Action: Add test that writes a mock `.rds` cache (with `assessment_summary$out`), calls `export_potential_kba(...)` with paths to mock data + config, asserts GPKG file exists
+- Action: Add test that writes a mock `.rds` cache (with `assessment_summary$out`),
+  calls `create_potential_kba(...)` with paths to mock data + config, asserts GPKG file exists
 - Test: `make tests_fast`
 
-**Step 22b — Green: add `export_potential_kba`**
+**Step 22b — Green: add `create_potential_kba`**
 - File: `R/cli.R`
-- Action: Add exported function: `readRDS()` for cache `assessment_summary$out` + `read_csv`/`read_config` + `compute_individual_kde` (fast, recomputes KDE_surface) → `compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)` → `st_write()`. The expensive `repAssess` is never re-run.
+- Action: Add exported function: `readRDS()` for cache `assessment_summary$out` +
+  `_adapt_config` + `readr::read_csv` + `compute_individual_kde` (fast, recomputes KDE_surface)
+  → `compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)` →
+  `sf::st_write()`. The expensive `repAssess` is never re-run.
 - Test: `make tests_fast`
 
-**Step 23a — Red: add test for `export_representative_assessment`**
+**Step 23a — Red: add test for `create_representative_assessment`**
 - File: `tests/testthat/test_cache.R`
-- Action: Add test that writes a mock `.rds` cache, calls `export_representative_assessment(...)`, asserts CSV + datapackage.json exist
+- Action: Add test that writes a mock `.rds` cache, calls
+  `create_representative_assessment(...)`, asserts CSV + datapackage.json exist
 - Test: `make tests_fast`
 
-**Step 23b — Green: add `export_representative_assessment`**
+**Step 23b — Green: add `create_representative_assessment`**
 - File: `R/cli.R`
-- Action: Add exported function: `readRDS()` → format → `write_csv()` + `datapackage.json`
+- Action: Add exported function: `readRDS()` → format → `readr::write_csv()` +
+  `datapackage.json`
 - Test: `make tests_fast`
 
 ### Sprint 5 — Restructure render functions to skip R6 class
@@ -398,38 +559,64 @@ Runs **after Sprint 4** (serial dependency). The create-phase functions from
 Sprint 4 produce the artifacts that these render functions consume.
 
 **Testing note:** Slow tests use end-to-end artifact creation during migration
-(call the Sprint 4 `export_*`/`write_*` inside the test preamble to produce
+(call the Sprint 4 `create_*` inside the test preamble to produce
 temp artifacts). After Sprint 7, swap to pre-computed fixture files in
 `tests/data/`.
 
 **Step 24 — Switch `render_representative_assessment` to artifact-reading**
 - File: `R/cli.R`
-- Action: Replace `Track2KBA_Wrapper$new(...)` + `wrapper$compute_representative_assessment(...)` with `readRDS(rds_path)` → `plot_representative_assessment(assessment_detail)` + `ggsave()`. Still accepts `options` list (which now must contain `rds-path` in addition to `output-path`). Internal logic is pure artifact-reading.
+- Action: Replace `Track2KBA_Wrapper$new(...)` + `wrapper$compute_representative_assessment(...)`
+  with `readRDS(rds_path)` → `plot_representative_assessment(assessment_detail)` + `ggsave()`.
+  Still accepts `options` list (which now must contain `rds-path` in addition to `output-path`).
+  Internal logic is pure artifact-reading.
 - Test: `make tests`
 
 **Step 25 — Switch `render_potential_kba` to artifact-reading**
 - File: `R/cli.R`
-- Action: Replace R6 class usage + `mapSite()` with `st_read(gpkg_path)` → `plot_potential_kba(site)` + `ggsave()`. Still accepts `options` list (which now must contain `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
+- Action: Replace R6 class usage + `mapSite()` with `sf::st_read(gpkg_path)` →
+  `plot_potential_kba(site)` + `ggsave()`. Still accepts `options` list (which now must contain
+  `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
 - Test: `make tests`
 
 **Step 26 — Switch `render_individual_kde` to artifact-reading**
 - File: `R/cli.R`
-- Action: Replace R6 class usage + `mapKDE()` with `st_read(gpkg_path)` → `plot_individual_kde(UDPolygons)` + `ggsave()`. Still accepts `options` list (which now must contain `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
+- Action: Replace R6 class usage + `mapKDE()` with `sf::st_read(gpkg_path)` →
+  `plot_individual_kde(UDPolygons)` + `ggsave()`. Still accepts `options` list (which now must
+  contain `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
 - Test: `make tests`
 
-### Sprint 6 — Remove R6 class
+### Sprint 6 — Remove R6 class and consolidate to `R/compute.R`
 
-R6 class is no longer used by CLI (Sprint 5 removed those callers). Only `test_representative_assess.R` (fast) exercises R6 methods via `Wrapper_Tester`.
+R6 class is no longer used by CLI (Sprint 5 removed those callers). Only
+`test_representative_assess.R` (fast) exercises R6 methods via `Wrapper_Tester`.
 
-**Step 27 — Delete R6 class and consolidate tests**
-- File: `R/representative_assess.R`, `tests/testthat/test_representative_assess.R`
-- Action: Delete the `Track2KBA_Wrapper` definition and `Wrapper_Tester`. Move unique assertions from `test_representative_assess.R` into the per-function `test_compute_*.R` files:
-  - Area checks from "Get KDE" (`expected_area = 17929`, `expected_area = 44250`) → into the `compute_individual_kde` test block.
-  - `out ≈ 59.30424` check → into the `compute_representative_assessment` test block.
-  - Scale dictionary name check (`"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`) → into the `get_scale_parameters` test block in `test_kernels.R`.
-  - `get_tracks` returns `SpatialPointsDataFrame` → no unique coverage; covered by existing `compute_individual_kde` class assertions.
-- Delete `test_representative_assess.R`. No loss of coverage, no duplication.
+**Step 27 — Delete R6 class and consolidate compute functions**
+- File: `R/representative_assess.R`, `R/track_example.R`, `R/fisheries_process.R`,
+  `R/get_kernels.R`, `tests/testthat/test_representative_assess.R`
+- Action:
+  - Delete the `Track2KBA_Wrapper` definition and `Wrapper_Tester`
+  - Delete `test_representative_assess.R`
+  - Create `R/compute.R` containing ALL `compute_*` functions (moved from the four deleted files):
+    - `compute_individual_kde`, `compute_representative_assessment`, `compute_potential_kba`,
+      `compute_cache` (from `representative_assess.R`)
+    - `compute_trips`, `compute_trips_summary` (from `track_example.R`)
+    - `compute_filtered_fisheries_by_date_and_lat_lon`, `compute_filtered_fisheries_by_date`,
+      `compute_filtered_fisheries_by_lat_lon`, `compute_filtered_between_dates`
+      (from `fisheries_process.R`)
+    - `compute_scale_parameters` (from `get_kernels.R`)
+  - Move unique assertions from `test_representative_assess.R` into the per-function
+    `test_compute_*.R` files:
+    - Area checks from "Get KDE" (`expected_area = 17929`, `expected_area = 44250`)
+      → into the `compute_individual_kde` test block.
+    - `out ≈ 59.30424` check → into the `compute_representative_assessment` test block.
+    - Scale dictionary name check (`"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`)
+      → into the `compute_scale_parameters` test block in `test_kernels.R`.
+  - No loss of coverage, no duplication.
 - Test: `make tests_fast`
+
+**Note:** Test files stay in their current locations (`test_track_example.R`,
+`test_fisheries_process.R`, `test_kernels.R`) — only the function locations under
+test change. Renaming test files is optional and not required.
 
 ### Sprint 7 — Signature cleanup and fixture finalization
 
@@ -466,12 +653,13 @@ exercise these functions.**
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|
-| 3 — Add plot layer (current) | 17a–19b | 6 ahead | — | 6 |
-| 4 — Add cache exports (incl. `export_individual_kde`) | 20a–23b | 8 ahead | — | 8 |
-| **5 — Restructure renders (artifact-read, no compute)** | **24–26** | — | **3 ahead** | **3** |
-| 6 — Remove R6 | 27 | 1 ahead | — | 1 |
-| **7 — Signature cleanup + fixture finalization** | **28–31** | — | **4 ahead** | **4** |
-| **Remaining** | **17–47** | **15 ahead** | **7 ahead** | **22 total** |
+| Pre-work — Naming alignment | P1–P8 | 7 ahead | — | 7 |
+| 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
+| 4 — Add cache exports | 20a–23b | 8 ahead | — | 8 |
+| **5 — Restructure renders** | **24–26** | — | **3 ahead** | **3** |
+| 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
+| **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
+| **Remaining** | **P1–31** | **22 ahead** | **7 ahead** | **29 total** |
 
 - Sprint 5 depends on Sprint 4 (serial dependency).
 - Sprint 7 depends on Sprint 5 (slow test files refer to render functions).
