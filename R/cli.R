@@ -9,36 +9,21 @@
 
 #' Render Potential KBA
 #'
-#' Reads GPS data and configuration, computes the representative assessment and
-#' potential Key Biodiversity Area (KBA), and saves the resulting map as a PNG file.
+#' Reads a pre-computed GeoPackage file containing potential KBA polygons and
+#' saves the resulting map as a PNG file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
-#'     \item{config-path}{Path to the configuration file (JSON).}
-#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{gpkg-path}{Path to the input GeoPackage file with KBA polygons.}
 #'     \item{output-path}{Path where the output PNG plot will be saved.}
-#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
-#'     \item{n-iterations}{Integer specifying the number of iterations for the assessment.}
-#'     \item{population-size}{Integer specifying the population size for site identification.}
-#'     \item{smoothing-method}{Character string specifying the smoothing method for KDE.}
 #'   }
 #'
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 render_potential_kba <- function(options) {
-  config_content <- .adapt_config(options[["config-path"]])
-  trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  percentage_distribution <- options[["percentage-distribution"]]
-  n_iterations <- options[["n-iterations"]]
-  smoothing_method <- options[["smoothing-method"]]
-
-  sf::sf_use_s2(FALSE)
-  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
-  representative_assess <- wrapper$compute_representative_assessment(percentage_distribution, n_iterations)
-  site <- wrapper$compute_potential_kba(representative_assess, percentage_distribution, population_size = options[["population-size"]])
-  valid_site <- sf::st_make_valid(site)
-  track2KBA::mapSite(valid_site)
-  ggplot2::ggsave(filename = options[["output-path"]], device = "png")
+  site <- sf::st_read(options[["gpkg-path"]], quiet = TRUE)
+  plot <- plot_potential_kba(site)
+  ggplot2::ggsave(filename = options[["output-path"]], plot = plot, device = "png")
 }
 
 #' Render Representative Assessment
