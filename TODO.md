@@ -72,7 +72,8 @@ methods, exported CLI functions, and tests were updated atomically.
 | Pre-work Step P7 — Create fixture generation script | ✅ Done |
 | Pre-work Step P8 — Note for `bycatch_thesis` | ✅ Done |
 | Sprint 3 — Add plot layer | ✅ Done |
-| Sprint 4 — Add new `create_*` exported functions | ⬜ Next |
+| Sprint 4 — Add new `create_*` exported functions | ✅ Done |
+| Sprint 5 — Restructure render functions to skip R6 class | ⬜ Next |
 | Sprint 5 — Restructure render functions to skip R6 class | ⬜ |
 | Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ |
 | Sprint 7 — Signature cleanup and fixture finalization | ⬜ |
@@ -684,11 +685,11 @@ exercise these functions.**
 | Pre-work P7 — Fixture script | done | — | — | ✅ |
 | Pre-work P8 — Thesis note | done | — | — | ✅ |
 | 3 — Add plot layer | 17a–19b | ✅ (6) | — | 6 |
-| 4 — Add cache exports | 20a–23b | 8 ahead | — | 8 |
+| 4 — Add cache exports | 20a–23b | ✅ (8) | — | 8 |
 | **5 — Restructure renders** | **24–26** | — | **3 ahead** | **3** |
 | 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
-| **Remaining** | **S4–S7** | **9 ahead** | **7 ahead** | **16 total** |
+| **Remaining** | **S5–S7** | **1 ahead** | **7 ahead** | **8 total** |
 
 - Sprint 5 depends on Sprint 4 (serial dependency).
 - Sprint 7 depends on Sprint 5 (slow test files refer to render functions).
