@@ -230,3 +230,32 @@ create_individual_kde <- function(options) {
   kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
   sf::st_write(kde$UDPolygons, options[["output-path"]])
 }
+
+#' Create Processed Data
+#'
+#' Reads GPS data and configuration, runs the full bootstrap pipeline
+#' (compute_individual_kde + compute_representative_assessment) exactly once,
+#' and caches the assessment_summary and assessment_detail as an RDS file.
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output RDS file will be saved.}
+#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
+#'     \item{smoothing-method}{Character string specifying the smoothing method for KDE.}
+#'     \item{n-iterations}{Integer specifying the number of bootstrap iterations.}
+#'   }
+#'
+#' @return None. Called for its side effect of writing an RDS cache file to disk.
+#' @export
+create_processed_data <- function(options) {
+  config_content <- .adapt_config(options[["config-path"]])
+  data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  levelUD <- options[["percentage-distribution"]]
+  smoothing_method <- options[["smoothing-method"]]
+  n_iterations <- options[["n-iterations"]]
+
+  result <- compute_cache(data, config_content, levelUD, smoothing_method, n_iterations)
+  saveRDS(result, options[["output-path"]])
+}
