@@ -20,7 +20,6 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 > **Note:** `devtools` is only available inside Docker. Run tests via `docker exec bycatch_code_ci make tests`. The suite takes ~12 minutes.
 > Fast tests (~37s) can be run with `make tests_fast`, which skips the slow tests
 > in `tests/testthat/slow/`. Slow tests require `make tests` (or `make tests_slow`).
-> After changing any file in `R/`, rebuild the package with `docker exec bycatch_code_ci make install` — the container has a stale installed version by default.
 >
 > Slow test timing (individual files, via `testthat::test_file`):
 >
@@ -122,9 +121,9 @@ Colony is kept only inside `compute_*` calls to `track2KBA` algorithms (`tripSpl
 
 ## Package structure
 
-- **`R/`** — 6 files. Entrypoint: `cli.R` (Level 2 functions: `create_*`, `render_*`, `.adapt_config`). Compute layer: `representative_assess.R` (R6 class `Track2KBA_Wrapper` + standalone `compute_*` functions), `track_example.R` (`compute_trips`, `compute_trips_summary`), `fisheries_process.R` (`compute_filtered_*`), `get_kernels.R` (`compute_scale_parameters`). Exception: `get_domain_specific_options.R`.
-- **`tests/testthat/`** — 9 fast + 4 slow in `slow/`. Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions.
-  - Fast: `test_compute_individual_kde.R`, `test_compute_representative_assessment.R`, `test_compute_cache.R`, `test_cli.R`, `test_fisheries_process.R`, `test_get_domain_specific_options.R`, `test_kernels.R`, `test_representative_assess.R`, `test_track_example.R`.
+- **`R/`** — 7 files. Entrypoint: `cli.R` (Level 2 functions: `create_*`, `render_*`, `.adapt_config`). Compute layer: `representative_assess.R` (R6 class `Track2KBA_Wrapper` + standalone `compute_*` functions), `track_example.R` (`compute_trips`, `compute_trips_summary`), `fisheries_process.R` (`compute_filtered_*`), `get_kernels.R` (`compute_scale_parameters`). Plot layer: `plot.R` (internal `plot_*` functions). Exception: `get_domain_specific_options.R`.
+- **`tests/testthat/`** — 10 fast + 4 slow in `slow/`. Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions.
+  - Fast: `test_compute_individual_kde.R`, `test_compute_representative_assessment.R`, `test_compute_cache.R`, `test_cli.R`, `test_fisheries_process.R`, `test_get_domain_specific_options.R`, `test_kernels.R`, `test_plot.R`, `test_representative_assess.R`, `test_track_example.R`.
   - Slow: `slow/test_compute_potential_kba.R`, `slow/test_render_*.R`.
 - **`tests/data/`** — CSV and RDS fixtures. Paths hardcoded as `/workdir/tests/data/…` (Docker convention).
 - **`tests/src/`** — One-off scripts (e.g., `create_test_fixtures.R`). Not part of the test suite.
@@ -156,7 +155,7 @@ GitHub Actions (`.github/workflows/actions.yml`): `docker build` → `make check
 ## Commit conventions
 
 Each commit message follows this format:
-- **Gitmoji** prefix matching the change type (🔥 remove, 🗑️ deprecate, 📝 docs, 🧩 🚧 small step or a bigger plan, etc.).
+- **Gitmoji** prefix matching the change type (🔥 remove, 🗑️ deprecate, 📝 docs, 🛑🧪 Red phase of TDD, ✅🧪 Green phase of TDD, 🧩 🚧 small step of a bigger plan ).
 - **Imperative verb** immediately after the gitmoji.
 - **Summary** under 72 characters.
 - **Blank second line.**

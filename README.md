@@ -85,8 +85,15 @@ Results can also be fed into GIS tools (QGIS, GMT) for custom cartography.
   cached bootstrap results with fast-recomputed kernel densities).
 - **`create_representative_assessment()`** — Tabular Data Package export (CSV +
   `datapackage.json` schema) of the full bootstrap iteration results.
-- **`plot_potential_kba()`**, **`plot_individual_kde()`**, and **`plot_representative_assessment()`** —
-  ggplot2-based replacements for `track2KBA` base-R plots.
 - **Shared RDS caching** — the expensive `repAssess` bootstrap runs once per
   dataset; all downstream figures and exports read cached results.
+
+## What's new (v0.9.0-dev)
+
+- **Plot layer** — three new internal `plot_*` functions provide ggplot2-based
+  visualizations: `plot_representative_assessment()` (scatterplot),
+  `plot_potential_kba()` (sf map), `plot_individual_kde()` (sf map). These are
+  Level 1 Pure functions (no I/O, no side effects) and are not exported.
+  `render_*` functions (Sprint 5) will use them instead of `track2KBA` base-R
+  plots.
 

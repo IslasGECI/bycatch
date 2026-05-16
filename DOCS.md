@@ -113,6 +113,38 @@ Defines and returns a named list of command-line options for use in CLI tools.
 
 ---
 
+## Plot layer (Level 1 Pure — internal)
+
+### `plot_representative_assessment(assessment_detail)`
+
+Returns a ggplot2 scatterplot of inclusion rate vs sample size from the
+representative assessment bootstrap iterations.
+
+- **Parameters:**
+  - `assessment_detail` (data.frame) — full iteration table with columns `SampleSize`, `InclusionRate`, `iteration`, `pred`, `rep_est`, `is_rep`. Typically loaded from a cached `.rds` file.
+- **Returns:** A ggplot2 object.
+- **Notes:** Level 1 Pure — no I/O, no side effects. Called by `render_representative_assessment` (after Sprint 5).
+
+### `plot_potential_kba(site)`
+
+Returns a ggplot2 map of potential Key Biodiversity Area (KBA) polygons.
+
+- **Parameters:**
+  - `site` (sf) — polygons object with KBA site data, as returned by `compute_potential_kba()`. Typically loaded from a `.gpkg` file.
+- **Returns:** A ggplot2 object.
+- **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapSite` — no colony parameter. Called by `render_potential_kba` (after Sprint 5).
+
+### `plot_individual_kde(UDPolygons)`
+
+Returns a ggplot2 map of individual kernel density estimate (KDE) polygons.
+
+- **Parameters:**
+  - `UDPolygons` (sf) — utilization distribution polygons, as returned by `compute_individual_kde()`. Typically loaded from a `.gpkg` file.
+- **Returns:** A ggplot2 object.
+- **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapKDE` — no colony parameter. Called by `render_individual_kde` (after Sprint 5).
+
+---
+
 ## Compute layer (standalone)
 
 ### `compute_individual_kde(data, config, levelUD, smoothing_method)`

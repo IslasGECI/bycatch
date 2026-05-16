@@ -11,6 +11,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New internal function `compute_representative_assessment()` wraps `track2KBA::repAssess` with `bootTable=TRUE` and returns both `assessment_summary` and `assessment_detail` as separate data frames.
 - New internal function `compute_potential_kba()` wraps `track2KBA::findSite` with `polyOut=TRUE` and returns KBA polygons as an sf object.
 - New internal function `compute_cache()` composes `compute_individual_kde` and `compute_representative_assessment` into a single pipeline that runs `repAssess` exactly once, returning only the bootstrap output for downstream caching.
+- New internal function `plot_representative_assessment()` returns a ggplot2 scatterplot (InclusionRate vs SampleSize) from an `assessment_detail` data.frame. Level 1 Pure — no I/O, no side effects.
+- New internal function `plot_potential_kba()` returns a ggplot2 map from an sf polygons object. Replaces `track2KBA::mapSite` — no colony parameter. Level 1 Pure — no I/O, no side effects.
+- New internal function `plot_individual_kde()` returns a ggplot2 map from UDPolygons sf object. Replaces `track2KBA::mapKDE` — no colony parameter. Level 1 Pure — no I/O, no side effects.
 
 ### Changed
 - `filter_data_between_dates()` renamed to `create_filtered_gps_between_dates()` (was `export_filtered_gps_between_dates()`).
