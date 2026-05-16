@@ -70,7 +70,14 @@ methods, exported CLI functions, and tests were updated atomically.
 |--------|--------|
 | Sprint 1 — Compute layer foundation | ✅ Done |
 | Sprint 2 — Additional preparation | ✅ Done |
-| Pre-work — Naming alignment | ⬜ Next |
+| Pre-work Step P1 — Rename `export_*` to `create_*` | ✅ Done |
+| Pre-work Step P2 — Rename `get_*` to `compute_*` | ✅ Done |
+| Pre-work Step P3 — Rename `filter_*` to `compute_filtered_*` | ✅ Done |
+| Pre-work Step P4 — Replace `read_config` with `.adapt_config` | ✅ Done |
+| Pre-work Step P5 — Add `sf_use_s2` save/restore to `compute_*` | ✅ Done |
+| Pre-work Step P6 — Remove colony from `render_individual_kde` | ⬜ Next |
+| Pre-work Step P7 — Create fixture generation script | ⬜ Pending |
+| Pre-work Step P8 — Note for `bycatch_thesis` | ⬜ Pending |
 | Sprint 3 — Add plot layer | ⬜ Pending |
 | Sprint 4 — Add new `create_*` exported functions | ⬜ Pending |
 | Sprint 5 — Restructure render functions to skip R6 class | ⬜ Pending |
@@ -652,14 +659,21 @@ exercise these functions.**
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|
-| Pre-work — Naming alignment | P1–P8 | 7 ahead | — | 7 |
+|---|---|---|---|---|---|
+| Pre-work P1 — `export_*` to `create_*` | P1 | 1 | — | 1 ✅ |
+| Pre-work P2 — `get_*` to `compute_*` | P2 | 1 | — | 1 ✅ |
+| Pre-work P3 — `filter_*` to `compute_filtered_*` | P3 | 1 | — | 1 ✅ |
+| Pre-work P4 — `read_config` to `.adapt_config` | P4 | 1 | — | 1 ✅ |
+| Pre-work P5 — `sf_use_s2` guards | P5 | 1 | — | 1 ✅ |
+| Pre-work P6 — Colony removal | P6 | — | — | 1 ⬜ |
+| Pre-work P7 — Fixture script | P7 | — | — | 1 ⬜ |
+| Pre-work P8 — Thesis note | P8 | — | — | 1 ⬜ |
 | 3 — Add plot layer | 17a–19b | 6 ahead | — | 6 |
 | 4 — Add cache exports | 20a–23b | 8 ahead | — | 8 |
 | **5 — Restructure renders** | **24–26** | — | **3 ahead** | **3** |
 | 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
-| **Remaining** | **P1–31** | **22 ahead** | **7 ahead** | **29 total** |
+| **Remaining** | **P6–31** | **15 ahead** | **7 ahead** | **24 total** |
 
 - Sprint 5 depends on Sprint 4 (serial dependency).
 - Sprint 7 depends on Sprint 5 (slow test files refer to render functions).

@@ -17,7 +17,7 @@ potential Key Biodiversity Area (KBA), and saves the resulting map as a PNG file
     - `population-size` (integer) — population size for KBA site identification.
     - `smoothing-method` (character) — smoothing method for kernel density estimation.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
-- **Notes:** Disables S2 spherical geometry (`sf_use_s2`) for compatibility with `track2KBA`.
+- **Notes:** S2 spherical geometry is managed internally by `compute_*` functions — `render_*` is unaware of S2 state.
 
 ### `render_representative_assessment(options)`
 
@@ -47,7 +47,7 @@ for each tracked individual, and saves the resulting map as a PNG file.
     - `percentage-distribution` (integer) — percentage distribution for the KDE.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
 
-### `export_trips_summary(options)`
+### `create_trips_summary(options)`
 
 Generates a summary of trips from GPS data and configuration, and writes it to
 a CSV file.
@@ -60,7 +60,7 @@ a CSV file.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 - **Notes:** The output CSV contains columns `tripID`, `n_locs`, `departure`, `return`, `duration`, `total_dist`.
 
-### `export_trips(options, config_content)`
+### `create_trips(options, config_content)`
 
 Extracts individual foraging trips from GPS data and writes the result to a
 CSV file.
@@ -74,7 +74,7 @@ CSV file.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 - **Notes:** The output CSV contains columns `tripID`, `Latitude`, `Longitude`.
 
-### `export_filtered_fisheries(options)`
+### `create_filtered_fisheries(options)`
 
 Filters raw fisheries GPS data by date range and geographic bounding box, then
 writes the filtered data to a CSV file.
@@ -91,7 +91,7 @@ writes the filtered data to a CSV file.
     - `lon-max` (numeric) — maximum longitude for filtering.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 
-### `export_filtered_gps_between_dates(options)`
+### `create_filtered_gps_between_dates(options)`
 
 Filters GPS data between two inclusive dates and writes the result to a CSV file.
 
@@ -169,21 +169,21 @@ Composes `compute_individual_kde` + `compute_representative_assessment`. Calls
 
 ## Configuration
 
-### `read_config(config_path)`
+### `.adapt_config(config_path)`
 
 Reads a JSON configuration file and returns its content as a list with a
-parsed colony tibble.
+parsed colony tibble. Private helper used by `create_*` and `render_*` functions.
 
 - **Parameters:**
   - `config_path` (character) — path to the JSON configuration file.
-- **Returns:** A list with keys: `inner_buff` (numeric), `return_buff` (numeric), `duration` (numeric), `colony` (tibble with columns `Longitude`, `Latitude`).
+- **Returns:** A list with keys: `inner_buff` (numeric), `return_buff` (numeric), `duration` (numeric), `lat_colony` (numeric), `lon_colony` (numeric), `colony` (tibble with columns `Longitude`, `Latitude`).
 - **Errors:** File not found or invalid JSON (delegated to `rjson::fromJSON`).
 
 ---
 
 ## Track processing
 
-### `get_trips(data, config_content)`
+### `compute_trips(data, config_content)`
 
 Converts raw GPS data into a spatial data frame of individual foraging trips.
 
@@ -193,12 +193,12 @@ Converts raw GPS data into a spatial data frame of individual foraging trips.
 - **Returns:** A `SpatialPointsDataFrame` with trip assignments. Each row is a GPS fix annotated with trip ID.
 - **Notes:** Filters out non-returning trips (`rmNonTrip = TRUE`). Date-time format is `ymd_HMS`.
 
-### `get_summary_of_trips(trips, config_content)`
+### `compute_trips_summary(trips, config_content)`
 
 Generates a summary table of trip characteristics from a `tripSplit` output.
 
 - **Parameters:**
-  - `trips` (data.frame) — trip data from `get_trips`.
+  - `trips` (data.frame) — trip data from `compute_trips`.
   - `config_content` (list) — configuration list with element `colony` (tibble).
 - **Returns:** A data.frame with one row per trip and columns including trip ID, completeness status, and derived metrics.
 
@@ -216,7 +216,7 @@ Wraps `track2KBA::findScale`.
 
 ## Fisheries data processing
 
-### `filter_fisheries_by_date(fisheries_data, start, end)`
+### `compute_filtered_fisheries_by_date(fisheries_data, start, end)`
 
 Filters fisheries data rows within an inclusive date range.
 
@@ -226,7 +226,7 @@ Filters fisheries data rows within an inclusive date range.
   - `end` (character) — end date (`YYYY-MM-DD`, inclusive).
 - **Returns:** A filtered data.frame with rows whose `FechaRecepcionUnitrac` falls within `[start, end]`.
 
-### `filter_fisheries_by_lat_lon(fisheries_data, lat_min, lat_max, lon_min, lon_max)`
+### `compute_filtered_fisheries_by_lat_lon(fisheries_data, lat_min, lat_max, lon_min, lon_max)`
 
 Filters fisheries data rows within a geographic bounding box.
 
@@ -238,7 +238,7 @@ Filters fisheries data rows within a geographic bounding box.
   - `lon_max` (numeric) — maximum longitude.
 - **Returns:** A filtered data.frame with rows whose coordinates fall within the bounding box.
 
-### `filter_fisheries_by_date_and_lat_lon(fisheries_data, start, end, lat_min, lat_max, lon_min, lon_max)`
+### `compute_filtered_fisheries_by_date_and_lat_lon(fisheries_data, start, end, lat_min, lat_max, lon_min, lon_max)`
 
 Composes date-range and bounding-box filters on fisheries data.
 

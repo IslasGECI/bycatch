@@ -13,14 +13,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New internal function `compute_cache()` composes `compute_individual_kde` and `compute_representative_assessment` into a single pipeline that runs `repAssess` exactly once, returning only the bootstrap output for downstream caching.
 
 ### Changed
-- `filter_data_between_dates()` renamed to `export_filtered_gps_between_dates()`.
-- `process_fisheries_data()` renamed to `export_filtered_fisheries()`.
-- `write_trips_summary()` renamed to `export_trips_summary()`.
-- `write_trips()` renamed to `export_trips()`.
-- New internal function `compute_space_use()` extracts the project-then-estimate-space-use pipeline as a standalone pure function.
-- Colony is no longer returned by `compute_space_use()` — it is only used internally for trip summary calculations.
-- `compute_space_use()` renamed to `compute_individual_kde()` to align with the `export_individual_kde` / `render_individual_kde` naming chain.
-- `get_scale_parameters()` renamed to `compute_scale_parameters()` to follow the internal compute-function naming convention.
+- `filter_data_between_dates()` renamed to `create_filtered_gps_between_dates()` (was `export_filtered_gps_between_dates()`).
+- `process_fisheries_data()` renamed to `create_filtered_fisheries()` (was `export_filtered_fisheries()`).
+- `write_trips_summary()` renamed to `create_trips_summary()` (was `export_trips_summary()`).
+- `write_trips()` renamed to `create_trips()` (was `export_trips()`).
+- `compute_space_use()` renamed to `compute_individual_kde()`.
+- `get_scale_parameters()` renamed to `compute_scale_parameters()`.
+- `get_trips()` renamed to `compute_trips()`.
+- `get_summary_of_trips()` renamed to `compute_trips_summary()`.
+- `filter_fisheries_by_date_and_lat_lon()` renamed to `compute_filtered_fisheries_by_date_and_lat_lon()`.
+- `filter_fisheries_by_date()` renamed to `compute_filtered_fisheries_by_date()`.
+- `filter_fisheries_by_lat_lon()` renamed to `compute_filtered_fisheries_by_lat_lon()`.
+- `filter_between_dates()` renamed to `compute_filtered_between_dates()`.
+- `read_config()` replaced by private helper `.adapt_config()` for Level 2 functions.
+- Colony removed from `render_individual_kde()` — presentation layers no longer receive colony.
+- `sf_use_s2(FALSE)` now self-managed by `compute_*` functions with save/restore pattern.
+- New internal function `compute_space_use()` was added and then renamed to `compute_individual_kde()` in the same release cycle.
 
 ## [0.8.0] - 2026-05-11
 ### Changed

@@ -43,14 +43,14 @@ provided Docker container to avoid path configuration.
 # Inside the Docker container:
 
 # Export a filtered dataset
-Rscript -e "bycatch::export_filtered_gps_between_dates(bycatch::get_domain_specific_options())" \
+Rscript -e "bycatch::create_filtered_gps_between_dates(bycatch::get_domain_specific_options())" \
   --data-path /workdir/data/gps.csv \
   --output-path /workdir/data/gps_filtered.csv \
   --start 2024-01-01 --end 2024-12-31 \
   --date-column-name DateTime
 
 # Export trip summaries
-Rscript -e "bycatch::export_trips_summary(bycatch::get_domain_specific_options())" \
+Rscript -e "bycatch::create_trips_summary(bycatch::get_domain_specific_options())" \
   --data-path /workdir/data/trips.csv \
   --config-path /workdir/config.json \
   --output-path /workdir/output/trips_summary.csv
@@ -79,14 +79,14 @@ Results can also be fed into GIS tools (QGIS, GMT) for custom cartography.
 
 ## Coming soon
 
-- **`write_processed_data()`** — one-step compute-and-cache command that runs the
+- **`create_processed_data()`** — one-step compute-and-cache command that runs the
   expensive bootstrap once and saves results for all figure pipelines.
-- **`export_potential_kba()`** — GeoPackage export for KBA polygons (combines
+- **`create_potential_kba()`** — GeoPackage export for KBA polygons (combines
   cached bootstrap results with fast-recomputed kernel densities).
-- **`export_representative_assessment()`** — Tabular Data Package export (CSV +
+- **`create_representative_assessment()`** — Tabular Data Package export (CSV +
   `datapackage.json` schema) of the full bootstrap iteration results.
-- **`plot_potential_kba()`** and **`plot_individual_kde()`** — ggplot2-based
-  replacements for `track2KBA::mapSite` and `track2KBA::mapKDE`.
+- **`plot_potential_kba()`**, **`plot_individual_kde()`**, and **`plot_representative_assessment()`** —
+  ggplot2-based replacements for `track2KBA` base-R plots.
 - **Shared RDS caching** — the expensive `repAssess` bootstrap runs once per
   dataset; all downstream figures and exports read cached results.
 
