@@ -23,3 +23,16 @@ plot_potential_kba <- function(site) {
     ggplot2::geom_sf() +
     ggplot2::labs(x = "Longitude", y = "Latitude")
 }
+
+#' Plot individual KDE
+#'
+#' @param UDPolygons An sf polygons object as returned by
+#'   `compute_individual_kde()`.
+#'
+#' @return A ggplot object mapping the individual KDE polygons.
+#' @noRd
+plot_individual_kde <- function(UDPolygons) {
+  ggplot2::ggplot(UDPolygons) +
+    ggplot2::geom_sf() +
+    ggplot2::labs(x = "Longitude", y = "Latitude")
+}
