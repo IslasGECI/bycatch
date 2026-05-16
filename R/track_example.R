@@ -1,10 +1,10 @@
-get_summary_of_trips <- function(trips, config_content) {
+compute_trips_summary <- function(trips, config_content) {
   colony <- config_content$colony
   sumTrips <- track2KBA::tripSummary(trips = trips, colony = colony)
   return(sumTrips)
 }
 
-get_trips <- function(data, config_content) {
+compute_trips <- function(data, config_content) {
   dataGroup <- track2KBA::formatFields(
     dataGroup = data,
     fieldID = "name",

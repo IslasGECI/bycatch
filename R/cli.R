@@ -91,7 +91,7 @@ render_individual_kde <- function(options) {
 #'
 #' Generates and writes a summary of trips based on GPS data and configuration settings.
 #'
-#' This function reads configuration and GPS data from the provided file paths, summarizes the trips using `get_summary_of_trips`,
+#' This function reads configuration and GPS data from the provided file paths, summarizes the trips using `compute_trips_summary`,
 #' and writes the summary to the specified output CSV file.
 #'
 #' @param options A named list containing the following elements:
@@ -106,7 +106,7 @@ render_individual_kde <- function(options) {
 create_trips_summary <- function(options) {
   config_content <- read_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
-    get_summary_of_trips(config_content) |>
+    compute_trips_summary(config_content) |>
     readr::write_csv(options[["output-path"]])
 }
 
@@ -131,7 +131,7 @@ create_trips_summary <- function(options) {
 create_trips <- function(options, config_content) {
   config_content <- read_config(options[["config-path"]])
   trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
-    get_trips(config_content)
+    compute_trips(config_content)
   trips@data |>
     readr::write_csv(options[["output-path"]])
 }
