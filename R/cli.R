@@ -292,3 +292,49 @@ create_potential_kba <- function(options) {
   site <- compute_potential_kba(kde$KDE_surface, represent, popSize, levelUD)
   sf::st_write(site, options[["output-path"]])
 }
+
+#' Create Representative Assessment
+#'
+#' Reads a cached RDS file (assessment_summary + assessment_detail) and writes
+#' the assessment_detail as a CSV file alongside a datapackage.json descriptor
+#' (Tabular Data Package format).
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{rds-path}{Path to the cached RDS file with assessment_summary and assessment_detail.}
+#'     \item{output-path}{Path where the output CSV file will be saved. The datapackage.json
+#'       is written to the same directory.}
+#'   }
+#'
+#' @return None. Called for its side effect of writing CSV and datapackage.json to disk.
+#' @export
+create_representative_assessment <- function(options) {
+  cache <- readRDS(options[["rds-path"]])
+  assessment_summary <- cache$assessment_summary
+  assessment_detail <- cache$assessment_detail
+
+  readr::write_csv(assessment_detail, options[["output-path"]])
+
+  dpkg_path <- file.path(dirname(options[["output-path"]]), "datapackage.json")
+  dpkg <- list(
+    profile = "tabular-data-package",
+    name = "representative-assessment",
+    resources = list(
+      list(
+        path = basename(options[["output-path"]]),
+        profile = "tabular-data-resource",
+        schema = list(
+          fields = list(
+            list(name = "SampleSize", type = "number", description = "Number of individuals sampled"),
+            list(name = "InclusionRate", type = "number", description = "Inclusion rate for this iteration"),
+            list(name = "iteration", type = "integer", description = "Bootstrap iteration number"),
+            list(name = "pred", type = "number", description = "Predicted asymptotic inclusion rate"),
+            list(name = "rep_est", type = "number", description = "Representativeness estimate"),
+            list(name = "is_rep", type = "boolean", description = "Whether this sample is representative")
+          )
+        )
+      )
+    )
+  )
+  writeLines(rjson::toJSON(dpkg), dpkg_path)
+}
