@@ -43,30 +43,22 @@ render_potential_kba <- function(options) {
 
 #' Render Representative Assessment
 #'
-#' Reads GPS data and configuration, computes the representative assessment,
-#' and saves the resulting plot as a PNG file.
+#' Reads a cached RDS file (assessment_detail) and saves the representative
+#' assessment scatterplot as a PNG file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
-#'     \item{config-path}{Path to the configuration file (JSON).}
-#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{rds-path}{Path to the cached RDS file with assessment_summary and assessment_detail.}
 #'     \item{output-path}{Path where the output PNG plot will be saved.}
-#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
-#'     \item{n-iterations}{Integer specifying the number of iterations for the assessment.}
 #'   }
 #'
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 render_representative_assessment <- function(options) {
-  config_content <- .adapt_config(options[["config-path"]])
-  trips_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  percentage_distribution <- options[["percentage-distribution"]]
-  smoothing_method <- options[["smoothing-method"]]
-
-  wrapper <- Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)
-  grDevices::png(options[["output-path"]])
-  wrapper$compute_representative_assessment(percentage_distribution, options[["n-iterations"]])
-  grDevices::dev.off()
+  cache <- readRDS(options[["rds-path"]])
+  assessment_detail <- cache$assessment_detail
+  plot <- plot_representative_assessment(assessment_detail)
+  ggplot2::ggsave(filename = options[["output-path"]], plot = plot, device = "png")
 }
 
 #' Render Individual KDE
