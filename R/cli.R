@@ -157,7 +157,7 @@ create_trips <- function(options, config_content) {
 create_filtered_fisheries <- function(options) {
   fisheries_raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   fisheries_data <- fisheries_raw_data |>
-    filter_fisheries_by_date_and_lat_lon(
+     compute_filtered_fisheries_by_date_and_lat_lon(
       start = options[["start"]],
       end = options[["end"]],
       lat_min = options[["lat-min"]],
@@ -186,7 +186,7 @@ create_filtered_fisheries <- function(options) {
 create_filtered_gps_between_dates <- function(options) {
   raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   filtered_data <- raw_data |>
-    filter_between_dates(
+    compute_filtered_between_dates(
       start = options[["start"]],
       end = options[["end"]],
       !!rlang::sym(options[["date-column-name"]])
