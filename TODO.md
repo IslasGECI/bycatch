@@ -30,7 +30,7 @@ Level 2 functions (`create_*`, `render_*`) compose Level 1 functions. Only Make 
 | `plot_*` | In-memory visualization | None | Internal | 1 — Pure |
 | `create_*` | Read → compute → write | Disk I/O | Exported (`R/cli.R`) | 2 — Artifact |
 | `render_*` | Read → `plot_*` → write image | Disk I/O | Exported (`R/cli.R`) | 2 — Artifact |
-| `_*` | Private helper (underscore prefix) | Varies | Internal, called only by Level 2 | 2 — Helper |
+| `.*` | Private helper (dot prefix) | Varies | Internal, called only by Level 2 | 2 — Helper |
 
 Level 1 I/O prefixes (`read_*`, `write_*`, `import_*`, `export_*`) are used by third-party packages directly — this project does not add new wrappers around them.
 
@@ -185,7 +185,7 @@ Every exported function follows the three-line pattern.
 
 | Function | Purpose | Calls |
 |---|---|---|
-| `_adapt_config` | Read raw JSON config + build colony tibble | `rjson::fromJSON` + `tibble::tibble` |
+| `.adapt_config` | Read raw JSON config + build colony tibble | `rjson::fromJSON` + `tibble::tibble` |
 
 #### Pipeline: processed data (cache)
 
@@ -248,7 +248,7 @@ the pre-computed artifact — it never calls `compute_*`.
 
 ```
 create_processed_data(data_path, config_path, rds_path, ...)                    
-  ├── rjson::fromJSON(config_path) + tibble::tibble   (via _adapt_config)
+  ├── rjson::fromJSON(config_path) + tibble::tibble   (via .adapt_config)
   ├── readr::read_csv(data_path)                           
   ├── compute_cache(data, config, ...)          # internal, pure: runs repAssess ONCE
   │     ├── compute_individual_kde(...)               # fast: projectTracks → estSpaceUse             
@@ -260,7 +260,7 @@ create_processed_data(data_path, config_path, rds_path, ...)
                                                                                                  
 create_potential_kba(rds_path, data_path, config_path, popSize, levelUD, smoothing_method, gpkg_path)
   ├── readRDS(rds_path)                         # reads assessment_summary$out                 
-  ├── rjson::fromJSON + tibble::tibble          # via _adapt_config
+  ├── rjson::fromJSON + tibble::tibble          # via .adapt_config
   ├── readr::read_csv(data_path)                                           
   ├── compute_individual_kde(data, config, levelUD, smoothing_method)  # fast, no repAssess          
   ├── compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)              
@@ -277,7 +277,7 @@ render_representative_assessment(rds_path, png_path)
   └── ggplot2::ggsave(png_path)                                                                          
                                                                                                  
 create_individual_kde(data_path, config_path, levelUD, smoothing_method, gpkg_path)              
-  ├── rjson::fromJSON + tibble::tibble          # via _adapt_config
+  ├── rjson::fromJSON + tibble::tibble          # via .adapt_config
   ├── readr::read_csv(data_path)                                            
   ├── compute_individual_kde(data, config, levelUD, smoothing_method)  # fast, no repAssess          
   └── sf::st_write(UDPolygons, gpkg_path)                                                           
@@ -309,12 +309,12 @@ create_filtered_gps_between_dates(gps_csv, output_csv, ...)
 R/
   compute.R              # ALL compute_* functions (Level 1 pure)
   plot.R                 # ALL plot_* functions (Level 1 pure)
-  cli.R                  # ALL create_* + render_* + _adapt_config (Level 2)
+  cli.R                  # ALL create_* + render_* + .adapt_config (Level 2)
   get_domain_specific_options.R   # exported exception
 ```
 
 Files removed during Phase 2:
-- `R/read_config.R` → replaced by `_adapt_config` in `R/cli.R` (pre-work)
+- `R/read_config.R` → replaced by `.adapt_config` in `R/cli.R` (pre-work)
 - `R/representative_assess.R` → folded into `R/compute.R` (Sprint 6)
 - `R/track_example.R` → folded into `R/compute.R` (Sprint 6)
 - `R/fisheries_process.R` → folded into `R/compute.R` (Sprint 6)
@@ -427,10 +427,10 @@ No behavioral changes, no new functionality. Run `make tests_fast` after each st
 - Update callers in `create_filtered_fisheries` and `create_filtered_gps_between_dates`
 - Test: `make tests_fast`
 
-**Step P4 — Replace `read_config` with `_adapt_config`**
-- File: Create `_adapt_config` in `R/cli.R`, delete `R/read_config.R`, delete `tests/testthat/test_config.R`
-- Action: `_adapt_config` does the same JSON read + colony tibble build as `read_config`, but lives in `R/cli.R` as a private Level 2 helper (underscore prefix)
-- Update all callers in `R/cli.R` to use `_adapt_config`
+**Step P4 — Replace `read_config` with `.adapt_config`**
+- File: Create `.adapt_config` in `R/cli.R`, delete `R/read_config.R`, delete `tests/testthat/test_config.R`
+- Action: `.adapt_config` does the same JSON read + colony tibble build as `read_config`, but lives in `R/cli.R` as a private Level 2 helper (dot prefix)
+- Update all callers in `R/cli.R` to use `.adapt_config`
 - Test: `make tests_fast`
 
 **Step P5 — Add `sf_use_s2` save/restore to `compute_*` functions calling `track2KBA`**
@@ -543,7 +543,7 @@ test with `tempfile()` paths.
 **Step 22b — Green: add `create_potential_kba`**
 - File: `R/cli.R`
 - Action: Add exported function: `readRDS()` for cache `assessment_summary$out` +
-  `_adapt_config` + `readr::read_csv` + `compute_individual_kde` (fast, recomputes KDE_surface)
+  `.adapt_config` + `readr::read_csv` + `compute_individual_kde` (fast, recomputes KDE_surface)
   → `compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)` →
   `sf::st_write()`. The expensive `repAssess` is never re-run.
 - Test: `make tests_fast`
