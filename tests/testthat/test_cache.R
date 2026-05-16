@@ -18,3 +18,26 @@ describe("create_individual_kde", {
     testtools::if_exist_remove(output_path)
   })
 })
+
+describe("create_processed_data", {
+  it("writes a valid RDS file with assessment_summary and assessment_detail", {
+    output_path <- "/workdir/tests/test_processed_data.rds"
+    data_path <- "/workdir/tests/data/trips_5_ids.csv"
+    options <- list(
+      "data-path" = data_path,
+      "config-path" = config_path,
+      "output-path" = output_path,
+      "percentage-distribution" = 50,
+      "smoothing-method" = "log_median",
+      "n-iterations" = 1
+    )
+    testtools::if_exist_remove(output_path)
+    create_processed_data(options)
+    expect_true(testtools::exist_output_file(output_path))
+    result <- readRDS(output_path)
+    expect_true(all(c("assessment_summary", "assessment_detail") %in% names(result)))
+    expect_true(inherits(result$assessment_summary, "data.frame"))
+    expect_true(inherits(result$assessment_detail, "data.frame"))
+    testtools::if_exist_remove(output_path)
+  })
+})
