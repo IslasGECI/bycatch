@@ -104,6 +104,69 @@ Filters GPS data between two inclusive dates and writes the result to a CSV file
     - `date-column-name` (character) — name of the date column in the input data.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 
+### `create_individual_kde(options)`
+
+Reads GPS data and configuration, computes kernel density estimates (KDEs)
+for each tracked individual, and saves the resulting UDPolygons as a GeoPackage
+file. Recomputes the fast pipeline from scratch (no bootstrap).
+
+- **Parameters:**
+  - `options`: named list
+    - `config-path` (character) — path to the configuration file (JSON).
+    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `output-path` (character) — path where the output GeoPackage file (`*.gpkg`) is saved.
+    - `percentage-distribution` (integer) — percentage contour level for KDE polygons.
+    - `smoothing-method` (character) — smoothing method for KDE. One of `"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`.
+- **Returns:** None. Side effect: writes a GeoPackage file to `output-path`.
+- **Notes:** Only the UDPolygons are written (KDE_surface and tracks are ephemeral). Colony is used internally by `compute_individual_kde` but not included in the output.
+
+### `create_processed_data(options)`
+
+Reads GPS data and configuration, runs the full bootstrap pipeline exactly once
+(compute_individual_kde + repAssess), and caches the assessment results as an
+RDS file.
+
+- **Parameters:**
+  - `options`: named list
+    - `config-path` (character) — path to the configuration file (JSON).
+    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `output-path` (character) — path where the output RDS cache file is saved.
+    - `percentage-distribution` (integer) — percentage contour level for the assessment.
+    - `smoothing-method` (character) — smoothing method for KDE.
+    - `n-iterations` (integer) — number of bootstrap iterations for the representative assessment.
+- **Returns:** None. Side effect: writes an RDS file to `output-path` containing `assessment_summary` (data.frame: `out`, `asym`, `Rep70`, `Rep95`) and `assessment_detail` (data.frame: full iteration table).
+- **Notes:** This is the only function that runs the expensive `repAssess` bootstrap. Downstream functions (`create_potential_kba`, `create_representative_assessment`, `render_*`) read the cached output instead of re-running it.
+
+### `create_potential_kba(options)`
+
+Reads a cached RDS file (from `create_processed_data`), recomputes individual
+KDE (fast, no bootstrap), identifies potential Key Biodiversity Areas (KBAs),
+and saves the result as a GeoPackage file.
+
+- **Parameters:**
+  - `options`: named list
+    - `rds-path` (character) — path to the cached RDS file with `assessment_summary` (must contain `out` column).
+    - `config-path` (character) — path to the configuration file (JSON).
+    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `output-path` (character) — path where the output GeoPackage file (`*.gpkg`) is saved.
+    - `percentage-distribution` (integer) — percentage contour level for KDE.
+    - `smoothing-method` (character) — smoothing method for KDE.
+    - `population-size` (integer) — population size for the KBA criterion.
+- **Returns:** None. Side effect: writes a GeoPackage file to `output-path`.
+
+### `create_representative_assessment(options)`
+
+Reads a cached RDS file (from `create_processed_data`) and writes the assessment
+results as a Tabular Data Package: a CSV file with the full iteration data plus
+a `datapackage.json` descriptor with field schemas.
+
+- **Parameters:**
+  - `options`: named list
+    - `rds-path` (character) — path to the cached RDS file with `assessment_summary` and `assessment_detail`.
+    - `output-path` (character) — path where the output CSV file is saved. The `datapackage.json` descriptor is written to the same directory.
+- **Returns:** None. Side effect: writes a CSV file and `datapackage.json` to disk.
+- **Notes:** The `datapackage.json` follows the [Tabular Data Package](https://specs.frictionlessdata.io/tabular-data-package/) specification.
+
 ### `get_domain_specific_options()`
 
 Defines and returns a named list of command-line options for use in CLI tools.

@@ -1,6 +1,6 @@
 # Implementation Plan: Function Renaming and Architecture Restructuring
 
-**Gold:** Complete Sprint 3 — add plot layer (`R/plot.R` with `plot_representative_assessment`, `plot_potential_kba`, `plot_individual_kde`).
+**Gold:** Complete Sprint 5 — restructure render functions to skip the R6 class (`Track2KBA_Wrapper`) and use pre-computed artifacts.
 
 ## Architecture Reference
 
@@ -64,17 +64,11 @@ Colony is kept only inside `compute_*` functions that call `track2KBA` algorithm
 All three renames committed (see CHANGELOG for details). The R6 wrapper
 methods, exported CLI functions, and tests were updated atomically.
 
-### Phase 2 — Write / Render Separation (Sprints 1–7)
+### Phase 2 — Write / Render Separation (Sprints 5–8)
 
 | Sprint | Status |
 |--------|--------|
-| Pre-work Step P6 — Remove colony from `render_individual_kde` | 🗑️ Skipped |
-| Pre-work Step P7 — Create fixture generation script | ✅ Done |
-| Pre-work Step P8 — Note for `bycatch_thesis` | ✅ Done |
-| Sprint 3 — Add plot layer | ✅ Done |
-| Sprint 4 — Add new `create_*` exported functions | ✅ Done |
 | Sprint 5 — Restructure render functions to skip R6 class | ⬜ Next |
-| Sprint 5 — Restructure render functions to skip R6 class | ⬜ |
 | Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ |
 | Sprint 7 — Signature cleanup and fixture finalization | ⬜ |
 | Sprint 8 (potential) — Inline `compute_cache` into `create_processed_data` | ⬜ Maybe |
@@ -459,112 +453,7 @@ No behavioral changes, no new functionality. Run `make tests_fast` after each st
 - Action: Add a note listing all renamed exported functions so `bycatch_thesis` can update its calls later
 - Test: N/A
 
-### Sprint 3 — Add plot layer (new file `R/plot.R`)
 
-Each function follows **test-first**: 2 sub-steps per function. Tests go in
-`tests/testthat/test_plot.R` (new file). Tests use real fixture `.rds` files
-from `tests/data/` — no mocks.
-
-**Step 17a — Red: add test for `plot_representative_assessment`**
-- File: `tests/testthat/test_plot.R`
-- Action: Add test that reads `tests/data/assessment_detail.rds`, calls
-  `plot_representative_assessment(assessment_detail)`, asserts
-  `expect_s3_class(result, "ggplot")`
-- Test: `make tests_fast`
-
-**Step 17b — Green: add `plot_representative_assessment`**
-- File: `R/plot.R` (new)
-- Action: Add function taking assessment_detail data.frame → returns ggplot2 scatterplot
-- Test: `make tests_fast`
-
-**Step 18a — Red: add test for `plot_potential_kba`**
-- File: `tests/testthat/test_plot.R`
-- Action: Add test that reads `tests/data/kba_polygons.rds`, calls
-  `plot_potential_kba(site)`, asserts `expect_s3_class(result, "ggplot")`
-- Test: `make tests_fast`
-
-**Step 18b — Green: add `plot_potential_kba`**
-- File: `R/plot.R`
-- Action: Add function taking sf polygons → returns ggplot2 map (replaces `mapSite`, no colony)
-- Test: `make tests_fast`
-
-**Step 19a — Red: add test for `plot_individual_kde`**
-- File: `tests/testthat/test_plot.R`
-- Action: Add test that reads `tests/data/ud_polygons.rds`, calls
-  `plot_individual_kde(UDPolygons)`, asserts `expect_s3_class(result, "ggplot")`
-- Test: `make tests_fast`
-
-**Step 19b — Green: add `plot_individual_kde`**
-- File: `R/plot.R`
-- Action: Add function taking UDPolygons → returns ggplot2 map (replaces `mapKDE`, no colony)
-- Test: `make tests_fast`
-
-**Step 19c — Update `bycatch_thesis` to-do list**
-- File: `../bycatch_thesis/TODO.md`
-- Action: Add note: Sprint 3 adds three `plot_*` functions (internal, not exported). `render_*` functions will be restructured in Sprint 5 to use these instead of `track2KBA` base-R plots. No immediate Makefile impact.
-- Test: N/A
-
-### Sprint 4 — Add new `create_*` exported functions
-
-Each function follows **test-first**: 2 sub-steps per function. Tests go in
-`tests/testthat/test_cache.R` (new file). Since these perform disk I/O,
-test with `tempfile()` paths.
-
-**Step 20a — Red: add test for `create_individual_kde`**
-- File: `tests/testthat/test_cache.R`
-- Action: Add test that creates a temp GPKG path, calls `create_individual_kde(...)`
-  with paths to mock data + config, asserts GPKG file exists and is valid
-- Test: `make tests_fast`
-
-**Step 20b — Green: add `create_individual_kde`**
-- File: `R/cli.R`
-- Action: Add exported function: read CSV + config → `compute_individual_kde(...)` →
-  `sf::st_write(UDPolygons, gpkg_path)`. Recomputes fast pipeline from scratch (no bootstrap).
-- Test: `make tests_fast`
-
-**Step 21a — Red: add test for `create_processed_data`**
-- File: `tests/testthat/test_cache.R`
-- Action: Add test that creates a temp RDS path, calls `create_processed_data(...)`,
-  asserts file exists and is valid RDS
-- Test: `make tests_fast`
-
-**Step 21b — Green: add `create_processed_data`**
-- File: `R/cli.R`
-- Action: Add exported function: read CSV + config → `compute_cache(...)` → `saveRDS()`.
-  The RDS stores only assessment_summary + assessment_detail (the repAssess output).
-  This is the ONLY function that runs the expensive bootstrap.
-- Test: `make tests_fast`
-
-**Step 22a — Red: add test for `create_potential_kba`**
-- File: `tests/testthat/test_cache.R`
-- Action: Add test that writes a mock `.rds` cache (with `assessment_summary$out`),
-  calls `create_potential_kba(...)` with paths to mock data + config, asserts GPKG file exists
-- Test: `make tests_fast`
-
-**Step 22b — Green: add `create_potential_kba`**
-- File: `R/cli.R`
-- Action: Add exported function: `readRDS()` for cache `assessment_summary$out` +
-  `.adapt_config` + `readr::read_csv` + `compute_individual_kde` (fast, recomputes KDE_surface)
-  → `compute_potential_kba(KDE_surface, assessment_summary$out, popSize, levelUD)` →
-  `sf::st_write()`. The expensive `repAssess` is never re-run.
-- Test: `make tests_fast`
-
-**Step 23a — Red: add test for `create_representative_assessment`**
-- File: `tests/testthat/test_cache.R`
-- Action: Add test that writes a mock `.rds` cache, calls
-  `create_representative_assessment(...)`, asserts CSV + datapackage.json exist
-- Test: `make tests_fast`
-
-**Step 23b — Green: add `create_representative_assessment`**
-- File: `R/cli.R`
-- Action: Add exported function: `readRDS()` → format → `readr::write_csv()` +
-  `datapackage.json`
-- Test: `make tests_fast`
-
-**Step 23c — Update `bycatch_thesis` to-do list**
-- File: `../bycatch_thesis/TODO.md`
-- Action: Add note: Sprint 4 adds four `create_*` exported functions (`create_individual_kde`, `create_processed_data`, `create_potential_kba`, `create_representative_assessment`). These are new CLI entry points for data artifact generation. The Makefile may add targets for them.
-- Test: N/A
 
 ### Sprint 5 — Restructure render functions to skip R6 class
 
@@ -602,6 +491,8 @@ temp artifacts). After Sprint 7, swap to pre-computed fixture files in
 - File: `../bycatch_thesis/TODO.md`
 - Action: Add note: Sprint 5 restructures `render_*` functions to read pre-computed artifacts instead of running the R6 class. The options list now requires `rds-path` or `gpkg-path` in addition to `output-path`. The `data-path` and `config-path` arguments are no longer needed for render calls.
 - Test: N/A
+
+Stop before Sprint 6 and ask for confirmation before proceeding.
 
 ### Sprint 6 — Remove R6 class and consolidate to `R/compute.R`
 
@@ -641,6 +532,8 @@ test change. Renaming test files is optional and not required.
 - Action: Add note: Sprint 6 removes the R6 class `Track2KBA_Wrapper` and consolidates all `compute_*` functions into `R/compute.R`. No direct impact on exported function signatures.
 - Test: N/A
 
+Stop before Sprint 7 and ask for confirmation before proceeding.
+
 ### Sprint 7 — Signature cleanup and fixture finalization
 
 Change function signatures from `(options)` to explicit artifact paths (input
@@ -675,21 +568,16 @@ exercise these functions.**
 - Action: Add note: Sprint 7 changes `render_*` signatures from `(options)` to explicit parameters: `render_potential_kba(gpkg_path, png_path)`, `render_representative_assessment(rds_path, png_path)`, `render_individual_kde(gpkg_path, png_path)`. The Makefile `Rscript -e` calls must be updated to pass artifact paths directly instead of the options list. Also, the slow render tests now read pre-computed fixture files instead of calling `create_*` in the preamble.
 - Test: N/A
 
+
 ---
 
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
 |---|---|---|---|---|---|
-| Pre-work P6 — Colony removal | skipped | — | — | 🗑️ |
-| Pre-work P7 — Fixture script | done | — | — | ✅ |
-| Pre-work P8 — Thesis note | done | — | — | ✅ |
-| 3 — Add plot layer | 17a–19b | ✅ (6) | — | 6 |
-| 4 — Add cache exports | 20a–23b | ✅ (8) | — | 8 |
 | **5 — Restructure renders** | **24–26** | — | **3 ahead** | **3** |
 | 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
 | **Remaining** | **S5–S7** | **1 ahead** | **7 ahead** | **8 total** |
 
-- Sprint 5 depends on Sprint 4 (serial dependency).
 - Sprint 7 depends on Sprint 5 (slow test files refer to render functions).

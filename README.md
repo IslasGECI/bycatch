@@ -11,89 +11,63 @@ parameter](https://github.com/IslasGECI/bycatch/actions/workflows/actions.yml/ba
 
 **Assess where seabirds forage, where fishing vessels operate, and where they overlap — to prevent bycatch.**
 
-bycatch ingests GPS tracking data from seabird colonies, computes their foraging
-areas and key biodiversity areas (KBAs), and compares those areas against fishing
-vessel GPS data to identify overlap hotspots.
+bycatch converts GPS tracking data from seabird colonies into maps of foraging
+areas, identifies potential key biodiversity areas (KBAs), and overlays them
+with fishing vessel GPS data to pinpoint high-risk overlap zones.
 
-## How it works
+## What you need
 
-| Step | What happens | Status |
-| :--- | :--- | :--- |
-| 1. Load GPS tracks | Import raw seabird and fishing vessel positions. | Ready |
-| 2. Split into trips | Separate continuous GPS streams into individual foraging trips. | Ready |
-| 3. Estimate space use | Compute kernel density estimates (KDE) for each individual. | Ready |
-| 4. Assess representativity | Bootstrap to determine how many individuals are needed to represent the population. | Ready |
-| 5. Identify KBA candidates | Find areas used by a significant proportion of the local population. | Ready |
-| 6. Overlap with fisheries | Compare seabird areas against fishing fleet GPS data. | Ready |
-| 7. Visualise results | Output static figures (PNG), vector data (GeoPackage), and summary tables (CSV). | Ready |
+- **Seabird GPS data** (CSV with dates, positions, and individual IDs).
+- **Colony location** and configuration (coordinates, buffer distances, trip duration).
+- **Fishing vessel GPS data** (optional, for overlap analysis).
 
-## Before you start
+Run inside the provided Docker container — all paths use `/workdir/...`.
 
-You need:
-- **GPS tracking data** from seabirds (CSV with longitude, latitude, date, time, and individual ID).
-- **Colony location** and configuration (lon/lat, buffer distances, trip duration).
-- Optionally: **fishing vessel GPS data** for overlap analysis.
-
-All data paths in the package follow Docker conventions (`/workdir/...`). Run inside the
-provided Docker container to avoid path configuration.
-
-## Run the project
+## Quick start
 
 ```shell
 # Inside the Docker container:
 
-# Export a filtered dataset
-Rscript -e "bycatch::create_filtered_gps_between_dates(bycatch::get_domain_specific_options())" \
-  --data-path /workdir/data/gps.csv \
-  --output-path /workdir/data/gps_filtered.csv \
-  --start 2024-01-01 --end 2024-12-31 \
-  --date-column-name DateTime
-
-# Export trip summaries
-Rscript -e "bycatch::create_trips_summary(bycatch::get_domain_specific_options())" \
-  --data-path /workdir/data/trips.csv \
+# 1. Cache the expensive bootstrap (runs repAssess once, enables fast downstream steps)
+Rscript -e "bycatch::create_processed_data(bycatch::get_domain_specific_options())" \
   --config-path /workdir/config.json \
-  --output-path /workdir/output/trips_summary.csv
+  --data-path /workdir/data/trips.csv \
+  --output-path /workdir/output/cache.rds \
+  --percentage-distribution 50 \
+  --smoothing-method log_median \
+  --n-iterations 100
 
-# Render a KBA map from GPS data and configuration
+# 2. Generate a KBA map from the cached results
 Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options())" \
-  --data-path /workdir/data/trips.csv \
   --config-path /workdir/config.json \
-  --output-path /workdir/output/kba.png
+  --data-path /workdir/data/trips.csv \
+  --output-path /workdir/output/kba.png \
+  --percentage-distribution 50 \
+  --n-iterations 100 \
+  --population-size 10 \
+  --smoothing-method log_median
 
-(Coming soon: cache-based pipeline where the expensive bootstrap runs once.)
+# 3. Export the full assessment as CSV with metadata (Tabular Data Package)
+Rscript -e "bycatch::create_representative_assessment(bycatch::get_domain_specific_options())" \
+  --rds-path /workdir/output/cache.rds \
+  --output-path /workdir/output/assessment.csv
 ```
 
-## Core concept
+For a complete reference of all commands and parameters, see [`DOCS.md`](DOCS.md).
 
-If you provide seabird GPS tracks and a colony location, bycatch will:
+## Outputs
 
-1. Split the tracks into individual foraging trips.
-2. Calculate the area each bird uses (kernel density).
-3. Bootstrap across individuals to check if your sample is large enough.
-4. Identify potential key biodiversity areas (KBAs).
-5. Optionally overlap these areas with fishing vessel data.
-6. Save the results as PNG figures, CSV tables, and GeoPackage vector files.
-
-Results can also be fed into GIS tools (QGIS, GMT) for custom cartography.
+| Format | What | Example |
+|--------|------|---------|
+| PNG | Static maps and figures | KBA map, representativity plot |
+| GeoPackage (`.gpkg`) | Vector polygons for GIS | KBA boundaries, individual KDE contours |
+| CSV | Tabular data | Trip summaries, filtered data, assessment iterations |
+| RDS | Cached bootstrap results | Single-file cache for fast reprocessing |
+| `datapackage.json` | Field schemas alongside CSV | Tabular Data Package metadata |
 
 ## Coming soon
 
-- **`create_processed_data()`** — one-step compute-and-cache command that runs the
-  expensive bootstrap once and saves results for all figure pipelines.
-- **`create_potential_kba()`** — GeoPackage export for KBA polygons (combines
-  cached bootstrap results with fast-recomputed kernel densities).
-- **`create_representative_assessment()`** — Tabular Data Package export (CSV +
-  `datapackage.json` schema) of the full bootstrap iteration results.
-- **Shared RDS caching** — the expensive `repAssess` bootstrap runs once per
-  dataset; all downstream figures and exports read cached results.
-
-## What's new (v0.9.0-dev)
-
-- **Plot layer** — three new internal `plot_*` functions provide ggplot2-based
-  visualizations: `plot_representative_assessment()` (scatterplot),
-  `plot_potential_kba()` (sf map), `plot_individual_kde()` (sf map). These are
-  Level 1 Pure functions (no I/O, no side effects) and are not exported.
-  `render_*` functions (Sprint 5) will use them instead of `track2KBA` base-R
-  plots.
+- Overlap analysis between seabird KBA polygons and fishing vessel tracks.
+- Multi-colony comparisons.
+- Customizable map projections.
 

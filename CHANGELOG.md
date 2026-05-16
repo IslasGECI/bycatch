@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - New internal function `plot_representative_assessment()` returns a ggplot2 scatterplot (InclusionRate vs SampleSize) from an `assessment_detail` data.frame. Level 1 Pure — no I/O, no side effects.
 - New internal function `plot_potential_kba()` returns a ggplot2 map from an sf polygons object. Replaces `track2KBA::mapSite` — no colony parameter. Level 1 Pure — no I/O, no side effects.
 - New internal function `plot_individual_kde()` returns a ggplot2 map from UDPolygons sf object. Replaces `track2KBA::mapKDE` — no colony parameter. Level 1 Pure — no I/O, no side effects.
+- New exported function `create_individual_kde(options)` recomputes individual KDE (fast, no bootstrap) and saves UDPolygons as a GeoPackage file.
+- New exported function `create_processed_data(options)` runs the full bootstrap pipeline (`compute_individual_kde` + `repAssess`) exactly once and caches the assessment results as an RDS file. This is the only function that runs the expensive bootstrap.
+- New exported function `create_potential_kba(options)` reads a cached RDS file, recomputes individual KDE from raw data, identifies potential KBAs via `findSite`, and saves the result as a GeoPackage file. Requires a pre-computed RDS cache (from `create_processed_data`).
+- New exported function `create_representative_assessment(options)` reads a cached RDS file and writes the full iteration data as a Tabular Data Package (CSV + `datapackage.json` with field schemas).
 
 ### Changed
 - `filter_data_between_dates()` renamed to `create_filtered_gps_between_dates()` (was `export_filtered_gps_between_dates()`).
