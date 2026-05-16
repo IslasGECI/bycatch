@@ -203,3 +203,30 @@ create_filtered_gps_between_dates <- function(options) {
   filtered_data |>
     readr::write_csv(options[["output-path"]])
 }
+
+#' Create Individual KDE
+#'
+#' Reads GPS data and configuration, computes kernel density estimates (KDEs)
+#' for each tracked individual, and saves the resulting UDPolygons as a GeoPackage file.
+#' Recomputes the fast pipeline from scratch (no bootstrap).
+#'
+#' @param options A named list containing the following elements:
+#'   \describe{
+#'     \item{config-path}{Path to the configuration file (JSON).}
+#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{output-path}{Path where the output GeoPackage file will be saved.}
+#'     \item{percentage-distribution}{Integer specifying the percentage distribution for KDE.}
+#'     \item{smoothing-method}{Character string specifying the smoothing method for KDE.}
+#'   }
+#'
+#' @return None. Called for its side effect of writing a GeoPackage file to disk.
+#' @export
+create_individual_kde <- function(options) {
+  config_content <- .adapt_config(options[["config-path"]])
+  data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  levelUD <- options[["percentage-distribution"]]
+  smoothing_method <- options[["smoothing-method"]]
+
+  kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
+  sf::st_write(kde$UDPolygons, options[["output-path"]])
+}
