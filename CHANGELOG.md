@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - New internal function `compute_representative_assessment()` wraps `track2KBA::repAssess` with `bootTable=TRUE` and returns both `assessment_summary` and `assessment_detail` as separate data frames.
 - New internal function `compute_potential_kba()` wraps `track2KBA::findSite` with `polyOut=TRUE` and returns KBA polygons as an sf object.
-- New internal function `compute_cache()` composes `compute_individual_kde` and `compute_representative_assessment` into a single pipeline that runs `repAssess` exactly once, returning only the bootstrap output for downstream caching.
+- New internal function `compute_cache()` composes `compute_individual_kde` and `compute_representative_assessment` into a single pipeline that runs `repAssess` exactly once, returning only the bootstrap output for downstream caching. (Removed in Sprint 6 — inlined into `create_processed_data`.)
 - New internal function `plot_representative_assessment()` returns a ggplot2 scatterplot (InclusionRate vs SampleSize) from an `assessment_detail` data.frame. Level 1 Pure — no I/O, no side effects.
 - New internal function `plot_potential_kba()` returns a ggplot2 map from an sf polygons object. Replaces `track2KBA::mapSite` — no colony parameter. Level 1 Pure — no I/O, no side effects.
 - New internal function `plot_individual_kde()` returns a ggplot2 map from UDPolygons sf object. Replaces `track2KBA::mapKDE` — no colony parameter. Level 1 Pure — no I/O, no side effects.
@@ -36,8 +36,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `render_representative_assessment()` no longer runs the R6 compute pipeline. It reads a pre-computed RDS cache (`rds-path`, `output-path` only) and plots via `plot_representative_assessment()`.
 - `render_potential_kba()` no longer runs the R6 compute pipeline or calls `track2KBA::mapSite`. It reads a pre-computed GeoPackage (`gpkg-path`, `output-path` only) and plots via `plot_potential_kba()`.
 - `render_individual_kde()` no longer runs the R6 compute pipeline or calls `track2KBA::mapKDE`. It reads a pre-computed GeoPackage (`gpkg-path`, `output-path` only) and plots via `plot_individual_kde()`. Colony parameter removed from presentation layer.
-- `sf_use_s2(FALSE)` save/restore pattern still not implemented in `compute_*` functions.
+- All `compute_*` functions consolidated into `R/compute.R` (Sprint 6). Previous locations: `R/representative_assess.R`, `R/track_example.R`, `R/fisheries_process.R`, `R/get_kernels.R` — all deleted.
+- `compute_cache` inlined into `create_processed_data`. The composition of `compute_individual_kde` + `compute_representative_assessment` is now explicit at Level 2.
 - New internal function `compute_space_use()` was added and then renamed to `compute_individual_kde()` in the same release cycle.
+
+### Removed
+- R6 class `Track2KBA_Wrapper` and `Wrapper_Tester` test harness — replaced by standalone `compute_*` functions.
+- Test files `test_representative_assess.R` (R6-specific) and `test_compute_cache.R` (subsumed by `test_cache.R` end-to-end test). Unique assertions relocated to existing `test_compute_individual_kde.R` and `test_kernels.R`.
 
 ## [0.8.0] - 2026-05-11
 ### Changed

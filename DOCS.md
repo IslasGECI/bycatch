@@ -199,7 +199,7 @@ Returns a ggplot2 map of individual kernel density estimate (KDE) polygons.
 
 ---
 
-## Compute layer (standalone)
+## Compute layer (all functions in `R/compute.R`)
 
 ### `compute_individual_kde(data, config, levelUD, smoothing_method)`
 
@@ -238,18 +238,7 @@ assessment. Wraps `track2KBA::findSite`.
   - `levelUD` (numeric) — percentage contour level.
 - **Returns:** An sf object with polygon data (columns `N_IND`, `N_animals`, `potentialSite`).
 
-### `compute_cache(data, config, levelUD, smoothing_method, n_iterations)`
-
-Composes `compute_individual_kde` + `compute_representative_assessment`. Calls
-`repAssess` exactly once. Returns only the bootstrap output for caching.
-
-- **Parameters:**
-  - `data` (data.frame) — GPS tracking data with a `Returns` column.
-  - `config` (list) — configuration with `colony` (tibble).
-  - `levelUD` (numeric) — percentage contour level.
-  - `smoothing_method` (character) — smoothing method for KDE.
-  - `n_iterations` (integer) — number of bootstrap iterations.
-- **Returns:** A list with elements `assessment_summary` and `assessment_detail` (same as `compute_representative_assessment`).
+~~`compute_cache`~~ — removed in Sprint 6. Its logic (compose `compute_individual_kde` + `compute_representative_assessment`) is now inlined directly into `create_processed_data`.
 
 ---
 
@@ -340,58 +329,8 @@ Composes date-range and bounding-box filters on fisheries data.
 
 ---
 
-## R6 class: `Track2KBA_Wrapper` (deprecated)
+## Removed: `Track2KBA_Wrapper` (R6 class)
 
-Orchestrates the track2KBA workflow: projection, scale estimation, kernel density estimation, representativity assessment, and KBA identification.
-**Deprecated in favor of standalone `compute_*` functions.** No exported function calls this class after Sprint 5. Scheduled for removal in Sprint 6.
-
-### `Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)`
-
-- **Parameters:**
-  - `trips_data` (data.frame) — GPS tracking data with a `Returns` column.
-  - `config_content` (list) — configuration with `colony` (tibble of `Longitude`, `Latitude`).
-  - `percentage_distribution` (numeric) — percentage distribution for KDE.
-  - `smoothing_method` (character, default `"log_median"`) — smoothing method for KDE. One of `"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`.
-- **Side effects:** Stores `complete_trips`, `colony`, `tracks`, `percentage_distribution`, `smoothing_method`, and `KDE` as public fields.
-
-### `get_tracks()`
-
-Projects complete trips to an azimuthal equidistant projection.
-
-- **Parameters:** None (uses `self$complete_trips`).
-- **Returns:** A `SpatialPointsDataFrame` of projected tracking data.
-
-### `get_scale_dictionary()`
-
-Computes a dictionary of candidate smoothing parameters for KDE.
-
-- **Parameters:** None (uses `self$complete_trips`, `self$colony`, `self$tracks`).
-- **Returns:** A named list with keys `log_median`, `reference_bandwidth`, `scale_ARS`.
-
-### `estimate_space_use(percentage_distribution)`
-
-Computes kernel density estimates (KDE) for each individual.
-
-- **Parameters:**
-  - `percentage_distribution` (numeric) — percentage contour level for the KDE polygons.
-- **Returns:** A list with elements `KDE.Surface` (raster) and `UDPolygons` (SpatialPolygonsDataFrame with area column).
-- **Notes:** The number of output polygons equals the number of tracked individuals. Area output depends on the projection and contour level.
-
-### `compute_representative_assessment(percentage_distribution, n_iterations)`
-
-Bootstraps across individuals to assess how representative the sample is.
-
-- **Parameters:**
-  - `percentage_distribution` (numeric) — percentage distribution for the assessment.
-  - `n_iterations` (integer) — number of bootstrap iterations.
-- **Returns:** A data.frame with column `out` containing the representativity percentage.
-
-### `compute_potential_kba(repr, percentage_distribution, population_size)`
-
-Identifies potential Key Biodiversity Areas (KBAs) based on the representative assessment.
-
-- **Parameters:**
-  - `repr` (data.frame) — result from `compute_representative_assessment`, must contain an `out` column.
-  - `percentage_distribution` (numeric) — percentage distribution for site identification.
-  - `population_size` (integer) — population size for the KBA criterion.
-- **Returns:** A spatial object (polygons) of identified potential KBA sites.
+Removed in Sprint 6. The R6 class is replaced by standalone `compute_*` functions
+in `R/compute.R`. State is passed explicitly through parameters rather than stored
+in an object.

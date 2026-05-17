@@ -137,10 +137,9 @@ Colony is kept only inside `compute_*` calls to `track2KBA` algorithms (`tripSpl
 
 ## Package structure
 
-- **`R/`** — 7 files. Entrypoint: `cli.R` (Level 2 functions: `create_*`, `render_*`, `.adapt_config`). Compute layer: `representative_assess.R` (R6 class `Track2KBA_Wrapper` + standalone `compute_*` functions), `track_example.R` (`compute_trips`, `compute_trips_summary`), `fisheries_process.R` (`compute_filtered_*`), `get_kernels.R` (`compute_scale_parameters`). Plot layer: `plot.R` (internal `plot_*` functions). Exception: `get_domain_specific_options.R`.
-- **`tests/testthat/`** — 11 fast + 4 slow in `slow/`. Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions.
-  - Fast: `test_cache.R`, `test_cli.R`, `test_compute_cache.R`, `test_compute_individual_kde.R`, `test_compute_representative_assessment.R`, `test_fisheries_process.R`, `test_get_domain_specific_options.R`, `test_kernels.R`, `test_plot.R`, `test_representative_assess.R`, `test_track_example.R`.
-  - Slow: `slow/test_compute_potential_kba.R`, `slow/test_render_*.R`.
+- **`R/`** — 4 files. Entrypoint: `cli.R` (Level 2 functions: `create_*`, `render_*`, `.adapt_config`). Compute layer: `compute.R` (all `compute_*` functions). Plot layer: `plot.R` (internal `plot_*` functions). Exception: `get_domain_specific_options.R`.
+- **`tests/testthat/`** — 9 fast + 4 slow in `slow/`. Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions.
+  - Fast: `test_cache.R`, `test_cli.R`, `test_compute_individual_kde.R`, `test_compute_representative_assessment.R`, `test_fisheries_process.R`, `test_get_domain_specific_options.R`, `test_kernels.R`, `test_plot.R`, `test_track_example.R`.
   - Slow: `slow/test_compute_potential_kba.R`, `slow/test_render_*.R`.
 - **`tests/data/`** — CSV and RDS fixtures. Paths hardcoded as `/workdir/tests/data/…` (Docker convention).
 - **`tests/src/`** — One-off scripts (e.g., `create_test_fixtures.R`). Not part of the test suite.
@@ -151,7 +150,6 @@ Colony is kept only inside `compute_*` calls to `track2KBA` algorithms (`tripSpl
 
 ## Testing quirks
 
-- `test_representative_assess.R` defines `Wrapper_Tester` (inherits `Track2KBA_Wrapper` with empty `initialize`) for isolated unit tests.
 - `make tests_file file=<path>` runs a single test file without commit/restore.
 - Coverage script: `tests/testthat/coverage.R` (uses `covr`, sends to codecov).
 - All paths in tests are `/workdir/…` — to run outside Docker, symlink or adjust paths.
@@ -184,7 +182,7 @@ Each commit message follows this format:
 - **Formatting**: `styler` is mandatory. `make check` enforces it in CI.
 - **Docs**: roxygen2 with `markdown = TRUE`. Run `devtools::document()` (or `make install`) to regenerate `NAMESPACE` and `man/*.Rd`.
   `NAMESPACE` is gitignored; `man/` files are untracked. Roxygen2 `#'` tags in `R/*.R` are the source of truth — generated files are never committed manually.
-- **OO pattern**: R6 classes (not S3/S4) for stateful workflows like `Track2KBA_Wrapper`. Being gradually replaced by standalone `compute_*` functions (Phase 2, Sprint 6). Sprint 5 removed R6 from all `render_*` functions — they now read pre-computed artifacts directly. The R6 class is no longer called by any exported function.
+- **OO pattern**: No R6 classes remain. Legacy `Track2KBA_Wrapper` was removed in Sprint 6. All state is passed explicitly through function parameters.
 - **Compute/plot layer**: `compute_*` functions are pure (no I/O, no side effects), return lists or data.frames. `plot_*` functions are pure, return ggplot2 objects. Disk I/O lives only in exported `create_*` / `render_*` functions in `R/cli.R`.
 - **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
 - **Spatial**: `sf_use_s2(FALSE)` is self-managed by `compute_*` functions (save, set, restore on exit). `plot_*` and `create_*`/`render_*` are unaware of S2 state. Colony is removed from all presentation layers.
