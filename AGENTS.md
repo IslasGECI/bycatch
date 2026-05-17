@@ -116,24 +116,15 @@ R does not allow identifiers starting with underscore. Use dot prefix for privat
 - Level 1 I/O (`read_*`, `write_*`, `import_*`, `export_*`): only disk I/O, no computation. Third-party I/O calls (`readr::read_csv`, `sf::st_write`, `ggsave`) are used directly by Level 2 — no wrappers.
 - Level 2 (`create_*`, `render_*`): compose Level 1 functions. Only Make orchestrates Level 2 calls — they never call each other.
 
-### Spatial (S2)
+### Spatial (S2) and Colony
 
-`sf_use_s2(FALSE)` is self-managed by `compute_*` functions. Pattern:
-```r
-previous_s2_setting <- sf::sf_use_s2(FALSE)
-on.exit(sf::sf_use_s2(previous_s2_setting))
-```
-`plot_*` never sets S2 (they only use ggplot2). `create_*`/`render_*` are completely unaware of S2 state.
+`sf_use_s2(FALSE)` save/restore is the responsibility of `compute_*` functions
+but the pattern is NOT yet implemented — fixture scripts handle S2 externally.
+`plot_*` never sets S2 (they only use ggplot2). `create_*`/`render_*` are
+completely unaware of S2 state.
 
-> **NOTE:** The save/restore pattern is NOT yet implemented in any `compute_*`
-> function (P5 claimed but not done). The fixture script
-> (`tests/src/create_test_fixtures.R`) handles S2 externally. No bare
-> `sf::sf_use_s2(FALSE)` call remains in `R/cli.R` — Sprint 5 removed the last
-> one when it restructured the `render_*` functions.
-
-### Colony
-
-Colony is kept only inside `compute_*` calls to `track2KBA` algorithms (`tripSplit`, `tripSummary`). `plot_*` and `render_*` never receive or use colony.
+Colony is kept only inside `compute_*` calls to `track2KBA` algorithms
+(`tripSplit`, `tripSummary`). `plot_*` and `render_*` never receive or use colony.
 
 ## Package structure
 
@@ -151,7 +142,8 @@ Colony is kept only inside `compute_*` calls to `track2KBA` algorithms (`tripSpl
 ## Testing quirks
 
 - `make tests_file file=<path>` runs a single test file without commit/restore.
-- Coverage script: `tests/testthat/coverage.R` (uses `covr`, sends to codecov).
+- Coverage script: `tests/testthat/coverage.R` (uses `covr`, sends to codecov). HTML report written to `tests/coverage-report.html`.
+- `covr::package_coverage()` runs only the fast test suite — `render_*` function bodies are exercised only by slow tests, so they show as uncovered.
 - All paths in tests are `/workdir/…` — to run outside Docker, symlink or adjust paths.
 
 ## Fixture scripts
@@ -184,7 +176,6 @@ Each commit message follows this format:
   `NAMESPACE` is gitignored; `man/` files are untracked. Roxygen2 `#'` tags in `R/*.R` are the source of truth — generated files are never committed manually.
 - **OO pattern**: No R6 classes remain. Legacy `Track2KBA_Wrapper` was removed in Sprint 6. All state is passed explicitly through function parameters.
 - **Compute/plot layer**: `compute_*` functions are pure (no I/O, no side effects), return lists or data.frames. `plot_*` functions are pure, return ggplot2 objects. Disk I/O lives only in exported `create_*` / `render_*` functions in `R/cli.R`.
+- **`(options)` convention**: All Level 2 exported functions (`create_*`, `render_*`) accept a single `options` list parameter via `get_domain_specific_options()`. This is a permanent design decision — no signature cleanup sprint will occur.
 - **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
-- **Spatial**: `sf_use_s2(FALSE)` is self-managed by `compute_*` functions (save, set, restore on exit). `plot_*` and `create_*`/`render_*` are unaware of S2 state. Colony is removed from all presentation layers.
-- **C++**: C++17 via `.R/Makevars`.
 - **License**: AGPL-3.0-or-later.

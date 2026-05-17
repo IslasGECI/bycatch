@@ -32,17 +32,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `filter_fisheries_by_date()` renamed to `compute_filtered_fisheries_by_date()`.
 - `filter_fisheries_by_lat_lon()` renamed to `compute_filtered_fisheries_by_lat_lon()`.
 - `filter_between_dates()` renamed to `compute_filtered_between_dates()`.
-- `read_config()` replaced by private helper `.adapt_config()` for Level 2 functions.
+- `read_config()` replaced by private helper `.adapt_config()` for Level 2 functions. Source file `R/read_config.R` deleted.
 - `render_representative_assessment()` no longer runs the R6 compute pipeline. It reads a pre-computed RDS cache (`rds-path`, `output-path` only) and plots via `plot_representative_assessment()`.
 - `render_potential_kba()` no longer runs the R6 compute pipeline or calls `track2KBA::mapSite`. It reads a pre-computed GeoPackage (`gpkg-path`, `output-path` only) and plots via `plot_potential_kba()`.
 - `render_individual_kde()` no longer runs the R6 compute pipeline or calls `track2KBA::mapKDE`. It reads a pre-computed GeoPackage (`gpkg-path`, `output-path` only) and plots via `plot_individual_kde()`. Colony parameter removed from presentation layer.
-- All `compute_*` functions consolidated into `R/compute.R` (Sprint 6). Previous locations: `R/representative_assess.R`, `R/track_example.R`, `R/fisheries_process.R`, `R/get_kernels.R` — all deleted.
+- All `compute_*` functions consolidated into `R/compute.R` (Sprint 6). Previous locations: `R/representative_assess.R`, `R/track_example.R`, `R/fisheries_process.R`, `R/get_kernels.R`, `R/read_config.R` — all deleted. (5 source files removed from package root.)
 - `compute_cache` inlined into `create_processed_data`. The composition of `compute_individual_kde` + `compute_representative_assessment` is now explicit at Level 2.
 - New internal function `compute_space_use()` was added and then renamed to `compute_individual_kde()` in the same release cycle.
 
 ### Removed
 - R6 class `Track2KBA_Wrapper` and `Wrapper_Tester` test harness — replaced by standalone `compute_*` functions.
-- Test files `test_representative_assess.R` (R6-specific) and `test_compute_cache.R` (subsumed by `test_cache.R` end-to-end test). Unique assertions relocated to existing `test_compute_individual_kde.R` and `test_kernels.R`.
+- Test files `test_representative_assess.R` (R6-specific), `test_compute_cache.R` (subsumed by `test_cache.R` end-to-end test), `test_config.R` (tested removed `read_config()`), and `test_nothing.R` (version check, R6 context). Unique assertions relocated to `test_compute_individual_kde.R`, `test_kernels.R`, and `test_plot.R`.
 
 ## [0.8.0] - 2026-05-11
 ### Changed
