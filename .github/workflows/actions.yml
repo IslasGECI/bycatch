@@ -27,7 +27,8 @@ jobs:
       run: echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
     - name: Push latest Docker image to Docker Hub
       run: docker push islasgeci/bycatch:latest
-    - name: Push SHA tag to Docker Hub
+    - name: Push four-digit week tag to Docker Hub
       run: |
-        docker tag islasgeci/bycatch:latest islasgeci/bycatch:${GITHUB_SHA:0:4}
-        docker push islasgeci/bycatch:${GITHUB_SHA:0:4}
+        four_digit_week=$(date +%y%V)
+        docker tag islasgeci/bycatch:latest islasgeci/bycatch:${four_digit_week}
+        docker push islasgeci/bycatch:${four_digit_week}
