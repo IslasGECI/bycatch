@@ -1,6 +1,6 @@
 # AGENTS.md — bycatch
 
-R package `bycatch` (v0.9.0-dev) — seabird bycatch risk assessment.
+R package `bycatch` (v0.9.0) — seabird bycatch risk assessment.
 Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 
 ## Commands
