@@ -51,7 +51,7 @@ a CSV file.
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 - **Notes:** The output CSV contains columns `tripID`, `n_locs`, `departure`, `return`, `duration`, `total_dist`.
 
-### `create_trips(options, config_content)`
+### `create_trips(options)`
 
 Extracts individual foraging trips from GPS data and writes the result to a
 CSV file.
@@ -61,7 +61,6 @@ CSV file.
     - `config-path` (character) — path to the configuration file (JSON).
     - `data-path` (character) — path to the input GPS data file (CSV).
     - `output-path` (character) — path where the output CSV file is saved.
-  - `config_content` (list) — configuration content (optional; overwritten by reading from `config-path`).
 - **Returns:** None. Side effect: writes a CSV file to `output-path`.
 - **Notes:** The output CSV contains columns `tripID`, `Latitude`, `Longitude`.
 

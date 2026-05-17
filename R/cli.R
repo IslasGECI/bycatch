@@ -102,11 +102,10 @@ create_trips_summary <- function(options) {
 #'     \item{data-path}{Path to the input GPS data file (CSV).}
 #'     \item{output-path}{Path where the output CSV file will be saved.}
 #'   }
-#' @param config_content The configuration content as a list (optional, will be overwritten by reading from config-path).
 #'
 #' @return None. Called for its effect of writing trip data to disk.
 #' @export
-create_trips <- function(options, config_content) {
+create_trips <- function(options) {
   config_content <- .adapt_config(options[["config-path"]])
   trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     compute_trips(config_content)
