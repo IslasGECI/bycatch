@@ -225,7 +225,8 @@ create_processed_data <- function(options) {
   smoothing_method <- options[["smoothing-method"]]
   n_iterations <- options[["n-iterations"]]
 
-  result <- compute_cache(data, config_content, levelUD, smoothing_method, n_iterations)
+  kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
+  result <- compute_representative_assessment(kde$KDE_surface, kde$tracks, levelUD, n_iterations)
   saveRDS(result, options[["output-path"]])
 }
 

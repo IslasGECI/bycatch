@@ -14,5 +14,13 @@ describe("compute_individual_kde", {
     expect_true(inherits(result$tracks, "SpatialPointsDataFrame"))
     number_of_individuals <- 3
     expect_equal(nrow(result$UDPolygons), number_of_individuals)
+    obtained_area <- sum(result$UDPolygons$area)
+    expected_area <- 17929
+    expect_equal(obtained_area, expected_area, tolerance = 1e-3)
+
+    result_75 <- compute_individual_kde(data, config, levelUD = 75, smoothing_method = "log_median")
+    obtained_area_75 <- sum(result_75$UDPolygons$area)
+    expected_area_75 <- 44250
+    expect_equal(obtained_area_75, expected_area_75, tolerance = 1e-3)
   })
 })

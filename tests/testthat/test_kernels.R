@@ -12,5 +12,12 @@ describe("Calculate space use", {
     expect_equal(ncol(obtained), expected_ncol)
     expected_magnitud <- 5.55
     expect_equal(obtained$mag, expected_magnitud)
+    expected_names <- c("log_median", "reference_bandwidth", "scale_ARS")
+    obtained_scale_dictionary <- list(
+      "log_median" = obtained$mag,
+      "reference_bandwidth" = obtained$href,
+      "scale_ARS" = obtained$scaleARS
+    )
+    expect_true(all(names(obtained_scale_dictionary) %in% expected_names))
   })
 })
