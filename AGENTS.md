@@ -1,6 +1,6 @@
 # AGENTS.md — bycatch
 
-R package `bycatch` (v0.8.0) — seabird bycatch risk assessment.
+R package `bycatch` (v0.9.0-dev) — seabird bycatch risk assessment.
 Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 
 ## Commands
@@ -28,14 +28,15 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 > | Test file | Runtime |
 > |---|---|
 > | `test_compute_potential_kba.R` | 6m 28s |
-> | `test_render_potential_kba.R` | 5m 0s |
-> | `test_render_representative_assessment.R` | 34s |
-> | `test_render_individual_kde.R` | 23s |
+> | `test_render_potential_kba.R` | <1s (was 5m — Sprint 5 made it artifact-reading) |
+> | `test_render_representative_assessment.R` | <1s (was 34s — Sprint 5 made it artifact-reading) |
+> | `test_render_individual_kde.R` | <1s (was 23s — Sprint 5 made it artifact-reading) |
 >
-> The two longest tests (`compute_potential_kba`, `render_potential_kba`) both
-> call `findSite` internally, which is the main bottleneck with 10 individuals
-> and `polyOut=TRUE`. `make tests_file` does **not** work for files in `slow/`;
-> use `testthat::test_file()` directly instead.
+> After Sprint 5, all three `render_*` tests read pre-computed fixtures instead
+> of running the full compute pipeline, reducing them from minutes to sub-second.
+> The bottleneck shifted to `test_cache.R` (5m) and `test_compute_potential_kba.R`
+> (6m 28s), both calling `findSite` internally. `make tests_file` does **not** work
+> for files in `slow/`; use `testthat::test_file()` directly instead.
 
 ## Testing tip: source loading
 
@@ -125,9 +126,10 @@ on.exit(sf::sf_use_s2(previous_s2_setting))
 `plot_*` never sets S2 (they only use ggplot2). `create_*`/`render_*` are completely unaware of S2 state.
 
 > **NOTE:** The save/restore pattern is NOT yet implemented in any `compute_*`
-> function (P5 claimed but not done). Only `R/cli.R:35` has bare
-> `sf::sf_use_s2(FALSE)` without restore. The fixture script
-> (`tests/src/create_test_fixtures.R`) handles S2 externally.
+> function (P5 claimed but not done). The fixture script
+> (`tests/src/create_test_fixtures.R`) handles S2 externally. No bare
+> `sf::sf_use_s2(FALSE)` call remains in `R/cli.R` — Sprint 5 removed the last
+> one when it restructured the `render_*` functions.
 
 ### Colony
 
@@ -182,7 +184,7 @@ Each commit message follows this format:
 - **Formatting**: `styler` is mandatory. `make check` enforces it in CI.
 - **Docs**: roxygen2 with `markdown = TRUE`. Run `devtools::document()` (or `make install`) to regenerate `NAMESPACE` and `man/*.Rd`.
   `NAMESPACE` is gitignored; `man/` files are untracked. Roxygen2 `#'` tags in `R/*.R` are the source of truth — generated files are never committed manually.
-- **OO pattern**: R6 classes (not S3/S4) for stateful workflows like `Track2KBA_Wrapper`. Being gradually replaced by standalone `compute_*` functions (Phase 2, Sprint 6).
+- **OO pattern**: R6 classes (not S3/S4) for stateful workflows like `Track2KBA_Wrapper`. Being gradually replaced by standalone `compute_*` functions (Phase 2, Sprint 6). Sprint 5 removed R6 from all `render_*` functions — they now read pre-computed artifacts directly. The R6 class is no longer called by any exported function.
 - **Compute/plot layer**: `compute_*` functions are pure (no I/O, no side effects), return lists or data.frames. `plot_*` functions are pure, return ggplot2 objects. Disk I/O lives only in exported `create_*` / `render_*` functions in `R/cli.R`.
 - **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
 - **Spatial**: `sf_use_s2(FALSE)` is self-managed by `compute_*` functions (save, set, restore on exit). `plot_*` and `create_*`/`render_*` are unaware of S2 state. Colony is removed from all presentation layers.

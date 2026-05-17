@@ -37,17 +37,30 @@ Rscript -e "bycatch::create_processed_data(bycatch::get_domain_specific_options(
   --smoothing-method log_median \
   --n-iterations 100
 
-# 2. Generate a KBA map from the cached results
-Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options())" \
+# 2. Generate individual KDE polygons (GeoPackage) for the KBA map
+Rscript -e "bycatch::create_individual_kde(bycatch::get_domain_specific_options())" \
   --config-path /workdir/config.json \
   --data-path /workdir/data/trips.csv \
-  --output-path /workdir/output/kba.png \
+  --output-path /workdir/output/ud_polygons.gpkg \
   --percentage-distribution 50 \
-  --n-iterations 100 \
-  --population-size 10 \
   --smoothing-method log_median
 
-# 3. Export the full assessment as CSV with metadata (Tabular Data Package)
+# 3. Identify potential KBAs from the cached assessment
+Rscript -e "bycatch::create_potential_kba(bycatch::get_domain_specific_options())" \
+  --rds-path /workdir/output/cache.rds \
+  --config-path /workdir/config.json \
+  --data-path /workdir/data/trips.csv \
+  --output-path /workdir/output/kba.gpkg \
+  --percentage-distribution 50 \
+  --smoothing-method log_median \
+  --population-size 10
+
+# 4. Render a KBA map from the pre-computed GeoPackage
+Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options())" \
+  --gpkg-path /workdir/output/kba.gpkg \
+  --output-path /workdir/output/kba.png
+
+# 5. Export the full assessment as CSV with metadata (Tabular Data Package)
 Rscript -e "bycatch::create_representative_assessment(bycatch::get_domain_specific_options())" \
   --rds-path /workdir/output/cache.rds \
   --output-path /workdir/output/assessment.csv

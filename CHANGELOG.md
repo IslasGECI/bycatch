@@ -33,8 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `filter_fisheries_by_lat_lon()` renamed to `compute_filtered_fisheries_by_lat_lon()`.
 - `filter_between_dates()` renamed to `compute_filtered_between_dates()`.
 - `read_config()` replaced by private helper `.adapt_config()` for Level 2 functions.
-- Colony removed from `render_individual_kde()` — presentation layers no longer receive colony.
-- `sf_use_s2(FALSE)` now self-managed by `compute_*` functions with save/restore pattern.
+- `render_representative_assessment()` no longer runs the R6 compute pipeline. It reads a pre-computed RDS cache (`rds-path`, `output-path` only) and plots via `plot_representative_assessment()`.
+- `render_potential_kba()` no longer runs the R6 compute pipeline or calls `track2KBA::mapSite`. It reads a pre-computed GeoPackage (`gpkg-path`, `output-path` only) and plots via `plot_potential_kba()`.
+- `render_individual_kde()` no longer runs the R6 compute pipeline or calls `track2KBA::mapKDE`. It reads a pre-computed GeoPackage (`gpkg-path`, `output-path` only) and plots via `plot_individual_kde()`. Colony parameter removed from presentation layer.
+- `sf_use_s2(FALSE)` save/restore pattern still not implemented in `compute_*` functions.
 - New internal function `compute_space_use()` was added and then renamed to `compute_individual_kde()` in the same release cycle.
 
 ## [0.8.0] - 2026-05-11

@@ -4,48 +4,39 @@
 
 ### `render_potential_kba(options)`
 
-Reads GPS data and configuration, computes representative assessment and
-potential Key Biodiversity Area (KBA), and saves the resulting map as a PNG file.
+Reads a pre-computed GeoPackage file containing potential KBA polygons and
+saves the resulting map as a PNG file.
 
 - **Parameters:**
   - `options`: named list
-    - `config-path` (character) — path to the configuration file (JSON).
-    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `gpkg-path` (character) — path to the input GeoPackage file with KBA polygons.
     - `output-path` (character) — path where the output PNG plot is saved.
-    - `percentage-distribution` (integer) — percentage distribution for the assessment.
-    - `n-iterations` (integer) — number of bootstrap iterations for the assessment.
-    - `population-size` (integer) — population size for KBA site identification.
-    - `smoothing-method` (character) — smoothing method for kernel density estimation.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
-- **Notes:** S2 spherical geometry is managed internally by `compute_*` functions — `render_*` is unaware of S2 state.
+- **Notes:** The input `.gpkg` file is produced by `create_potential_kba`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
 
 ### `render_representative_assessment(options)`
 
-Reads GPS data and configuration, computes the representative assessment,
-and saves the resulting plot as a PNG file.
+Reads a cached RDS file (assessment_detail) and saves the representative
+assessment scatterplot as a PNG file.
 
 - **Parameters:**
   - `options`: named list
-    - `config-path` (character) — path to the configuration file (JSON).
-    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `rds-path` (character) — path to the cached RDS file with `assessment_summary` and `assessment_detail`.
     - `output-path` (character) — path where the output PNG plot is saved.
-    - `percentage-distribution` (integer) — percentage distribution for the assessment.
-    - `n-iterations` (integer) — number of bootstrap iterations for the assessment.
-    - `smoothing-method` (character) — smoothing method for kernel density estimation.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
+- **Notes:** The input `.rds` file is produced by `create_processed_data`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
 
 ### `render_individual_kde(options)`
 
-Reads GPS data and configuration, computes kernel density estimates (KDE)
-for each tracked individual, and saves the resulting map as a PNG file.
+Reads a pre-computed GeoPackage file containing UDPolygons and saves the
+resulting KDE map as a PNG file.
 
 - **Parameters:**
   - `options`: named list
-    - `config-path` (character) — path to the configuration file (JSON).
-    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `gpkg-path` (character) — path to the input GeoPackage file with UDPolygons.
     - `output-path` (character) — path where the output PNG plot is saved.
-    - `percentage-distribution` (integer) — percentage distribution for the KDE.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
+- **Notes:** The input `.gpkg` file is produced by `create_individual_kde`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
 
 ### `create_trips_summary(options)`
 
@@ -135,7 +126,7 @@ RDS file.
     - `smoothing-method` (character) — smoothing method for KDE.
     - `n-iterations` (integer) — number of bootstrap iterations for the representative assessment.
 - **Returns:** None. Side effect: writes an RDS file to `output-path` containing `assessment_summary` (data.frame: `out`, `asym`, `Rep70`, `Rep95`) and `assessment_detail` (data.frame: full iteration table).
-- **Notes:** This is the only function that runs the expensive `repAssess` bootstrap. Downstream functions (`create_potential_kba`, `create_representative_assessment`, `render_*`) read the cached output instead of re-running it.
+- **Notes:** This is the only function that runs the expensive `repAssess` bootstrap. Downstream functions (`create_potential_kba`, `create_representative_assessment`, `render_representative_assessment`) read the cached output instead of re-running it.
 
 ### `create_potential_kba(options)`
 
@@ -186,7 +177,7 @@ representative assessment bootstrap iterations.
 - **Parameters:**
   - `assessment_detail` (data.frame) — full iteration table with columns `SampleSize`, `InclusionRate`, `iteration`, `pred`, `rep_est`, `is_rep`. Typically loaded from a cached `.rds` file.
 - **Returns:** A ggplot2 object.
-- **Notes:** Level 1 Pure — no I/O, no side effects. Called by `render_representative_assessment` (after Sprint 5).
+- **Notes:** Level 1 Pure — no I/O, no side effects. Called by `render_representative_assessment`.
 
 ### `plot_potential_kba(site)`
 
@@ -195,7 +186,7 @@ Returns a ggplot2 map of potential Key Biodiversity Area (KBA) polygons.
 - **Parameters:**
   - `site` (sf) — polygons object with KBA site data, as returned by `compute_potential_kba()`. Typically loaded from a `.gpkg` file.
 - **Returns:** A ggplot2 object.
-- **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapSite` — no colony parameter. Called by `render_potential_kba` (after Sprint 5).
+- **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapSite` — no colony parameter. Called by `render_potential_kba`.
 
 ### `plot_individual_kde(UDPolygons)`
 
@@ -204,7 +195,7 @@ Returns a ggplot2 map of individual kernel density estimate (KDE) polygons.
 - **Parameters:**
   - `UDPolygons` (sf) — utilization distribution polygons, as returned by `compute_individual_kde()`. Typically loaded from a `.gpkg` file.
 - **Returns:** A ggplot2 object.
-- **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapKDE` — no colony parameter. Called by `render_individual_kde` (after Sprint 5).
+- **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapKDE` — no colony parameter. Called by `render_individual_kde`.
 
 ---
 
@@ -349,9 +340,10 @@ Composes date-range and bounding-box filters on fisheries data.
 
 ---
 
-## R6 class: `Track2KBA_Wrapper`
+## R6 class: `Track2KBA_Wrapper` (deprecated)
 
 Orchestrates the track2KBA workflow: projection, scale estimation, kernel density estimation, representativity assessment, and KBA identification.
+**Deprecated in favor of standalone `compute_*` functions.** No exported function calls this class after Sprint 5. Scheduled for removal in Sprint 6.
 
 ### `Track2KBA_Wrapper$new(trips_data, config_content, percentage_distribution, smoothing_method)`
 

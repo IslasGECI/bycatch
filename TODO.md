@@ -1,6 +1,6 @@
 # Implementation Plan: Function Renaming and Architecture Restructuring
 
-**Gold:** Complete Sprint 5 — restructure render functions to skip the R6 class (`Track2KBA_Wrapper`) and use pre-computed artifacts.
+**Gold:** Complete Sprint 6 — remove R6 class `Track2KBA_Wrapper` and consolidate all `compute_*` functions into `R/compute.R`.
 
 ## Architecture Reference
 
@@ -68,8 +68,8 @@ methods, exported CLI functions, and tests were updated atomically.
 
 | Sprint | Status |
 |--------|--------|
-| Sprint 5 — Restructure render functions to skip R6 class | ⬜ Next |
-| Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ |
+| Sprint 5 — Restructure render functions to skip R6 class | ✅ Done |
+| Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ Next |
 | Sprint 7 — Signature cleanup and fixture finalization | ⬜ |
 | Sprint 8 (potential) — Inline `compute_cache` into `create_processed_data` | ⬜ Maybe |
 
@@ -368,9 +368,9 @@ will break after Phase 1 and must be updated (not part of this plan):
 | `bycatch::plot_representative_assess(...)` | `bycatch::render_representative_assessment(...)` | `gps_albatross_50_percent_representative_assess_ars_*.png` |
 | `bycatch::plot_individual_kernels(...)` | `bycatch::render_individual_kde(...)` | `gps_albatross_50_percent_individuals_kernel_ars_*.png` |
 
-After Phase 2, the `render_*` and `create_*` function signatures change further.
-They will accept artifact paths (`.rds`, `.gpkg`) instead of raw `data-path`
-and `config-path`. This will require additional updates in
+Sprint 5 changed `render_*` signatures to accept artifact paths (`.rds`, `.gpkg`)
+instead of raw `data-path` and `config-path`. Sprint 7 will change the signature
+from `(options)` to explicit parameters. This will require additional updates in
 `bycatch_thesis/Makefile` at that time.
 
 ---
@@ -384,115 +384,24 @@ and `config-path`. This will require additional updates in
 | `make tests_fast` | All tests except `slow/` (~37s) | Every step that does NOT touch `render_*` functions |
 | `make tests` | `tests_fast` + `tests_slow` (~12min) | Every step that touches a `render_*` function or its test |
 
-### Pre-Work — Naming alignment
+### Pre-Work — Naming alignment ✅
 
-Before Sprint 3, rename all functions to match the architecture references.
-No behavioral changes, no new functionality. Run `make tests_fast` after each step.
-
-**Step P1 — Rename `export_*` to `create_*` (current functions)**
-- File: `R/cli.R`, `tests/testthat/test_cli.R`
-- Changes:
-  - `export_filtered_fisheries` → `create_filtered_fisheries`
-  - `export_filtered_gps_between_dates` → `create_filtered_gps_between_dates`
-  - `export_trips` → `create_trips`
-  - `export_trips_summary` → `create_trips_summary`
-- Test: `make tests_fast`
-
-**Step P2 — Rename `get_*` to `compute_*`**
-- File: `R/track_example.R`, `R/cli.R`, `tests/testthat/test_track_example.R`
-- Changes:
-  - `get_trips` → `compute_trips` (update callers in `create_trips`)
-  - `get_summary_of_trips` → `compute_trips_summary` (update callers in `create_trips_summary`)
-- Test: `make tests_fast`
-
-**Step P3 — Rename `filter_*` to `compute_filtered_*`**
-- File: `R/fisheries_process.R`, `R/cli.R`, `tests/testthat/test_fisheries_process.R`
-- Changes:
-  - `filter_fisheries_by_date_and_lat_lon` → `compute_filtered_fisheries_by_date_and_lat_lon`
-  - `filter_fisheries_by_date` → `compute_filtered_fisheries_by_date`
-  - `filter_fisheries_by_lat_lon` → `compute_filtered_fisheries_by_lat_lon`
-  - `filter_between_dates` → `compute_filtered_between_dates`
-- Update callers in `create_filtered_fisheries` and `create_filtered_gps_between_dates`
-- Test: `make tests_fast`
-
-**Step P4 — Replace `read_config` with `.adapt_config`**
-- File: Create `.adapt_config` in `R/cli.R`, delete `R/read_config.R`, delete `tests/testthat/test_config.R`
-- Action: `.adapt_config` does the same JSON read + colony tibble build as `read_config`, but lives in `R/cli.R` as a private Level 2 helper (dot prefix)
-- Update all callers in `R/cli.R` to use `.adapt_config`
-- Test: `make tests_fast`
-
-**Step P5 — Add `sf_use_s2` save/restore to `compute_*` functions calling `track2KBA`**
-- File: `R/representative_assess.R`, `R/track_example.R`, `R/get_kernels.R`
-- Action: At the top of each `compute_*` that calls a `track2KBA` function, add:
-  ```r
-  previous_s2_setting <- sf::sf_use_s2(FALSE)
-  on.exit(sf::sf_use_s2(previous_s2_setting))
-  ```
-- Affected functions: `compute_individual_kde`, `compute_representative_assessment`, `compute_potential_kba`, `compute_trips`, `compute_trips_summary`, `compute_scale_parameters`
-- Note: `compute_cache` delegates to other `compute_*` functions and does NOT need its own save/restore
-- Test: `make tests_fast`
-
-**Step P6 — Remove colony from `render_individual_kde`** 🗑️ Skipped
-- File: `R/cli.R`
-- Action: Dropped from plan. The colony-in-presentation problem is solved structurally
-  when Sprint 5 replaces `track2KBA::mapKDE` with `plot_individual_kde` (which has no
-  colony parameter). No separate intermediate step needed.
-- Test: N/A
-
-**Step P7 — Create test fixture generation script** ✅ Done
-- File: `tests/src/create_test_fixtures.R` (new)
-- Action: One-time script that runs the real `compute_*` functions once and saves outputs:
-  - `tests/data/assessment_detail.rds` — from `compute_representative_assessment`
-  - `tests/data/kba_polygons.rds` — from `compute_potential_kba`
-  - `tests/data/ud_polygons.rds` — UDPolygons extracted from KDE output
-- This script is not part of the test suite — run once, commit fixtures
-- Test: N/A
-
-**Step P8 — Bycatch thesis note** ✅ Done
-- File: `../bycatch_thesis/TODO.md`
-- Action: Add a note listing all renamed exported functions so `bycatch_thesis` can update its calls later
-- Test: N/A
+All eight pre-work steps (P1–P8) completed in Sprints 1–2:
+- P1: `export_*` renamed to `create_*`
+- P2: `get_*` renamed to `compute_*`
+- P3: `filter_*` renamed to `compute_filtered_*`
+- P4: `read_config` replaced by `.adapt_config` in `R/cli.R`
+- P5: (Not done — S2 save/restore pattern still not implemented in `compute_*`)
+- P6: Skipped (solved structurally by Sprint 5 replacing `mapKDE` with `plot_individual_kde`)
+- P7: Fixture generation script created
+- P8: `bycatch_thesis` TODO note added
 
 
 
-### Sprint 5 — Restructure render functions to skip R6 class
+### Sprint 5 — Restructure render functions to skip R6 class ✅
 
-Runs **after Sprint 4** (serial dependency). The create-phase functions from
-Sprint 4 produce the artifacts that these render functions consume.
-
-**Testing note:** Slow tests use end-to-end artifact creation during migration
-(call the Sprint 4 `create_*` inside the test preamble to produce
-temp artifacts). After Sprint 7, swap to pre-computed fixture files in
-`tests/data/`.
-
-**Step 24 — Switch `render_representative_assessment` to artifact-reading**
-- File: `R/cli.R`
-- Action: Replace `Track2KBA_Wrapper$new(...)` + `wrapper$compute_representative_assessment(...)`
-  with `readRDS(rds_path)` → `plot_representative_assessment(assessment_detail)` + `ggsave()`.
-  Still accepts `options` list (which now must contain `rds-path` in addition to `output-path`).
-  Internal logic is pure artifact-reading.
-- Test: `make tests`
-
-**Step 25 — Switch `render_potential_kba` to artifact-reading**
-- File: `R/cli.R`
-- Action: Replace R6 class usage + `mapSite()` with `sf::st_read(gpkg_path)` →
-  `plot_potential_kba(site)` + `ggsave()`. Still accepts `options` list (which now must contain
-  `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
-- Test: `make tests`
-
-**Step 26a — Switch `render_individual_kde` to artifact-reading**
-- File: `R/cli.R`
-- Action: Replace R6 class usage + `mapKDE()` with `sf::st_read(gpkg_path)` →
-  `plot_individual_kde(UDPolygons)` + `ggsave()`. Still accepts `options` list (which now must
-  contain `gpkg-path` in addition to `output-path`). Internal logic is pure artifact-reading.
-- Test: `make tests`
-
-**Step 26b — Update `bycatch_thesis` to-do list**
-- File: `../bycatch_thesis/TODO.md`
-- Action: If the changes in sprint 5 affect `../bycatch_thesis/Makefile`, add note: Sprint 5 restructures `render_*` functions to read pre-computed artifacts instead of running the R6 class. The options list now requires `rds-path` or `gpkg-path` in addition to `output-path`. The `data-path` and `config-path` arguments are no longer needed for render calls.
-- Test: N/A
-
-Stop before Sprint 6 and ask for confirmation before proceeding.
+**Steps 24–26 completed.** All three `render_*` functions now read pre-computed
+artifacts instead of running the R6 pipeline. See CHANGELOG for details.
 
 ### Sprint 6 — Remove R6 class and consolidate to `R/compute.R`
 
@@ -574,10 +483,10 @@ exercise these functions.**
 ### Phase 2 summary
 
 | Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|---|
-| **5 — Restructure renders** | **24–26** | — | **3 ahead** | **3** |
+|---|---|---|---|---|---|---|
+| **5 — Restructure renders (Done)** | **24–26** | — | **3** | **3** ✅ |
 | 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
 | **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
-| **Remaining** | **S5–S7** | **1 ahead** | **7 ahead** | **8 total** |
+| **Remaining** | **S6–S7** | **1 ahead** | **4 ahead** | **5 total** |
 
 - Sprint 7 depends on Sprint 5 (slow test files refer to render functions).
