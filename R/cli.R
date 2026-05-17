@@ -135,7 +135,7 @@ create_trips <- function(options, config_content) {
 create_filtered_fisheries <- function(options) {
   fisheries_raw_data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   fisheries_data <- fisheries_raw_data |>
-     compute_filtered_fisheries_by_date_and_lat_lon(
+    compute_filtered_fisheries_by_date_and_lat_lon(
       start = options[["start"]],
       end = options[["end"]],
       lat_min = options[["lat-min"]],
