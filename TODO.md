@@ -489,7 +489,7 @@ temp artifacts). After Sprint 7, swap to pre-computed fixture files in
 
 **Step 26b — Update `bycatch_thesis` to-do list**
 - File: `../bycatch_thesis/TODO.md`
-- Action: Add note: Sprint 5 restructures `render_*` functions to read pre-computed artifacts instead of running the R6 class. The options list now requires `rds-path` or `gpkg-path` in addition to `output-path`. The `data-path` and `config-path` arguments are no longer needed for render calls.
+- Action: If the changes in sprint 5 affect `../bycatch_thesis/Makefile`, add note: Sprint 5 restructures `render_*` functions to read pre-computed artifacts instead of running the R6 class. The options list now requires `rds-path` or `gpkg-path` in addition to `output-path`. The `data-path` and `config-path` arguments are no longer needed for render calls.
 - Test: N/A
 
 Stop before Sprint 6 and ask for confirmation before proceeding.
@@ -529,7 +529,7 @@ test change. Renaming test files is optional and not required.
 
 **Step 27b — Update `bycatch_thesis` to-do list**
 - File: `../bycatch_thesis/TODO.md`
-- Action: Add note: Sprint 6 removes the R6 class `Track2KBA_Wrapper` and consolidates all `compute_*` functions into `R/compute.R`. No direct impact on exported function signatures.
+- Action: If the changes in sprint 6 affect `../bycatch_thesis/Makefile`, add note: Sprint 6 removes the R6 class `Track2KBA_Wrapper` and consolidates all `compute_*` functions into `R/compute.R`. No direct impact on exported function signatures.
 - Test: N/A
 
 Stop before Sprint 7 and ask for confirmation before proceeding.
@@ -565,7 +565,7 @@ exercise these functions.**
 
 **Step 32 — Update `bycatch_thesis` to-do list**
 - File: `../bycatch_thesis/TODO.md`
-- Action: Add note: Sprint 7 changes `render_*` signatures from `(options)` to explicit parameters: `render_potential_kba(gpkg_path, png_path)`, `render_representative_assessment(rds_path, png_path)`, `render_individual_kde(gpkg_path, png_path)`. The Makefile `Rscript -e` calls must be updated to pass artifact paths directly instead of the options list. Also, the slow render tests now read pre-computed fixture files instead of calling `create_*` in the preamble.
+- Action: If the changes in sprint 7 affect `../bycatch_thesis/Makefile`, add note: Sprint 7 changes `render_*` signatures from `(options)` to explicit parameters: `render_potential_kba(gpkg_path, png_path)`, `render_representative_assessment(rds_path, png_path)`, `render_individual_kde(gpkg_path, png_path)`. The Makefile `Rscript -e` calls must be updated to pass artifact paths directly instead of the options list. Also, the slow render tests now read pre-computed fixture files instead of calling `create_*` in the preamble.
 - Test: N/A
 
 
