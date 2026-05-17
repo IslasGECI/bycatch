@@ -1,6 +1,6 @@
 # Implementation Plan: Function Renaming and Architecture Restructuring
 
-**Gold:** Complete Sprint 6 — remove R6 class `Track2KBA_Wrapper` and consolidate all `compute_*` functions into `R/compute.R`.
+**Gold:** Complete Sprint 6 — remove R6 class `Track2KBA_Wrapper`, consolidate all `compute_*` functions into `R/compute.R`, and inline `compute_cache` into `create_processed_data`. This finishes Phase 2.
 
 ## Architecture Reference
 
@@ -64,14 +64,12 @@ Colony is kept only inside `compute_*` functions that call `track2KBA` algorithm
 All three renames committed (see CHANGELOG for details). The R6 wrapper
 methods, exported CLI functions, and tests were updated atomically.
 
-### Phase 2 — Write / Render Separation (Sprints 5–8)
+### Phase 2 — Write / Render Separation (Sprints 5–6)
 
 | Sprint | Status |
 |--------|--------|
 | Sprint 5 — Restructure render functions to skip R6 class | ✅ Done |
-| Sprint 6 — Remove R6 class, consolidate to `R/compute.R` | ⬜ Next |
-| Sprint 7 — Signature cleanup and fixture finalization | ⬜ |
-| Sprint 8 (potential) — Inline `compute_cache` into `create_processed_data` | ⬜ Maybe |
+| Sprint 6 — Remove R6 class, consolidate to `R/compute.R`, inline `compute_cache` | ⬜ Next |
 
 ---
 
@@ -126,7 +124,7 @@ All live in `R/compute.R` (after Sprint 6 consolidation).
 | `compute_individual_kde` | `(data, config, levelUD, smoothing_method)` | `projectTracks` + `tripSummary` + `compute_scale_parameters` + `estSpaceUse` → `list(KDE_surface, UDPolygons, tracks)` |
 | `compute_representative_assessment` | `(KDE_surface, tracks, levelUD, n_iterations)` | `repAssess(bootTable=TRUE)` with null device → `list(assessment_summary, assessment_detail)` |
 | `compute_potential_kba` | `(KDE_surface, represent, popSize, levelUD)` | `findSite()` → sf polygons |
-| `compute_cache` | `(data, config, levelUD, smoothing_method, n_iterations)` | Composes `compute_individual_kde` + `compute_representative_assessment` → `list(assessment_summary, assessment_detail)` |
+| ~~`compute_cache`~~ | ~~`(data, config, levelUD, smoothing_method, n_iterations)`~~ | Inlined into `create_processed_data` (Sprint 6). Composition now explicit at Level 2. |
 | `compute_trips` | `(data, config_content)` | `formatFields` + `tripSplit` → SpatialPointsDataFrame |
 | `compute_trips_summary` | `(trips, config_content)` | `tripSummary` → data.frame |
 | `compute_scale_parameters` | `(tracks, trips_summary)` | `findScale` → list(mag, href, scaleARS) |
@@ -145,7 +143,7 @@ All live in `R/compute.R` (after Sprint 6 consolidation).
 
 All three live in `R/plot.R`.
 
-### What `compute_cache` returns
+### Cache contract
 
 The cache stores ONLY the output of `repAssess` — the expensive bootstrap.
 Everything else (KDE_surface, UDPolygons, tracks) is fast to recompute and
@@ -158,12 +156,16 @@ list(
 )
 ```
 
-**Main objective achieved:** `repAssess` runs once inside `compute_cache`. Every
+**Main objective achieved:** `repAssess` runs once inside `create_processed_data`. Every
 downstream function (`compute_potential_kba`, `render_representative_assessment`,
 `create_representative_assessment`) reads `assessment_summary` or `assessment_detail`
 from cache — the expensive bootstrap never runs twice. Functions that only need
 fast computations (`compute_individual_kde` results) recompute them on demand from
 raw data.
+
+`compute_cache` was inlined into `create_processed_data` in Sprint 6 — the
+composition of `compute_individual_kde` + `compute_representative_assessment`
+is now explicit at Level 2, not hidden behind a Level 1 wrapper.
 
 ### Exported functions in `R/cli.R` (Level 2)
 
@@ -179,7 +181,7 @@ Every exported function follows the three-line pattern.
 
 | Function | Read | Internal call | Write |
 |---|---|---|---|
-| `create_processed_data` | raw CSV + config | `compute_cache(...)` → `repAssess` output | `.rds` (assessment_summary + assessment_detail) |
+| `create_processed_data` | raw CSV + config | `compute_individual_kde` (fast) → `compute_representative_assessment` (slow, cached) | `.rds` (assessment_summary + assessment_detail) |
 
 #### Pipeline: trips
 
@@ -238,13 +240,11 @@ the pre-computed artifact — it never calls `compute_*`.
 create_processed_data(data_path, config_path, rds_path, ...)                    
   ├── rjson::fromJSON(config_path) + tibble::tibble   (via .adapt_config)
   ├── readr::read_csv(data_path)                           
-  ├── compute_cache(data, config, ...)          # internal, pure: runs repAssess ONCE
-  │     ├── compute_individual_kde(...)               # fast: projectTracks → estSpaceUse             
-  │     └── compute_representative_assessment(...)   # expensive: repAssess(bootTable=TRUE)      
-  │                                                                                            
-  └── saveRDS(                                                                               
-        list(assessment_summary, assessment_detail),  # ONLY repAssess output cached            
-        rds_path)                                                                               
+  ├── compute_individual_kde(...)               # fast: projectTracks → estSpaceUse             
+  ├── compute_representative_assessment(...)   # expensive: repAssess(bootTable=TRUE)      
+  ├── saveRDS(                                                                               
+  │     list(assessment_summary, assessment_detail),  # ONLY repAssess output cached            
+  │     rds_path)                                                                               
                                                                                                  
 create_potential_kba(rds_path, data_path, config_path, popSize, levelUD, smoothing_method, gpkg_path)
   ├── readRDS(rds_path)                         # reads assessment_summary$out                 
@@ -291,7 +291,7 @@ create_filtered_gps_between_dates(gps_csv, output_csv, ...)
   └── readr::write_csv                                                                                 
 ```
 
-### Final file layout (after Sprint 7)
+### Final file layout (after Sprint 6)
 
 ```
 R/
@@ -369,9 +369,9 @@ will break after Phase 1 and must be updated (not part of this plan):
 | `bycatch::plot_individual_kernels(...)` | `bycatch::render_individual_kde(...)` | `gps_albatross_50_percent_individuals_kernel_ars_*.png` |
 
 Sprint 5 changed `render_*` signatures to accept artifact paths (`.rds`, `.gpkg`)
-instead of raw `data-path` and `config-path`. Sprint 7 will change the signature
-from `(options)` to explicit parameters. This will require additional updates in
-`bycatch_thesis/Makefile` at that time.
+instead of raw `data-path` and `config-path`. All Level 2 functions permanently
+use the `(options)` list convention via `get_domain_specific_options()`. Sprint 6
+does not change any exported function signatures.
 
 ---
 
@@ -403,90 +403,65 @@ All eight pre-work steps (P1–P8) completed in Sprints 1–2:
 **Steps 24–26 completed.** All three `render_*` functions now read pre-computed
 artifacts instead of running the R6 pipeline. See CHANGELOG for details.
 
-### Sprint 6 — Remove R6 class and consolidate to `R/compute.R`
+### Sprint 6 — Remove R6 class, consolidate to `R/compute.R`, inline `compute_cache`
 
 R6 class is no longer used by CLI (Sprint 5 removed those callers). Only
 `test_representative_assess.R` (fast) exercises R6 methods via `Wrapper_Tester`.
+`compute_cache` is a Level 1 wrapper that simply composes two other Level 1
+calls — it is inlined into `create_processed_data` so composition is explicit
+at Level 2.
 
-**Step 27 — Delete R6 class and consolidate compute functions**
-- File: `R/representative_assess.R`, `R/track_example.R`, `R/fisheries_process.R`,
-  `R/get_kernels.R`, `tests/testthat/test_representative_assess.R`
-- Action:
-  - Delete the `Track2KBA_Wrapper` definition and `Wrapper_Tester`
-  - Delete `test_representative_assess.R`
-  - Create `R/compute.R` containing ALL `compute_*` functions (moved from the four deleted files):
-    - `compute_individual_kde`, `compute_representative_assessment`, `compute_potential_kba`,
-      `compute_cache` (from `representative_assess.R`)
-    - `compute_trips`, `compute_trips_summary` (from `track_example.R`)
-    - `compute_filtered_fisheries_by_date_and_lat_lon`, `compute_filtered_fisheries_by_date`,
-      `compute_filtered_fisheries_by_lat_lon`, `compute_filtered_between_dates`
-      (from `fisheries_process.R`)
-    - `compute_scale_parameters` (from `get_kernels.R`)
-  - Move unique assertions from `test_representative_assess.R` into the per-function
-    `test_compute_*.R` files:
-    - Area checks from "Get KDE" (`expected_area = 17929`, `expected_area = 44250`)
-      → into the `compute_individual_kde` test block.
-    - `out ≈ 59.30424` check → into the `compute_representative_assessment` test block.
-    - Scale dictionary name check (`"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`)
-      → into the `compute_scale_parameters` test block in `test_kernels.R`.
-  - No loss of coverage, no duplication.
+**Step 27 — Structural consolidation**
+- Files to delete:
+  - `R/representative_assess.R` (R6 class + `compute_individual_kde`, `compute_representative_assessment`, `compute_potential_kba`)
+  - `R/track_example.R` (`compute_trips`, `compute_trips_summary`)
+  - `R/fisheries_process.R` (4 `compute_filtered_*` functions)
+  - `R/get_kernels.R` (`compute_scale_parameters`)
+  - `tests/testthat/test_representative_assess.R` (`Wrapper_Tester`)
+  - `tests/testthat/test_compute_cache.R` (subsumed by `test_cache.R` end-to-end test)
+- File to create: `R/compute.R` — all remaining `compute_*` functions moved here
+  (all of the above EXCEPT `compute_cache`, which is inlined)
+- File to modify: `R/cli.R` — inline `compute_cache` logic into `create_processed_data`:
+  ```r
+  create_processed_data <- function(options) {
+    config_content <- .adapt_config(options[["config-path"]])
+    data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+    levelUD <- options[["percentage-distribution"]]
+    smoothing_method <- options[["smoothing-method"]]
+    n_iterations <- options[["n-iterations"]]
+
+    kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
+    result <- compute_representative_assessment(kde$KDE_surface, kde$tracks, levelUD, n_iterations)
+    saveRDS(result, options[["output-path"]])
+  }
+  ```
+- Move unique assertions from `test_representative_assess.R` into the per-function
+  `test_compute_*.R` files:
+  - Area checks from "Get KDE" (`expected_area = 17929`, `expected_area = 44250`)
+    → into the `compute_individual_kde` test block.
+  - `out ≈ 59.30424` check → into the `compute_representative_assessment` test block.
+  - Scale dictionary name check (`"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`)
+    → into the `compute_scale_parameters` test block in `test_kernels.R`.
+- Note: Test files stay in their current locations. Renaming test files is optional.
 - Test: `make tests_fast`
-
-**Note:** Test files stay in their current locations (`test_track_example.R`,
-`test_fisheries_process.R`, `test_kernels.R`) — only the function locations under
-test change. Renaming test files is optional and not required.
 
 **Step 27b — Update `bycatch_thesis` to-do list**
 - File: `../bycatch_thesis/TODO.md`
-- Action: If the changes in sprint 6 affect `../bycatch_thesis/Makefile`, add note: Sprint 6 removes the R6 class `Track2KBA_Wrapper` and consolidates all `compute_*` functions into `R/compute.R`. No direct impact on exported function signatures.
+- Action: Add note: Sprint 6 removes the R6 class `Track2KBA_Wrapper`, consolidates
+  all `compute_*` functions into `R/compute.R`, and inlines `compute_cache` into
+  `create_processed_data`. No direct impact on exported function signatures.
 - Test: N/A
 
-Stop before Sprint 7 and ask for confirmation before proceeding.
-
-### Sprint 7 — Signature cleanup and fixture finalization
-
-Change function signatures from `(options)` to explicit artifact paths (input
-first, output last). **Steps 28–30 require `make tests` because slow tests
-exercise these functions.**
-
-**Step 28 — Update `render_representative_assessment` signature**
-- File: `R/cli.R`, `tests/testthat/slow/test_render_representative_assessment.R`
-- Action: Change from `(options)` to `(rds_path, png_path)`. Update slow test.
-- Test: `make tests`
-
-**Step 29 — Update `render_potential_kba` signature**
-- File: `R/cli.R`, `tests/testthat/slow/test_render_potential_kba.R`
-- Action: Change from `(options)` to `(gpkg_path, png_path)`. Update slow test.
-- Test: `make tests`
-
-**Step 30 — Update `render_individual_kde` signature**
-- File: `R/cli.R`, `tests/testthat/slow/test_render_individual_kde.R`
-- Action: Change from `(options)` to `(gpkg_path, png_path)`. Update slow test.
-- Test: `make tests`
-
-**Step 31 — Replace end-to-end test artifacts with pre-computed fixtures**
-- File: `tests/testthat/slow/test_render_*.R`, new files in `tests/data/`
-- Action: Create fixture `.rds` (assessment_detail) and fixture `.gpkg` files
-  (KBA polygons, UDPolygons) in `tests/data/`. Replace the Sprint 5 end-to-end
-  artifact-creation preamble in each slow test with a direct path to the fixture.
-  The slow test now only tests the render pipeline: fixture → plot → PNG.
-- Test: `make tests`
-
-**Step 32 — Update `bycatch_thesis` to-do list**
-- File: `../bycatch_thesis/TODO.md`
-- Action: If the changes in sprint 7 affect `../bycatch_thesis/Makefile`, add note: Sprint 7 changes `render_*` signatures from `(options)` to explicit parameters: `render_potential_kba(gpkg_path, png_path)`, `render_representative_assessment(rds_path, png_path)`, `render_individual_kde(gpkg_path, png_path)`. The Makefile `Rscript -e` calls must be updated to pass artifact paths directly instead of the options list. Also, the slow render tests now read pre-computed fixture files instead of calling `create_*` in the preamble.
-- Test: N/A
+(Sprint 7 removed by design decision — all Level 2 functions permanently use the
+`(options)` convention via `get_domain_specific_options()`. No signature cleanup needed.)
 
 
 ---
 
 ### Phase 2 summary
 
-| Sprint | Steps | `tests_fast` cycles | `tests` cycles | Total commits |
-|---|---|---|---|---|---|---|
-| **5 — Restructure renders (Done)** | **24–26** | — | **3** | **3** ✅ |
-| 6 — Remove R6 + consolidate | 27 | 1 ahead | — | 1 |
-| **7 — Signature cleanup + fixtures** | **28–31** | — | **4 ahead** | **4** |
-| **Remaining** | **S6–S7** | **1 ahead** | **4 ahead** | **5 total** |
-
-- Sprint 7 depends on Sprint 5 (slow test files refer to render functions).
+| Sprint | Total commits | Status |
+|---|---|---|
+| 5 — Restructure renders | 3 | ✅ Done |
+| 6 — Remove R6 class, consolidate to `R/compute.R`, inline `compute_cache` | 1 | ⬜ Next |
+| **Phase 2 total** | **4** | |
