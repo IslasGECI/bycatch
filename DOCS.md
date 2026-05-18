@@ -237,7 +237,7 @@ assessment. Wraps `track2KBA::findSite`.
   - `levelUD` (numeric) — percentage contour level.
 - **Returns:** An sf object with polygon data (columns `N_IND`, `N_animals`, `potentialSite`).
 
-~~`compute_cache`~~ — removed in Sprint 6. Its logic (compose `compute_individual_kde` + `compute_representative_assessment`) is now inlined directly into `create_processed_data`.
+~~`compute_cache`~~ — removed. Its logic (compose `compute_individual_kde` + `compute_representative_assessment`) is now inlined directly into `create_processed_data`.
 
 ---
 
@@ -330,6 +330,6 @@ Composes date-range and bounding-box filters on fisheries data.
 
 ## Removed: `Track2KBA_Wrapper` (R6 class)
 
-Removed in Sprint 6. The R6 class is replaced by standalone `compute_*` functions
+The R6 class is replaced by standalone `compute_*` functions
 in `R/compute.R`. State is passed explicitly through parameters rather than stored
 in an object.

@@ -1,11 +1,11 @@
 # ==========================================
 # create_test_fixtures.R
 #
-# Context: One-time script to generate test fixture files for Sprint 3 (plot layer).
+# Context: One-time script to generate test fixture files for the plot layer.
 #
 # Description: Runs the real compute_* functions once and saves outputs as .rds
-# files in tests/data/. These fixtures are read by test_plot.R and, after Sprint 7,
-# by slow render tests. This script is NOT part of the test suite.
+# files in tests/data/. These fixtures are read by test_plot.R and by slow render
+# tests. This script is NOT part of the test suite.
 #
 # Entradas: /workdir/tests/data/trips_5_ids.csv
 #

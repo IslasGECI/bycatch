@@ -28,11 +28,11 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 > | Test file | Runtime |
 > |---|---|
 > | `test_compute_potential_kba.R` | 6m 28s |
-> | `test_render_potential_kba.R` | <1s (was 5m — Sprint 5 made it artifact-reading) |
-> | `test_render_representative_assessment.R` | <1s (was 34s — Sprint 5 made it artifact-reading) |
-> | `test_render_individual_kde.R` | <1s (was 23s — Sprint 5 made it artifact-reading) |
+> | `test_render_potential_kba.R` | <1s (was 5m — now artifact-reading) |
+> | `test_render_representative_assessment.R` | <1s (was 34s — now artifact-reading) |
+> | `test_render_individual_kde.R` | <1s (was 23s — now artifact-reading) |
 >
-> After Sprint 5, all three `render_*` tests read pre-computed fixtures instead
+> All three `render_*` tests read pre-computed fixtures instead
 > of running the full compute pipeline, reducing them from minutes to sub-second.
 > The bottleneck shifted to `test_cache.R` (5m) and `test_compute_potential_kba.R`
 > (6m 28s), both calling `findSite` internally. `make tests_file` does **not** work
@@ -174,9 +174,9 @@ Each commit message follows this format:
 - **Formatting**: `styler` is mandatory. `make check` enforces it in CI.
 - **Docs**: roxygen2 with `markdown = TRUE`. Run `devtools::document()` (or `make install`) to regenerate `NAMESPACE` and `man/*.Rd`.
   `NAMESPACE` is gitignored; `man/` files are untracked. Roxygen2 `#'` tags in `R/*.R` are the source of truth — generated files are never committed manually.
-- **OO pattern**: No R6 classes remain. Legacy `Track2KBA_Wrapper` was removed in Sprint 6. All state is passed explicitly through function parameters.
+- **OO pattern**: No R6 classes remain. Legacy `Track2KBA_Wrapper` was removed. All state is passed explicitly through function parameters.
 - **Compute/plot layer**: `compute_*` functions are pure (no I/O, no side effects), return lists or data.frames. `plot_*` functions are pure, return ggplot2 objects. Disk I/O lives only in exported `create_*` / `render_*` functions in `R/cli.R`.
-- **`(options)` convention**: All Level 2 exported functions (`create_*`, `render_*`) accept a single `options` list parameter via `get_domain_specific_options()`. This is a permanent design decision — no signature cleanup sprint will occur.
+- **`(options)` convention**: All Level 2 exported functions (`create_*`, `render_*`) accept a single `options` list parameter via `get_domain_specific_options()`. This is a permanent design decision — the `(options)` signature will not be changed.
 - **Parser-option coupling**: Every option key that a Level 2 function reads (`options[["key-name"]]`) must have a corresponding flag definition in `get_domain_specific_options()`. When adding a new function or a new option key to an existing function, always add the flag definition in `R/get_domain_specific_options.R` and add the key name to `tests/testthat/test_get_domain_specific_options.R`. Otherwise, CLI calls via `get_domain_specific_options()` fail with "long flag is invalid".
 - **Bug-scope investigation**: When a bug report mentions missing parser flags, cross-reference ALL exported Level 2 functions against `get_domain_specific_options()` — the report may list only a subset of affected functions. Use `grep('options\\[\\[', R/cli.R)` to find all consumed keys.
 - **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
