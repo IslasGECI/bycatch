@@ -116,6 +116,32 @@ R does not allow identifiers starting with underscore. Use dot prefix for privat
 - Level 1 I/O (`read_*`, `write_*`, `import_*`, `export_*`): only disk I/O, no computation. Third-party I/O calls (`readr::read_csv`, `sf::st_write`, `ggsave`) are used directly by Level 2 — no wrappers.
 - Level 2 (`create_*`, `render_*`): compose Level 1 functions. Only Make orchestrates Level 2 calls — they never call each other.
 
+### Filter ownership rule
+
+Every data row filter (`[`, `dplyr::filter`, `subset`) must be delegated to a `compute_*` function. `create_*` and `render_*` functions must not transform data — they orchestrate (read → compute → write) without filtering, mutating, or selecting rows.
+
+This includes:
+- `data[data$Returns == "Yes", ]` → inside `compute_project_returning_tracks`
+- `data[data$Returns == "Yes", ]` → inside `compute_trips_summary`
+- date-range filtering → inside `compute_filtered_between_dates`
+- lat/lon filtering → inside `compute_filtered_fisheries_by_lat_lon`
+
+Exceptions (not data filtering):
+- Reading from the `options` list (configuration access, not data transformation)
+- I/O parameters (e.g., `show_col_types = FALSE`)
+- Column selection that is inherent to output format (e.g., extracting `@data` from a Spatial object before writing CSV)
+
+### Layer ownership rule (no redundant computation)
+
+Every track2KBA function must be called in **exactly one** `compute_*` (or `plot_*`).  
+Every `compute_*` must be called in **exactly one** `create_*` (or `render_*`).  
+Every `create_*` writes its result to disk.  
+
+Consequences:
+- No `compute_*` calls another `compute_*` — if a `compute_*` needs another computation's result, the caller (`create_*`) reads it from disk and passes it as a parameter.
+- Every intermediate result is materialized on disk by a `create_*` function. The second time the same computation is needed, it is read from disk instead of re-run.
+- Exceptions must be explicitly documented with justification.
+
 ### Spatial (S2) and Colony
 
 `sf_use_s2(FALSE)` save/restore is the responsibility of `compute_*` functions
@@ -179,5 +205,5 @@ Each commit message follows this format:
 - **`(options)` convention**: All Level 2 exported functions (`create_*`, `render_*`) accept a single `options` list parameter via `get_domain_specific_options()`. This is a permanent design decision — the `(options)` signature will not be changed.
 - **Parser-option coupling**: Every option key that a Level 2 function reads (`options[["key-name"]]`) must have a corresponding flag definition in `get_domain_specific_options()`. When adding a new function or a new option key to an existing function, always add the flag definition in `R/get_domain_specific_options.R` and add the key name to `tests/testthat/test_get_domain_specific_options.R`. Otherwise, CLI calls via `get_domain_specific_options()` fail with "long flag is invalid".
 - **Bug-scope investigation**: When a bug report mentions missing parser flags, cross-reference ALL exported Level 2 functions against `get_domain_specific_options()` — the report may list only a subset of affected functions. Use `grep('options\\[\\[', R/cli.R)` to find all consumed keys.
-- **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
+- **Cache design**: Two RDS cache files produced: individual_kde.rds (KDE_surface, UDPolygons, tracks) and assessment.rds (assessment_summary, assessment_detail, KDE_surface). Colony was removed from `compute_individual_kde` when the function was simplified — it no longer calls `tripSummary`.
 - **License**: AGPL-3.0-or-later.
