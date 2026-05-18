@@ -162,7 +162,7 @@ a `datapackage.json` descriptor with field schemas.
 Defines and returns a named list of command-line options for use in CLI tools.
 
 - **Parameters:** None.
-- **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `smoothing-method`, `date-column-name`.
+- **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `gpkg-path`, `rds-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `smoothing-method`, `date-column-name`.
 
 ---
 
