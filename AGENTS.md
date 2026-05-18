@@ -1,6 +1,6 @@
 # AGENTS.md — bycatch
 
-R package `bycatch` (v0.9.0) — seabird bycatch risk assessment.
+R package `bycatch` (v0.9.1) — seabird bycatch risk assessment.
 Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 
 ## Commands
@@ -177,5 +177,7 @@ Each commit message follows this format:
 - **OO pattern**: No R6 classes remain. Legacy `Track2KBA_Wrapper` was removed in Sprint 6. All state is passed explicitly through function parameters.
 - **Compute/plot layer**: `compute_*` functions are pure (no I/O, no side effects), return lists or data.frames. `plot_*` functions are pure, return ggplot2 objects. Disk I/O lives only in exported `create_*` / `render_*` functions in `R/cli.R`.
 - **`(options)` convention**: All Level 2 exported functions (`create_*`, `render_*`) accept a single `options` list parameter via `get_domain_specific_options()`. This is a permanent design decision — no signature cleanup sprint will occur.
+- **Parser-option coupling**: Every option key that a Level 2 function reads (`options[["key-name"]]`) must have a corresponding flag definition in `get_domain_specific_options()`. When adding a new function or a new option key to an existing function, always add the flag definition in `R/get_domain_specific_options.R` and add the key name to `tests/testthat/test_get_domain_specific_options.R`. Otherwise, CLI calls via `get_domain_specific_options()` fail with "long flag is invalid".
+- **Bug-scope investigation**: When a bug report mentions missing parser flags, cross-reference ALL exported Level 2 functions against `get_domain_specific_options()` — the report may list only a subset of affected functions. Use `grep('options\\[\\[', R/cli.R)` to find all consumed keys.
 - **Cache design**: Only `repAssess` output is cached (two data.frames: `assessment_summary`, `assessment_detail`). KDE_surface, UDPolygons, and tracks are fast to recompute and never cached. Colony is used internally by `compute_individual_kde` but never returned or cached.
 - **License**: AGPL-3.0-or-later.
