@@ -243,10 +243,10 @@ assessment. Wraps `track2KBA::findSite`.
 
 ## Configuration
 
-### `.adapt_config(config_path)`
+### `import_config(config_path)`
 
 Reads a JSON configuration file and returns its content as a list with a
-parsed colony tibble. Private helper used by `create_*` and `render_*` functions.
+parsed colony tibble. Used by `create_*` and `render_*` functions.
 
 - **Parameters:**
   - `config_path` (character) — path to the JSON configuration file.

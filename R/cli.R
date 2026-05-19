@@ -1,12 +1,3 @@
-.adapt_config <- function(config_path) {
-  json_content <- rjson::fromJSON(file = config_path)
-  json_content$colony <- tibble::tibble(
-    Longitude = json_content$lon_colony,
-    Latitude  = json_content$lat_colony
-  )
-  json_content
-}
-
 #' Render Potential KBA
 #'
 #' Reads a pre-computed GeoPackage file containing potential KBA polygons and
@@ -82,7 +73,7 @@ render_individual_kde <- function(options) {
 #' @return None. Called for its side effect of writing a summary to disk.
 #' @export
 create_trips_summary <- function(options) {
-  config_content <- .adapt_config(options[["config-path"]])
+  config_content <- import_config(options[["config-path"]])
   readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     compute_trips_summary(config_content) |>
     readr::write_csv(options[["output-path"]])
@@ -106,7 +97,7 @@ create_trips_summary <- function(options) {
 #' @return None. Called for its effect of writing trip data to disk.
 #' @export
 create_trips <- function(options) {
-  config_content <- .adapt_config(options[["config-path"]])
+  config_content <- import_config(options[["config-path"]])
   trips <- readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
     compute_trips(config_content)
   trips@data |>
@@ -190,7 +181,7 @@ create_filtered_gps_between_dates <- function(options) {
 #' @return None. Called for its side effect of writing a GeoPackage file to disk.
 #' @export
 create_individual_kde <- function(options) {
-  config_content <- .adapt_config(options[["config-path"]])
+  config_content <- import_config(options[["config-path"]])
   data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   levelUD <- options[["percentage-distribution"]]
   smoothing_method <- options[["smoothing-method"]]
@@ -218,7 +209,7 @@ create_individual_kde <- function(options) {
 #' @return None. Called for its side effect of writing an RDS cache file to disk.
 #' @export
 create_processed_data <- function(options) {
-  config_content <- .adapt_config(options[["config-path"]])
+  config_content <- import_config(options[["config-path"]])
   data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   levelUD <- options[["percentage-distribution"]]
   smoothing_method <- options[["smoothing-method"]]
@@ -251,7 +242,7 @@ create_processed_data <- function(options) {
 create_potential_kba <- function(options) {
   cache <- readRDS(options[["rds-path"]])
   represent <- cache$assessment_summary$out
-  config_content <- .adapt_config(options[["config-path"]])
+  config_content <- import_config(options[["config-path"]])
   data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
   levelUD <- options[["percentage-distribution"]]
   smoothing_method <- options[["smoothing-method"]]
