@@ -195,20 +195,26 @@ render_potential_kba
    - Assert that non-returning rows are excluded
    - Assert the result is a data.frame
 
-#### `tests/testthat/test_cache.R`
+#### `tests/testthat/test_create_representative_assessment.R`
 
-1. **Delete** `describe("create_representative_assessment", ...)` block (lines 70–99).
+1. **Delete** this file (currently tests CSV/datapackage.json export — will be replaced by the create_processed_data merge).
 
-2. **Rename** `describe("create_processed_data", ...)` → `describe("create_representative_assessment", ...)` (lines 22–43).
+#### `tests/testthat/test_create_processed_data.R`
+
+1. **Rename** describe → `"create_representative_assessment"`.
    - Update call: `create_processed_data(options)` → `create_representative_assessment(options)`
    - Update options: drop `config-path`, `data-path`, `smoothing-method`; add `rds-path`
    - Assertions stay the same
 
-3. **Update `create_individual_kde` test** — drop `config-path`; add `rds-path` (points to trips_summary.rds generated inline via `compute_trips_summary`). Verify RDS output contains `KDE_surface`, `UDPolygons`, `tracks`. Replace GeoPackage assertion.
+#### `tests/testthat/test_create_individual_kde.R`
 
-4. **Update `create_potential_kba` test** — drop `config-path`, `data-path`, `smoothing-method`. Mock cache must include `KDE_surface`.
+1. **Update test** — drop `config-path`; add `rds-path` (points to trips_summary.rds generated inline via `compute_trips_summary`). Verify RDS output contains `KDE_surface`, `UDPolygons`, `tracks`. Replace GeoPackage assertion.
 
-#### `tests/testthat/test_cli.R`
+#### `tests/testthat/slow/test_create_potential_kba.R`
+
+1. **Update test** — drop `config-path`, `data-path`, `smoothing-method`. Mock cache must include `KDE_surface`.
+
+#### `tests/testthat/test_write_trips_summary.R`
 
 - Update `create_trips_summary` test: expects RDS output now, not CSV. The test still uses `import_returning_trips` internally via `create_trips_summary`.
 
@@ -217,271 +223,18 @@ render_potential_kba
 - **Cycle 1** adds a new `describe("compute_project_returning_tracks", ...)` block that feeds pre-filtered data and asserts `SpatialPointsDataFrame`.
 - **Cycle 3** updates the existing `compute_individual_kde` test to use `import_returning_trips` + `compute_project_returning_tracks` + `compute_scale_parameters` inline to build inputs, then call the new three-parameter signature.
 
-#### `DOCS.md`, `README.md`, `CHANGELOG.md`
+#### `DOCS.md`
 
 - Update references: `create_processed_data` → `create_representative_assessment`
-- Update `create_trips_summary` section: now writes RDS with returning trips only
-- Update `create_individual_kde` section: reads sumTrips from RDS, outputs RDS
+- Update `create_trips_summary` section: now uses `import_returning_trips` + writes RDS with returning trips only
+- Update `create_individual_kde` section: reads via `import_returning_trips` + reads sumTrips from RDS + outputs RDS
 - Remove CSV + `datapackage.json` export references
 - Remove old `create_processed_data` section
+- Document `import_returning_trips` in I/O section
 
-### Resolved decisions
+#### `README.md`
 
-| Question | Decision |
-|---|---|---|
-| `tripSummary` duplicate (two call sites) | `compute_trips_summary` is sole owner. Removed from `compute_individual_kde`. |
-| `projectTracks` duplicate (two call sites) | New `compute_project_returning_tracks` is sole owner. Removed from `compute_individual_kde`. No separate `create_*` needed — only called from `create_individual_kde`, which materializes `tracks` inside `individual_kde.rds`. |
-| `compute_scale_parameters` called from another `compute_*` | Now called directly from `create_individual_kde` (Level 2 → Level 1 Pure). No longer called from `compute_individual_kde`. |
-| Where does the `data[data$Returns == "Yes", ]` filter belong? | `import_returning_trips` in `R/io.R` (Level 1 I/O). Row filtering is a permitted I/O adaptation per architecture. Neither `compute_project_returning_tracks` nor `compute_trips_summary` filters — both receive pre-filtered data. |
-| `compute_project_returning_tracks` filter | Removed. Function only projects — the filter is upstream in `import_returning_trips`. |
-| `compute_trips_summary` filter | Not added. Function receives pre-filtered returning trips from `create_trips_summary`. |
-| What filter logic does `compute_project_returning_tracks` own? | None. It projects pre-filtered data only. The `Returns == "Yes"` filter lives in `import_returning_trips`. |
-| Different data subsets (all trips vs returning only) | `import_returning_trips` provides returning trips. No production consumer needs all-trips summary. |
-| Data filter ownership | All row filters belong in Level 1 I/O (`import_*`, `read_*`), not in `compute_*`. |
-| `config-path` in `create_individual_kde` | Dropped. Colony no longer needed — `tripSummary` moved to `compute_trips_summary`, `projectTracks` moved to `compute_project_returning_tracks`. |
-| `rds-path` pointing to CSV | `create_trips_summary` writes RDS. `rds-path` always points to RDS. |
-
-### TDD cycles
-
-Each cycle is a Red → Green TDD sequence ending with a passing test suite.
-Order respects the dependency tree:
-
-- Cycle 0 is a prerequisite for Cycles 2 and 3.
-- Cycle 1 is a prerequisite for Cycle 3.
-- Cycles 2, 4, 5, 6 are independent of each other (can run in any order after Cycle 0).
-
----
-
-#### Cycle 0: Add `import_returning_trips` to `R/io.R`
-
-**Red** — create test file `tests/testthat/test_io.R`:
-- Add a `describe("import_returning_trips", ...)` block
-- Feed it `trips_5_ids.csv` (contains both `Returns == "Yes"` and `Returns == "No"` rows)
-- Assert the result is a data.frame with only returning trips (all rows have `Returns == "Yes"`)
-- Assert that non-returning rows are excluded
-- **Expected failure:** `import_returning_trips` does not exist → "could not find function"
-
-**Green** — create production function in `R/io.R`:
-```r
-import_returning_trips <- function(path) {
-  data <- readr::read_csv(path, show_col_types = FALSE)
-  data[data$Returns == "Yes", ]
-}
-```
-- Test passes ✓
-
-**Files changed:** `tests/testthat/test_io.R` (Red, new file), `R/io.R` (Green)
-
-**Note:** Row filtering (`data[data$Returns == "Yes", ]`) is explicitly permitted in Level 1 I/O per the architecture ("Filtrado de filas", item 7).
-
----
-
-#### Cycle 1: Add `compute_project_returning_tracks` (projection only)
-
-**Red** — update test file `tests/testthat/test_compute_individual_kde.R`:
-- Add a `describe("compute_project_returning_tracks", ...)` block
-- Feed it pre-filtered returning trips (e.g., `trips_5_ids.csv` filtered through `import_returning_trips`)
-- Assert the result is a `SpatialPointsDataFrame`
-- **Expected failure:** `compute_project_returning_tracks` does not exist → "could not find function"
-
-**Green** — update production file `R/compute.R`:
-```r
-compute_project_returning_tracks <- function(data) {
-  track2KBA::projectTracks(dataGroup = data, projType = "azim", custom = TRUE)
-}
-```
-- Test passes ✓
-
-**Files changed:** `tests/testthat/test_compute_individual_kde.R` (Red), `R/compute.R` (Green)
-
-**Note:** No filter inside — `data` is already pre-filtered to returning trips by `import_returning_trips` (Cycle 0). This function only projects.
-
----
-
-#### Cycle 2: Update `create_trips_summary` (use `import_returning_trips` + write RDS)
-
-**Red** — update test file `tests/testthat/test_cli.R`:
-- Change `create_trips_summary` test: expect `.rds` output instead of `.csv`
-- Read back with `readRDS`, verify columns of `sumTrips`
-- **Expected failure:** output is still CSV → `readRDS` fails or `exist_output_file` checks wrong path
-
-**Green** — update production file `R/cli.R`:
-- Replace `read_csv` with `import_returning_trips` (filtering moves to I/O layer)
-- Change output from `write_csv` to `saveRDS`:
-```r
-create_trips_summary <- function(options) {
-  config_content <- import_config(options[["config-path"]])
-  returning_trips <- import_returning_trips(options[["data-path"]])
-  sumTrips <- compute_trips_summary(returning_trips, config_content)
-  saveRDS(sumTrips, options[["output-path"]])
-}
-```
-- Test passes ✓
-
-**Files changed:** `tests/testthat/test_cli.R` (Red), `R/cli.R` (Green)
-
-**Prerequisite:** Cycle 0 must be complete (needs `import_returning_trips`)
-
----
-
-#### Cycle 3: Simplify `compute_individual_kde` + rewrite `create_individual_kde`
-
-This cycle changes two functions that are tightly coupled (caller/callee).
-Must happen together to keep the suite passing.
-
-**Red** — update two test files:
-
-1. `tests/testthat/test_compute_individual_kde.R`:
-   - Update existing test for `compute_individual_kde` to call new signature:
-     ```r
-     returning_trips <- import_returning_trips(data_path)
-     tracks <- compute_project_returning_tracks(returning_trips)
-     result <- compute_individual_kde(tracks, levelUD = 50, scale = ...)
-     ```
-   - Use `compute_scale_parameters` + scale dictionary inline to produce `scale`
-   - Assertions (list structure, area) stay the same
-   - **Expected failure:** `compute_individual_kde(data, config, levelUD, smoothing_method)` called with wrong argument count → error
-
-2. `tests/testthat/test_cache.R`:
-   - Rewrite `create_individual_kde` test: drop `config-path`, add `rds-path` (pointing to a `trips_summary.rds` generated inline via `compute_trips_summary`)
-   - Assert RDS output contains `KDE_surface`, `UDPolygons`, `tracks`
-   - **Expected failure:** `create_individual_kde` still uses old signature (reads config-path, writes GeoPackage) → test expects RDS but gets GeoPackage
-
-**Green** — update two production files:
-
-1. `R/compute.R` — simplify `compute_individual_kde`:
-   ```r
-   compute_individual_kde <- function(tracks, levelUD, scale) {
-     KDE <- track2KBA::estSpaceUse(tracks = tracks, scale = scale, levelUD = levelUD, polyOut = TRUE)
-     list(
-       KDE_surface = KDE$KDE.Surface,
-       UDPolygons = KDE$UDPolygons,
-       tracks = tracks
-     )
-   }
-   ```
-
-2. `R/cli.R` — rewrite `create_individual_kde`:
-   ```r
-   create_individual_kde <- function(options) {
-     returning_trips <- import_returning_trips(options[["data-path"]])
-     sumTrips <- readRDS(options[["rds-path"]])
-     levelUD <- options[["percentage-distribution"]]
-     smoothing_method <- options[["smoothing-method"]]
-     tracks <- compute_project_returning_tracks(returning_trips)
-     scale_parameters <- compute_scale_parameters(tracks, sumTrips)
-     scale_dictionary <- list(
-       "log_median" = scale_parameters$mag,
-       "reference_bandwidth" = scale_parameters$href,
-       "scale_ARS" = scale_parameters$scaleARS
-     )
-     scale <- scale_dictionary[[smoothing_method]]
-     kde <- compute_individual_kde(tracks, levelUD, scale)
-     saveRDS(kde, options[["output-path"]])
-   }
-   ```
-
-- Both tests pass ✓
-
-**Files changed:** `tests/testthat/test_compute_individual_kde.R` (Red), `tests/testthat/test_cache.R` (Red), `R/compute.R` (Green), `R/cli.R` (Green)
-
-**Prerequisites:** Cycles 0 and 1 must be complete (needs `import_returning_trips` and `compute_project_returning_tracks`)
-
----
-
-#### Cycle 4: Merge `create_processed_data` into `create_representative_assessment`
-
-**Red** — update test file `tests/testthat/test_cache.R`:
-1. **Delete** the old `describe("create_representative_assessment", ...)` block (lines 70–99) — test removed from suite
-2. **Rename** `describe("create_processed_data", ...)` to `describe("create_representative_assessment", ...)`:
-   - Change call: `create_processed_data(options)` → `create_representative_assessment(options)`
-   - Change options: drop `config-path`, `data-path`, `smoothing-method`; add `rds-path`
-   - Assertions stay the same (check RDS output for `assessment_summary` + `assessment_detail`)
-- **Expected failure:** `create_representative_assessment` has the old CSV-export body, does not accept the new options format, and does not write the expected RDS
-
-**Green** — update production file `R/cli.R`:
-1. **Delete** the entire `create_processed_data` function (lines 202–230)
-2. **Rewrite** `create_representative_assessment`:
-   ```r
-   create_representative_assessment <- function(options) {
-     cache <- readRDS(options[["rds-path"]])
-     KDE_surface <- cache$KDE_surface
-     tracks <- cache$tracks
-     levelUD <- options[["percentage-distribution"]]
-     n_iterations <- options[["n-iterations"]]
-     result <- compute_representative_assessment(KDE_surface, tracks, levelUD, n_iterations)
-     result$KDE_surface <- KDE_surface
-     saveRDS(result, options[["output-path"]])
-   }
-   ```
-3. Remove the old CSV/datapackage.json body (the previous `create_representative_assessment`)
-- Test passes ✓
-
-**Files changed:** `tests/testthat/test_cache.R` (Red), `R/cli.R` (Green)
-
-**Note:** This cycle is independent of Cycles 0–3 — it works entirely from pre-computed RDS caches.
-
----
-
-#### Cycle 5: Simplify `create_potential_kba` (read from assessment RDS, drop re-computation)
-
-**Red** — update test file `tests/testthat/test_cache.R`:
-- Drop `config-path`, `data-path`, `smoothing-method` from options
-- Mock cache must now include `KDE_surface` alongside `assessment_summary`
-- **Expected failure:** `create_potential_kba` still expects old options and re-runs `compute_individual_kde`
-
-**Green** — update production file `R/cli.R`:
-- Rewrite `create_potential_kba`:
-  ```r
-  create_potential_kba <- function(options) {
-    cache <- readRDS(options[["rds-path"]])
-    KDE_surface <- cache$KDE_surface
-    represent <- cache$assessment_summary$out
-    levelUD <- options[["percentage-distribution"]]
-    popSize <- options[["population-size"]]
-    site <- compute_potential_kba(KDE_surface, represent, popSize, levelUD)
-    sf::st_write(site, options[["output-path"]])
-  }
-  ```
-- Test passes ✓
-
-**Files changed:** `tests/testthat/test_cache.R` (Red), `R/cli.R` (Green)
-
----
-
-#### Cycle 6: `render_individual_kde` reads from RDS instead of GeoPackage
-
-**Red** — update test file `tests/testthat/slow/test_render_individual_kde.R`:
-- Change input option from `gpkg-path` to `rds-path`, pointing to individual_kde.rds
-- **Expected failure:** `render_individual_kde` still reads from `gpkg-path` → reads wrong path or wrong format
-
-**Green** — update production file `R/cli.R`:
-- Rewrite `render_individual_kde`:
-  ```r
-  render_individual_kde <- function(options) {
-    cache <- readRDS(options[["rds-path"]])
-    ud_polygons <- cache$UDPolygons
-    plot <- plot_individual_kde(ud_polygons)
-    ggplot2::ggsave(filename = options[["output-path"]], plot = plot, device = "png")
-  }
-  ```
-- Test passes ✓
-
-**Files changed:** `tests/testthat/slow/test_render_individual_kde.R` (Red), `R/cli.R` (Green)
-
----
-
-#### Cycle 7: Refactor — docs and cleanup
-
-No Red/Green — structural improvements only:
-
-1. Update `DOCS.md`:
-   - `create_processed_data` → `create_representative_assessment` everywhere
-   - `create_trips_summary`: now uses `import_returning_trips` + writes RDS with returning trips only
-   - `create_individual_kde`: reads via `import_returning_trips` + reads sumTrips from RDS + outputs RDS
-   - Remove CSV + `datapackage.json` export references
-   - Remove old `create_processed_data` section
-   - Document `import_returning_trips` in I/O section
+- Same reference updates (no API details, just command descriptions)
 
 2. Update `README.md` — same references
 
@@ -497,10 +250,3 @@ No Red/Green — structural improvements only:
   `track2KBA`. Pattern: `previous <- sf::sf_use_s2(FALSE);
   on.exit(sf::sf_use_s2(previous))`. Currently handled externally by
   fixture scripts. See AGENTS.md "Spatial (S2) and Colony" section.
-
----
-
-## Completed
-
-- `get_domain_specific_options()` missing `--gpkg-path` and `--rds-path`
-  flags: fixed in v0.9.1 via TDD Red/Green cycle.
