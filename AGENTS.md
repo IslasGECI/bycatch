@@ -18,25 +18,41 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 | `make mutants` | Placeholder (not yet implemented) |
 
 > **Note:** `devtools` is only available inside Docker. Run tests via `docker exec bycatch_code_ci make tests`. The suite takes ~12 minutes.
-> Fast tests (ideally ~37s) can be run with `make tests_fast`, which skips the slow tests
-> in `tests/testthat/slow/`. However, `tests/testthat/test_cache.R` contains a `create_potential_kba`
-> test that calls `findSite` internally and takes ~5 minutes — it is **not** in `slow/` yet,
-> so `make tests_fast` currently takes ~6 minutes total. Slow tests require `make tests` (or `make tests_slow`).
-> 
-> Slow test timing (individual files, via `testthat::test_file`):
+> Each test file contains exactly one `describe()` block.
+> Fast tests can be run with `make tests_fast`, which skips the slow tests
+> in `tests/testthat/slow/`. Slow tests require `make tests` (or `make tests_slow`).
+> `make tests_file` does **not** work for files in `slow/`; use `testthat::test_file()` directly instead.
 >
-> | Test file | Runtime |
-> |---|---|
-> | `test_compute_potential_kba.R` | 6m 28s |
-> | `test_render_potential_kba.R` | <1s (was 5m — now artifact-reading) |
-> | `test_render_representative_assessment.R` | <1s (was 34s — now artifact-reading) |
-> | `test_render_individual_kde.R` | <1s (was 23s — now artifact-reading) |
+> Test timing (individual files):
 >
-> All three `render_*` tests read pre-computed fixtures instead
-> of running the full compute pipeline, reducing them from minutes to sub-second.
-> The bottleneck shifted to `test_cache.R` (5m) and `test_compute_potential_kba.R`
-> (6m 28s), both calling `findSite` internally. `make tests_file` does **not** work
-> for files in `slow/`; use `testthat::test_file()` directly instead.
+> | Test file | describe | Tests | Time |
+> |---|---|---|---|
+> | `test_compute_individual_kde.R` | compute_individual_kde | 8 | 17.6s |
+> | `test_compute_representative_assessment.R` | compute_representative_assessment | 5 | 5.7s |
+> | `test_create_individual_kde.R` | create_individual_kde | 2 | 21.4s |
+> | `test_create_potential_kba.R` | create_potential_kba | 2 | 166.1s |
+> | `test_create_processed_data.R` | create_processed_data | 4 | 22.0s |
+> | `test_create_representative_assessment.R` | create_representative_assessment | 2 | 3.6s |
+> | `test_filter_gps_between_dates.R` | filter gps data between dates | 1 | 3.6s |
+> | `test_fisheries_process.R` | Processes fisheries data | 3 | 3.6s |
+> | `test_get_domain_specific_options.R` | Define domain specific options | 1 | 3.6s |
+> | `test_kernels.R` | Calculate space use | 3 | 3.9s |
+> | `test_plot_individual_kde.R` | plot_individual_kde | 1 | 3.6s |
+> | `test_plot_potential_kba.R` | plot_potential_kba | 1 | 3.6s |
+> | `test_plot_representative_assessment.R` | plot_representative_assessment | 1 | 3.6s |
+> | `test_process_fisheries.R` | process fisheries data | 1 | 3.7s |
+> | `test_track_example.R` | Get trips from GECI data | 2 | 3.8s |
+> | `test_write_trips_geographic_points.R` | Write trips geographic points | 2 | 3.8s |
+> | `test_write_trips_summary.R` | Write trips summary | 2 | 3.8s |
+> | `slow/test_compute_potential_kba.R` | compute_potential_kba | 2 | 222.3s |
+> | `slow/test_render_individual_kde.R` | render individual kde | 1 | 5.0s |
+> | `slow/test_render_potential_kba.R` | render potential kba | 1 | 4.1s |
+> | `slow/test_render_representative_assessment.R` | render representative assessment | 1 | 4.1s |
+>
+> The bottleneck is `test_create_potential_kba.R` (166s) and `slow/test_compute_potential_kba.R`
+> (222s), both calling `findSite` internally.
+> All three `render_*` slow tests read pre-computed fixtures instead
+> of running the full compute pipeline, keeping them well under 10s each.
 
 ## Testing tip: source loading
 
@@ -108,7 +124,7 @@ Three documents define the architecture:
 | `render_*` | 2 Artifact | Read → plot → write (exported) |
 | `get_domain_specific_options` | — | Exported exception (CLI helper) |
 
-R does not allow identifiers starting with underscore. Use dot prefix for private helpers (`.adapt_config`).
+R does not allow identifiers starting with underscore. Use dot prefix for private helpers (`.helper_function()`).
 
 ### Layer rules
 
@@ -154,10 +170,10 @@ Colony is kept only inside `compute_*` calls to `track2KBA` algorithms
 
 ## Package structure
 
-- **`R/`** — 4 files. Entrypoint: `cli.R` (Level 2 functions: `create_*`, `render_*`, `.adapt_config`). Compute layer: `compute.R` (all `compute_*` functions). Plot layer: `plot.R` (internal `plot_*` functions). Exception: `get_domain_specific_options.R`.
-- **`tests/testthat/`** — 9 fast + 4 slow in `slow/`. Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions.
-  - Fast: `test_cache.R`, `test_cli.R`, `test_compute_individual_kde.R`, `test_compute_representative_assessment.R`, `test_fisheries_process.R`, `test_get_domain_specific_options.R`, `test_kernels.R`, `test_plot.R`, `test_track_example.R`.
-  - Slow: `slow/test_compute_potential_kba.R`, `slow/test_render_*.R`.
+- **`R/`** — 5 files. Entrypoint: `cli.R` (Level 2 functions: `create_*`, `render_*`, ). Compute layer: `compute.R` (all `compute_*` functions). Plot layer: `plot.R` (internal `plot_*` functions). I/O: `io.R` (`import_config()`). Exception: `get_domain_specific_options.R`.
+- **`tests/testthat/`** — 17 fast + 4 slow in `slow/`. Uses `testthat` edition 3 + `testtools` helpers for file-existence assertions. Each file contains exactly one `describe()` block.
+  - Fast: `test_compute_individual_kde.R`, `test_compute_representative_assessment.R`, `test_create_individual_kde.R`, `test_create_potential_kba.R`, `test_create_processed_data.R`, `test_create_representative_assessment.R`, `test_filter_gps_between_dates.R`, `test_fisheries_process.R`, `test_get_domain_specific_options.R`, `test_kernels.R`, `test_plot_individual_kde.R`, `test_plot_potential_kba.R`, `test_plot_representative_assessment.R`, `test_process_fisheries.R`, `test_track_example.R`, `test_write_trips_geographic_points.R`, `test_write_trips_summary.R`.
+  - Slow: `slow/test_compute_potential_kba.R`, `slow/test_render_individual_kde.R`, `slow/test_render_potential_kba.R`, `slow/test_render_representative_assessment.R`.
 - **`tests/data/`** — CSV and RDS fixtures. Paths hardcoded as `/workdir/tests/data/…` (Docker convention).
 - **`tests/src/`** — One-off scripts (e.g., `create_test_fixtures.R`). Not part of the test suite.
 - **`NAMESPACE`** — roxygen2-generated. Deleted by `make clean`, regenerated by `make setup`. 12 exported functions.
