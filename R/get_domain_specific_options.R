@@ -24,6 +24,7 @@ get_domain_specific_options <- function() {
   population_size <- gecioptparse::integer_option(c("-p", "--population-size"), default = 1551)
   smoothing_method <- gecioptparse::character_option(c("-z", "--smoothing-method"), default = "log_median", help = "Method to compute the smoothing parameter h")
   column_name <- gecioptparse::character_option(c("-t", "--date-column-name"), default = "Fecha", help = "Name of date column to filter")
-  option_names <- c(data_path, config_path, output_path, gpkg_path, rds_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max, population_size, smoothing_method, column_name)
+  trips_summary_path <- gecioptparse::character_option(c("-y", "--trips-summary-path"), default = "", help = "Path to trips summary CSV")
+  option_names <- c(data_path, config_path, output_path, gpkg_path, rds_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max, population_size, smoothing_method, column_name, trips_summary_path)
   gecioptparse::get_options_from_vec(option_names)
 }
