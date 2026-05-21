@@ -28,31 +28,27 @@ Run inside the provided Docker container — all paths use `/workdir/...`.
 ```shell
 # Inside the Docker container:
 
-# 1. Cache the expensive bootstrap (runs repAssess once, enables fast downstream steps)
-Rscript -e "bycatch::create_processed_data(bycatch::get_domain_specific_options())" \
-  --config-path /workdir/config.json \
-  --data-path /workdir/data/trips.csv \
-  --output-path /workdir/output/cache.rds \
-  --percentage-distribution 50 \
-  --smoothing-method log_median \
-  --n-iterations 100
-
-# 2. Generate individual KDE polygons (GeoPackage) for the KBA map
+# 1. Cache individual KDE for a colony (fast, no bootstrap)
 Rscript -e "bycatch::create_individual_kde(bycatch::get_domain_specific_options())" \
   --config-path /workdir/config.json \
   --data-path /workdir/data/trips.csv \
-  --output-path /workdir/output/ud_polygons.gpkg \
+  --output-path /workdir/output/individual_kde.rds \
   --percentage-distribution 50 \
-  --smoothing-method log_median
+  --smoothing-method log_median \
+  --trips-summary-path /workdir/data/trips_summary.csv
+
+# 2. Run the expensive bootstrap assessment (repAssess) once
+Rscript -e "bycatch::create_representative_assessment(bycatch::get_domain_specific_options())" \
+  --rds-path /workdir/output/individual_kde.rds \
+  --output-path /workdir/output/assessment.rds \
+  --percentage-distribution 50 \
+  --n-iterations 100
 
 # 3. Identify potential KBAs from the cached assessment
 Rscript -e "bycatch::create_potential_kba(bycatch::get_domain_specific_options())" \
-  --rds-path /workdir/output/cache.rds \
-  --config-path /workdir/config.json \
-  --data-path /workdir/data/trips.csv \
+  --rds-path /workdir/output/assessment.rds \
   --output-path /workdir/output/kba.gpkg \
   --percentage-distribution 50 \
-  --smoothing-method log_median \
   --population-size 10
 
 # 4. Render a KBA map from the pre-computed GeoPackage
@@ -60,10 +56,10 @@ Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options()
   --gpkg-path /workdir/output/kba.gpkg \
   --output-path /workdir/output/kba.png
 
-# 5. Export the full assessment as CSV with metadata (Tabular Data Package)
-Rscript -e "bycatch::create_representative_assessment(bycatch::get_domain_specific_options())" \
-  --rds-path /workdir/output/cache.rds \
-  --output-path /workdir/output/assessment.csv
+# 5. Render an individual KDE map from the cached RDS
+Rscript -e "bycatch::render_individual_kde(bycatch::get_domain_specific_options())" \
+  --rds-path /workdir/output/individual_kde.rds \
+  --output-path /workdir/output/individual_kde.png
 ```
 
 For a complete reference of all commands and parameters, see [`DOCS.md`](DOCS.md).
@@ -72,11 +68,10 @@ For a complete reference of all commands and parameters, see [`DOCS.md`](DOCS.md
 
 | Format | What | Example |
 |--------|------|---------|
-| PNG | Static maps and figures | KBA map, representativity plot |
-| GeoPackage (`.gpkg`) | Vector polygons for GIS | KBA boundaries, individual KDE contours |
-| CSV | Tabular data | Trip summaries, filtered data, assessment iterations |
-| RDS | Cached bootstrap results | Single-file cache for fast reprocessing |
-| `datapackage.json` | Field schemas alongside CSV | Tabular Data Package metadata |
+| PNG | Static maps and figures | KBA map, individual KDE map |
+| GeoPackage (`.gpkg`) | Vector polygons for GIS | KBA boundaries |
+| CSV | Tabular data | Trip summaries, filtered data |
+| RDS | Cached computation results | Individual KDE cache, assessment cache |
 
 ## Coming soon
 

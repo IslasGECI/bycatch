@@ -24,19 +24,19 @@ assessment scatterplot as a PNG file.
     - `rds-path` (character) — path to the cached RDS file with `assessment_summary` and `assessment_detail`.
     - `output-path` (character) — path where the output PNG plot is saved.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
-- **Notes:** The input `.rds` file is produced by `create_processed_data`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
+- **Notes:** The input `.rds` file is produced by `create_representative_assessment`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
 
 ### `render_individual_kde(options)`
 
-Reads a pre-computed GeoPackage file containing UDPolygons and saves the
+Reads a pre-computed RDS file containing UDPolygons and saves the
 resulting KDE map as a PNG file.
 
 - **Parameters:**
   - `options`: named list
-    - `gpkg-path` (character) — path to the input GeoPackage file with UDPolygons.
+    - `rds-path` (character) — path to the input RDS file with UDPolygons.
     - `output-path` (character) — path where the output PNG plot is saved.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
-- **Notes:** The input `.gpkg` file is produced by `create_individual_kde`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
+- **Notes:** The input `.rds` file is produced by `create_individual_kde`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
 
 ### `create_trips_summary(options)`
 
@@ -96,73 +96,55 @@ Filters GPS data between two inclusive dates and writes the result to a CSV file
 
 ### `create_individual_kde(options)`
 
-Reads GPS data and configuration, computes kernel density estimates (KDEs)
-for each tracked individual, and saves the resulting UDPolygons as a GeoPackage
-file. Recomputes the fast pipeline from scratch (no bootstrap).
+Reads GPS data, projects tracks, estimates smoothing scale, computes kernel
+density estimates (KDEs) for each tracked individual, and caches the full
+result (KDE_surface, UDPolygons, tracks) as an RDS file.
 
 - **Parameters:**
   - `options`: named list
     - `config-path` (character) — path to the configuration file (JSON).
     - `data-path` (character) — path to the input GPS data file (CSV).
-    - `output-path` (character) — path where the output GeoPackage file (`*.gpkg`) is saved.
+    - `trips-summary-path` (character) — path to the trips summary CSV.
+    - `output-path` (character) — path where the output RDS file (`*.rds`) is saved.
     - `percentage-distribution` (integer) — percentage contour level for KDE polygons.
-    - `smoothing-method` (character) — smoothing method for KDE. One of `"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`.
-- **Returns:** None. Side effect: writes a GeoPackage file to `output-path`.
-- **Notes:** Only the UDPolygons are written (KDE_surface and tracks are ephemeral). Colony is used internally by `compute_individual_kde` but not included in the output.
-
-### `create_processed_data(options)`
-
-Reads GPS data and configuration, runs the full bootstrap pipeline exactly once
-(compute_individual_kde + repAssess), and caches the assessment results as an
-RDS file.
-
-- **Parameters:**
-  - `options`: named list
-    - `config-path` (character) — path to the configuration file (JSON).
-    - `data-path` (character) — path to the input GPS data file (CSV).
-    - `output-path` (character) — path where the output RDS cache file is saved.
-    - `percentage-distribution` (integer) — percentage contour level for the assessment.
     - `smoothing-method` (character) — smoothing method for KDE.
-    - `n-iterations` (integer) — number of bootstrap iterations for the representative assessment.
-- **Returns:** None. Side effect: writes an RDS file to `output-path` containing `assessment_summary` (data.frame: `out`, `asym`, `Rep70`, `Rep95`) and `assessment_detail` (data.frame: full iteration table).
-- **Notes:** This is the only function that runs the expensive `repAssess` bootstrap. Downstream functions (`create_potential_kba`, `create_representative_assessment`, `render_representative_assessment`) read the cached output instead of re-running it.
+- **Returns:** None. Side effect: writes an RDS file to `output-path` containing `KDE_surface`, `UDPolygons`, and `tracks`.
 
 ### `create_potential_kba(options)`
 
-Reads a cached RDS file (from `create_processed_data`), recomputes individual
-KDE (fast, no bootstrap), identifies potential Key Biodiversity Areas (KBAs),
-and saves the result as a GeoPackage file.
+Reads a cached RDS file (containing KDE_surface and assessment_summary),
+identifies potential Key Biodiversity Areas (KBAs), and saves the result
+as a GeoPackage file. No raw data re-computation is needed.
 
 - **Parameters:**
   - `options`: named list
-    - `rds-path` (character) — path to the cached RDS file with `assessment_summary` (must contain `out` column).
-    - `config-path` (character) — path to the configuration file (JSON).
-    - `data-path` (character) — path to the input GPS data file (CSV).
+    - `rds-path` (character) — path to the cached RDS file with `KDE_surface` and `assessment_summary` (must contain `out` column).
     - `output-path` (character) — path where the output GeoPackage file (`*.gpkg`) is saved.
     - `percentage-distribution` (integer) — percentage contour level for KDE.
-    - `smoothing-method` (character) — smoothing method for KDE.
     - `population-size` (integer) — population size for the KBA criterion.
 - **Returns:** None. Side effect: writes a GeoPackage file to `output-path`.
 
 ### `create_representative_assessment(options)`
 
-Reads a cached RDS file (from `create_processed_data`) and writes the assessment
-results as a Tabular Data Package: a CSV file with the full iteration data plus
-a `datapackage.json` descriptor with field schemas.
+Reads a cached RDS file (individual KDE), runs the bootstrap assessment
+(`repAssess`), and caches the assessment_summary and assessment_detail
+as an RDS file.
 
 - **Parameters:**
   - `options`: named list
-    - `rds-path` (character) — path to the cached RDS file with `assessment_summary` and `assessment_detail`.
-    - `output-path` (character) — path where the output CSV file is saved. The `datapackage.json` descriptor is written to the same directory.
-- **Returns:** None. Side effect: writes a CSV file and `datapackage.json` to disk.
-- **Notes:** The `datapackage.json` follows the [Tabular Data Package](https://specs.frictionlessdata.io/tabular-data-package/) specification.
+    - `rds-path` (character) — path to the cached RDS file with `KDE_surface` and `tracks`.
+    - `percentage-distribution` (integer) — percentage contour level for the assessment.
+    - `n-iterations` (integer) — number of bootstrap iterations for the representative assessment.
+    - `output-path` (character) — path where the output RDS file is saved.
+- **Returns:** None. Side effect: writes an RDS file to `output-path` containing `assessment_summary` (data.frame: `out`, `asym`, `Rep70`, `Rep95`), `assessment_detail` (data.frame: full iteration table), and `KDE_surface`.
+- **Notes:** This is the only function that runs the expensive `repAssess` bootstrap. Downstream functions read the cached output instead of re-running it.
 
 ### `get_domain_specific_options()`
 
 Defines and returns a named list of command-line options for use in CLI tools.
 
 - **Parameters:** None.
-- **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `gpkg-path`, `rds-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `smoothing-method`, `date-column-name`.
+- **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `gpkg-path`, `rds-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `smoothing-method`, `date-column-name`, `trips-summary-path`.
 
 ---
 
@@ -192,7 +174,7 @@ Returns a ggplot2 map of potential Key Biodiversity Area (KBA) polygons.
 Returns a ggplot2 map of individual kernel density estimate (KDE) polygons.
 
 - **Parameters:**
-  - `UDPolygons` (sf) — utilization distribution polygons, as returned by `compute_individual_kde()`. Typically loaded from a `.gpkg` file.
+  - `UDPolygons` (sf) — utilization distribution polygons, as returned by `compute_individual_kde()`. Typically loaded from a `.rds` file.
 - **Returns:** A ggplot2 object.
 - **Notes:** Level 1 Pure — no I/O, no side effects. Replaces `track2KBA::mapKDE` — no colony parameter. Called by `render_individual_kde`.
 
@@ -200,16 +182,15 @@ Returns a ggplot2 map of individual kernel density estimate (KDE) polygons.
 
 ## Compute layer (all functions in `R/compute.R`)
 
-### `compute_individual_kde(data, config, levelUD, smoothing_method)`
+### `compute_individual_kde(tracks, levelUD, scale)`
 
-Projects tracks, estimates smoothing scale, and computes kernel density estimates
-(KDE) for each tracked individual.
+Computes kernel density estimates (KDE) for each tracked individual.
+Wraps `track2KBA::estSpaceUse` with `polyOut=TRUE`.
 
 - **Parameters:**
-  - `data` (data.frame) — GPS tracking data with a `Returns` column.
-  - `config` (list) — configuration with `colony` (tibble of `Longitude`, `Latitude`).
+  - `tracks` (SpatialPointsDataFrame) — projected tracking data (from `compute_project_returning_tracks`).
   - `levelUD` (numeric) — percentage contour level for KDE polygons.
-  - `smoothing_method` (character) — smoothing method for KDE. One of `"log_median"`, `"reference_bandwidth"`, `"scale_ARS"`.
+  - `scale` (numeric) — smoothing parameter value (e.g. `scale_params$mag` from `compute_scale_parameters`).
 - **Returns:** A list with elements `KDE_surface` (estUDm), `UDPolygons` (sf), and `tracks` (SpatialPointsDataFrame).
 
 ### `compute_representative_assessment(KDE_surface, tracks, levelUD, n_iterations)`
@@ -237,7 +218,34 @@ assessment. Wraps `track2KBA::findSite`.
   - `levelUD` (numeric) — percentage contour level.
 - **Returns:** An sf object with polygon data (columns `N_IND`, `N_animals`, `potentialSite`).
 
-~~`compute_cache`~~ — removed. Its logic (compose `compute_individual_kde` + `compute_representative_assessment`) is now inlined directly into `create_processed_data`.
+### `compute_project_returning_tracks(data)`
+
+Projects returning-trips GPS data into a spatial data frame. Wraps `track2KBA::projectTracks` with `projType = "azim"` and `custom = TRUE`.
+
+- **Parameters:**
+  - `data` (data.frame) — GPS tracking data with a `Returns` column (returning trips only).
+- **Returns:** A `SpatialPointsDataFrame` with projected coordinates.
+
+---
+
+## I/O layer
+
+### `import_trips(path, filter_returning)`
+
+Reads a GPS tracking CSV and optionally filters to returning trips only.
+
+- **Parameters:**
+  - `path` (character) — path to the GPS data CSV.
+  - `filter_returning` (logical) — if `TRUE` (default), only rows with `Returns == "Yes"` are returned.
+- **Returns:** A data.frame with GPS tracking data.
+
+### `import_trips_summary(path)`
+
+Reads a trips summary CSV as-is.
+
+- **Parameters:**
+  - `path` (character) — path to the trips summary CSV.
+- **Returns:** A data.frame with trip-level summary columns (`tripID`, `n_locs`, `departure`, `return`, `duration`, `total_dist`, `max_dist`, `direction`, `complete`).
 
 ---
 

@@ -75,7 +75,7 @@ render_individual_kde <- function(options) {
 #' @export
 create_trips_summary <- function(options) {
   config_content <- import_config(options[["config-path"]])
-  readr::read_csv(options[["data-path"]], show_col_types = FALSE) |>
+  import_trips(options[["data-path"]], filter_returning = FALSE) |>
     compute_trips_summary(config_content) |>
     readr::write_csv(options[["output-path"]])
 }

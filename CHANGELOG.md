@@ -8,7 +8,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `import_config(config_path)` — exported Level 1 I/O function that reads a JSON configuration file and returns its content as a parsed list with a colony tibble. Previously the private `.adapt_config` helper in `R/cli.R`.
+- `import_trips(path, filter_returning)` — Level 1 I/O function to read GPS tracking CSV and optionally filter to returning trips only.
+- `import_trips_summary(path)` — Level 1 I/O function to read a trips summary CSV as-is.
+- `compute_project_returning_tracks(data)` — Level 1 Pure function wrapping `track2KBA::projectTracks`.
+- `--trips-summary-path` (`-y`) CLI flag for `get_domain_specific_options()`.
+
+### Changed
+- `compute_individual_kde()` simplified from 4-param `(data, config, levelUD, smoothing_method)` to 3-param `(tracks, levelUD, scale)`. Projection, trip summary, and scale estimation are now composed externally.
+- `create_individual_kde()` rewritten to use the new pipeline (`import_trips` → `compute_project_returning_tracks` → `import_trips_summary` → `compute_scale_parameters` → `compute_individual_kde`). Output changed from GeoPackage (UDPolygons only) to RDS (KDE_surface, UDPolygons, tracks).
+- `create_representative_assessment()` now reads an individual KDE RDS, runs `repAssess`, and writes an RDS with `assessment_summary`, `assessment_detail`, and `KDE_surface`. No longer writes CSV or `datapackage.json`.
+- `create_potential_kba()` now reads `KDE_surface` directly from a cached assessment RDS instead of recomputing KDE from raw data. Drops `--config-path`, `--data-path`, `--smoothing-method` options.
+- `render_individual_kde()` now reads from an RDS file (`--rds-path`) instead of a GeoPackage (`--gpkg-path`).
+- `create_trips_summary()` now uses `import_trips(filter_returning = FALSE)` internally instead of raw `readr::read_csv`.
+- `import_config()` now exported. Previously the private `.adapt_config` helper in `R/cli.R`.
+
+### Removed
+- `create_processed_data()` — its logic (compose `compute_individual_kde` + `compute_representative_assessment`) is now embedded in `create_representative_assessment`.
 
 ## [0.9.1] - 2026-05-17
 

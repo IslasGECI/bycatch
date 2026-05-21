@@ -31,14 +31,6 @@ popSize <- 10
 
 # ==== ENTRADAS ====
 data_path <- "/workdir/tests/data/trips_5_ids.csv"
-data <- read_csv(data_path, show_col_types = FALSE)
-
-config <- list(
-  colony = tibble(
-    Longitude = -118.29162,
-    Latitude = 28.88421
-  )
-)
 
 # ==== PROCESAMIENTO / ANÁLISIS ====
 # compute_* functions are expected to self-manage S2 (P5),
@@ -48,7 +40,11 @@ previous_s2 <- sf::sf_use_s2(FALSE)
 
 # Step 1: Compute individual KDE (fast, no bootstrap)
 cat("Computing individual KDE...\n")
-kde <- bycatch:::compute_individual_kde(data, config, levelUD, smoothing_method)
+returning_trips <- bycatch:::import_trips(data_path, filter_returning = TRUE)
+tracks <- bycatch:::compute_project_returning_tracks(returning_trips)
+sum_trips <- read_csv("/workdir/tests/data/trips_summary.csv", show_col_types = FALSE)
+scale_params <- bycatch:::compute_scale_parameters(tracks, sum_trips)
+kde <- bycatch:::compute_individual_kde(tracks, levelUD, scale_params$mag)
 
 # Step 2: Save UDPolygons fixture
 cat("Saving UDPolygons fixture...\n")
