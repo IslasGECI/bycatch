@@ -194,18 +194,15 @@ create_individual_kde <- function(options) {
 
 #' Create Potential KBA
 #'
-#' Reads a cached RDS file (assessment_summary), GPS data and configuration,
-#' recomputes individual KDE (fast, no bootstrap), identifies potential Key
-#' Biodiversity Areas (KBAs), and saves the result as a GeoPackage file.
+#' Reads a cached RDS file (assessment data with KDE_surface and
+#' assessment_summary), identifies potential Key Biodiversity Areas (KBAs),
+#' and saves the result as a GeoPackage file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
-#'     \item{rds-path}{Path to the cached RDS file with assessment_summary (must contain `out`).}
-#'     \item{config-path}{Path to the configuration file (JSON).}
-#'     \item{data-path}{Path to the input GPS data file (CSV).}
+#'     \item{rds-path}{Path to the cached RDS file with KDE_surface and assessment_summary.}
 #'     \item{output-path}{Path where the output GeoPackage file will be saved.}
 #'     \item{percentage-distribution}{Integer specifying the percentage distribution for KDE.}
-#'     \item{smoothing-method}{Character string specifying the smoothing method for KDE.}
 #'     \item{population-size}{Integer specifying the population size for KBA identification.}
 #'   }
 #'
@@ -213,15 +210,12 @@ create_individual_kde <- function(options) {
 #' @export
 create_potential_kba <- function(options) {
   cache <- readRDS(options[["rds-path"]])
+  KDE_surface <- cache$KDE_surface
   represent <- cache$assessment_summary$out
-  config_content <- import_config(options[["config-path"]])
-  data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  levelUD <- options[["percentage-distribution"]]
-  smoothing_method <- options[["smoothing-method"]]
   popSize <- options[["population-size"]]
+  levelUD <- options[["percentage-distribution"]]
 
-  kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
-  site <- compute_potential_kba(kde$KDE_surface, represent, popSize, levelUD)
+  site <- compute_potential_kba(KDE_surface, represent, popSize, levelUD)
   sf::st_write(site, options[["output-path"]])
 }
 
