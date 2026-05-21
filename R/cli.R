@@ -181,13 +181,15 @@ create_filtered_gps_between_dates <- function(options) {
 #' @return None. Called for its side effect of writing a GeoPackage file to disk.
 #' @export
 create_individual_kde <- function(options) {
-  config_content <- import_config(options[["config-path"]])
-  data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
+  returning_trips <- import_trips(options[["data-path"]], filter_returning = TRUE)
+  tracks <- compute_project_returning_tracks(returning_trips)
+  sum_trips <- import_trips_summary(options[["trips-summary-path"]])
+  scale_params <- compute_scale_parameters(tracks, sum_trips)
+  scale <- scale_params$mag
   levelUD <- options[["percentage-distribution"]]
-  smoothing_method <- options[["smoothing-method"]]
 
-  kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
-  sf::st_write(kde$UDPolygons, options[["output-path"]])
+  kde <- compute_individual_kde(tracks, levelUD, scale)
+  saveRDS(kde, options[["output-path"]])
 }
 
 #' Create Processed Data
