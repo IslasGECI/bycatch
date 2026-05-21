@@ -14,3 +14,7 @@ import_trips <- function(path, filter_returning = TRUE) {
   }
   trips
 }
+
+import_trips_summary <- function(path) {
+  readr::read_csv(path, show_col_types = FALSE)
+}
