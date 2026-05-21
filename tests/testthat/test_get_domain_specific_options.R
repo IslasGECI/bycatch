@@ -16,7 +16,8 @@ describe("Define domain specific options", {
     "population-size",
     "rds-path",
     "smoothing-method",
-    "start"
+    "start",
+    "trips-summary-path"
   )
   expect_true(all(expected_options %in% names(obtained_options)))
 })
