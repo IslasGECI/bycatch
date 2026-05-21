@@ -34,7 +34,6 @@ Rscript -e "bycatch::create_individual_kde(bycatch::get_domain_specific_options(
   --data-path /workdir/data/trips.csv \
   --output-path /workdir/output/individual_kde.rds \
   --percentage-distribution 50 \
-  --smoothing-method log_median \
   --trips-summary-path /workdir/data/trips_summary.csv
 
 # 2. Run the expensive bootstrap assessment (repAssess) once

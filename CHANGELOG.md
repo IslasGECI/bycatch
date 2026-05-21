@@ -8,19 +8,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
-- `import_trips(path, filter_returning)` — Level 1 I/O function to read GPS tracking CSV and optionally filter to returning trips only.
-- `import_trips_summary(path)` — Level 1 I/O function to read a trips summary CSV as-is.
-- `compute_project_returning_tracks(data)` — Level 1 Pure function wrapping `track2KBA::projectTracks`.
+- (none)
+
+### Changed
+- (none)
+
+### Fixed
+- (none)
+
+## [0.10.0] - 2026-05-20
+
+### Added
 - `--trips-summary-path` (`-y`) CLI flag for `get_domain_specific_options()`.
 
 ### Changed
-- `compute_individual_kde()` simplified from 4-param `(data, config, levelUD, smoothing_method)` to 3-param `(tracks, levelUD, scale)`. Projection, trip summary, and scale estimation are now composed externally.
-- `create_individual_kde()` rewritten to use the new pipeline (`import_trips` → `compute_project_returning_tracks` → `import_trips_summary` → `compute_scale_parameters` → `compute_individual_kde`). Output changed from GeoPackage (UDPolygons only) to RDS (KDE_surface, UDPolygons, tracks).
+- `create_individual_kde()` rewritten. Output changed from GeoPackage (UDPolygons only) to RDS (KDE_surface, UDPolygons, tracks). Pipeline now uses `import_trips` → `compute_project_returning_tracks` → `import_trips_summary` → `compute_scale_parameters` → `compute_individual_kde`. Accepts new `--trips-summary-path` flag; `--smoothing-method` is no longer consumed.
 - `create_representative_assessment()` now reads an individual KDE RDS, runs `repAssess`, and writes an RDS with `assessment_summary`, `assessment_detail`, and `KDE_surface`. No longer writes CSV or `datapackage.json`.
 - `create_potential_kba()` now reads `KDE_surface` directly from a cached assessment RDS instead of recomputing KDE from raw data. Drops `--config-path`, `--data-path`, `--smoothing-method` options.
 - `render_individual_kde()` now reads from an RDS file (`--rds-path`) instead of a GeoPackage (`--gpkg-path`).
-- `create_trips_summary()` now uses `import_trips(filter_returning = FALSE)` internally instead of raw `readr::read_csv`.
-- `import_config()` now exported. Previously the private `.adapt_config` helper in `R/cli.R`.
+- `create_trips_summary()` now uses `import_trips(filter_returning = FALSE)` internally. No change to its CLI interface.
 
 ### Removed
 - `create_processed_data()` — its logic (compose `compute_individual_kde` + `compute_representative_assessment`) is now embedded in `create_representative_assessment`.
@@ -98,7 +104,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-10-03
 
 
-[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.9.1...HEAD
+[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.0...HEAD
+[0.10.0]: https://github.com/IslasGECI/bycatch/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/IslasGECI/bycatch/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/IslasGECI/bycatch/compare/v0.8.0...v0.9.0
 [0.8.0]: https://github.com/IslasGECI/bycatch/compare/v0.7.0...v0.8.0

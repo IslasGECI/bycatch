@@ -166,20 +166,20 @@ create_filtered_gps_between_dates <- function(options) {
 
 #' Create Individual KDE
 #'
-#' Reads GPS data and configuration, computes kernel density estimates (KDEs)
-#' for each tracked individual, and saves the resulting UDPolygons as a GeoPackage file.
-#' Recomputes the fast pipeline from scratch (no bootstrap).
+#' Reads GPS data, projects tracks, estimates smoothing scale, computes kernel
+#' density estimates (KDEs) for each tracked individual, and saves the full
+#' result (KDE_surface, UDPolygons, tracks) as an RDS file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
 #'     \item{config-path}{Path to the configuration file (JSON).}
 #'     \item{data-path}{Path to the input GPS data file (CSV).}
-#'     \item{output-path}{Path where the output GeoPackage file will be saved.}
+#'     \item{trips-summary-path}{Path to the trips summary CSV.}
+#'     \item{output-path}{Path where the output RDS file will be saved.}
 #'     \item{percentage-distribution}{Integer specifying the percentage distribution for KDE.}
-#'     \item{smoothing-method}{Character string specifying the smoothing method for KDE.}
 #'   }
 #'
-#' @return None. Called for its side effect of writing a GeoPackage file to disk.
+#' @return None. Called for its side effect of writing an RDS file to disk.
 #' @export
 create_individual_kde <- function(options) {
   returning_trips <- import_trips(options[["data-path"]], filter_returning = TRUE)

@@ -107,7 +107,6 @@ result (KDE_surface, UDPolygons, tracks) as an RDS file.
     - `trips-summary-path` (character) — path to the trips summary CSV.
     - `output-path` (character) — path where the output RDS file (`*.rds`) is saved.
     - `percentage-distribution` (integer) — percentage contour level for KDE polygons.
-    - `smoothing-method` (character) — smoothing method for KDE.
 - **Returns:** None. Side effect: writes an RDS file to `output-path` containing `KDE_surface`, `UDPolygons`, and `tracks`.
 
 ### `create_potential_kba(options)`
