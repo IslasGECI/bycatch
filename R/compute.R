@@ -66,18 +66,7 @@ compute_project_returning_tracks <- function(data) {
   track2KBA::projectTracks(dataGroup = data, projType = "azim", custom = TRUE)
 }
 
-compute_individual_kde <- function(data, config, levelUD, smoothing_method) {
-  complete_trips <- data[data$Returns == "Yes", ]
-  colony <- config$colony
-  tracks <- track2KBA::projectTracks(dataGroup = complete_trips, projType = "azim", custom = TRUE)
-  sumTrips <- track2KBA::tripSummary(trips = complete_trips, colony = colony)
-  scale_parameters <- compute_scale_parameters(tracks, sumTrips)
-  scale_dictionary <- list(
-    "log_median" = scale_parameters$mag,
-    "reference_bandwidth" = scale_parameters$href,
-    "scale_ARS" = scale_parameters$scaleARS
-  )
-  scale <- scale_dictionary[[smoothing_method]]
+compute_individual_kde <- function(tracks, levelUD, scale) {
   KDE <- track2KBA::estSpaceUse(
     tracks = tracks,
     scale = scale,
