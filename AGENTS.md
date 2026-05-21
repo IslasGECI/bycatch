@@ -99,4 +99,7 @@ Each commit: **Gitmoji** + imperative verb + under-72-char summary. Blank line. 
 - `sf_use_s2(FALSE)` save/restore should live in `compute_*` but is not yet implemented — fixture scripts handle S2 externally.
 - `--smoothing-method` (`-z`) is defined in `get_domain_specific_options()` but no Level 2 function consumes it anymore (deprecated). All functions that previously used it now call `compute_scale_parameters` → `track2KBA::findScale` directly.
 - `create_processed_data` was removed in v0.10.0. Its role (composing `compute_individual_kde` + `compute_representative_assessment`) is now embedded in `create_representative_assessment`.
+- **CHANGELOG strategy**: Document only exported (Level 2) functions (`create_*`, `render_*`, `get_domain_specific_options`). Level 1 internal functions (`compute_*`, `import_*`, `plot_*`) are implementation details and excluded. This keeps the user-facing API changelog clean and separates public contract from internal refactoring.
+- **Cross-repo validation**: When updating CLI signatures or exported functions, audit all downstream consumers (e.g., `../bycatch_thesis/Makefile`) — verify every `bycatch::` call references an `@export` function. Stale function calls can silently break dependency workflows.
+- **Documentation sync**: After renaming or changing signatures, verify all references in `DOCS.md`, `README.md`, roxygen `@param` tags, and test files. Stale docs in roxygen tags cause CLI failures ("long flag is invalid").
 - License: AGPL-3.0-or-later.
