@@ -62,6 +62,10 @@ compute_scale_parameters <- function(tracks, trips_summary) {
   return(hVals)
 }
 
+compute_project_returning_tracks <- function(data) {
+  track2KBA::projectTracks(dataGroup = data, projType = "azim", custom = TRUE)
+}
+
 compute_individual_kde <- function(data, config, levelUD, smoothing_method) {
   complete_trips <- data[data$Returns == "Yes", ]
   colony <- config$colony
