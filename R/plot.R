@@ -19,9 +19,7 @@ plot_representative_assessment <- function(assessment_detail) {
 #' @return A ggplot object mapping the potential KBA polygons.
 #' @noRd
 plot_potential_kba <- function(site) {
-  ggplot2::ggplot(site) +
-    ggplot2::geom_sf() +
-    ggplot2::labs(x = "Longitude", y = "Latitude")
+  track2KBA::mapSite(Site = site, show = FALSE)
 }
 
 #' Plot individual KDE
