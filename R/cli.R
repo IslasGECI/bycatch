@@ -39,19 +39,20 @@ render_representative_assessment <- function(options) {
 
 #' Render Individual KDE
 #'
-#' Reads a pre-computed GeoPackage file containing UDPolygons and saves the
+#' Reads a pre-computed RDS file containing UDPolygons and saves the
 #' resulting KDE map as a PNG file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
-#'     \item{gpkg-path}{Path to the input GeoPackage file with UDPolygons.}
+#'     \item{rds-path}{Path to the input RDS file with UDPolygons.}
 #'     \item{output-path}{Path where the output PNG plot will be saved.}
 #'   }
 #'
 #' @return None. Called for its side effect of saving a plot to disk.
 #' @export
 render_individual_kde <- function(options) {
-  ud_polygons <- sf::st_read(options[["gpkg-path"]], quiet = TRUE)
+  cache <- readRDS(options[["rds-path"]])
+  ud_polygons <- cache$UDPolygons
   plot <- plot_individual_kde(ud_polygons)
   ggplot2::ggsave(filename = options[["output-path"]], plot = plot, device = "png")
 }
