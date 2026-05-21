@@ -192,36 +192,6 @@ create_individual_kde <- function(options) {
   saveRDS(kde, options[["output-path"]])
 }
 
-#' Create Processed Data
-#'
-#' Reads GPS data and configuration, runs the full bootstrap pipeline
-#' (compute_individual_kde + compute_representative_assessment) exactly once,
-#' and caches the assessment_summary and assessment_detail as an RDS file.
-#'
-#' @param options A named list containing the following elements:
-#'   \describe{
-#'     \item{config-path}{Path to the configuration file (JSON).}
-#'     \item{data-path}{Path to the input GPS data file (CSV).}
-#'     \item{output-path}{Path where the output RDS file will be saved.}
-#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
-#'     \item{smoothing-method}{Character string specifying the smoothing method for KDE.}
-#'     \item{n-iterations}{Integer specifying the number of bootstrap iterations.}
-#'   }
-#'
-#' @return None. Called for its side effect of writing an RDS cache file to disk.
-#' @export
-create_processed_data <- function(options) {
-  config_content <- import_config(options[["config-path"]])
-  data <- readr::read_csv(options[["data-path"]], show_col_types = FALSE)
-  levelUD <- options[["percentage-distribution"]]
-  smoothing_method <- options[["smoothing-method"]]
-  n_iterations <- options[["n-iterations"]]
-
-  kde <- compute_individual_kde(data, config_content, levelUD, smoothing_method)
-  result <- compute_representative_assessment(kde$KDE_surface, kde$tracks, levelUD, n_iterations)
-  saveRDS(result, options[["output-path"]])
-}
-
 #' Create Potential KBA
 #'
 #' Reads a cached RDS file (assessment_summary), GPS data and configuration,
@@ -257,46 +227,27 @@ create_potential_kba <- function(options) {
 
 #' Create Representative Assessment
 #'
-#' Reads a cached RDS file (assessment_summary + assessment_detail) and writes
-#' the assessment_detail as a CSV file alongside a datapackage.json descriptor
-#' (Tabular Data Package format).
+#' Reads a cached RDS file (individual KDE), runs the bootstrap assessment,
+#' and caches the assessment_summary and assessment_detail as an RDS file.
 #'
 #' @param options A named list containing the following elements:
 #'   \describe{
-#'     \item{rds-path}{Path to the cached RDS file with assessment_summary and assessment_detail.}
-#'     \item{output-path}{Path where the output CSV file will be saved. The datapackage.json
-#'       is written to the same directory.}
+#'     \item{rds-path}{Path to the cached RDS file with KDE_surface and tracks.}
+#'     \item{percentage-distribution}{Integer specifying the percentage distribution for the assessment.}
+#'     \item{n-iterations}{Integer specifying the number of bootstrap iterations.}
+#'     \item{output-path}{Path where the output RDS file will be saved.}
 #'   }
 #'
-#' @return None. Called for its side effect of writing CSV and datapackage.json to disk.
+#' @return None. Called for its side effect of writing an RDS file to disk.
 #' @export
 create_representative_assessment <- function(options) {
   cache <- readRDS(options[["rds-path"]])
-  assessment_summary <- cache$assessment_summary
-  assessment_detail <- cache$assessment_detail
+  KDE_surface <- cache$KDE_surface
+  tracks <- cache$tracks
+  levelUD <- options[["percentage-distribution"]]
+  n_iterations <- options[["n-iterations"]]
 
-  readr::write_csv(assessment_detail, options[["output-path"]])
-
-  dpkg_path <- file.path(dirname(options[["output-path"]]), "datapackage.json")
-  dpkg <- list(
-    profile = "tabular-data-package",
-    name = "representative-assessment",
-    resources = list(
-      list(
-        path = basename(options[["output-path"]]),
-        profile = "tabular-data-resource",
-        schema = list(
-          fields = list(
-            list(name = "SampleSize", type = "number", description = "Number of individuals sampled"),
-            list(name = "InclusionRate", type = "number", description = "Inclusion rate for this iteration"),
-            list(name = "iteration", type = "integer", description = "Bootstrap iteration number"),
-            list(name = "pred", type = "number", description = "Predicted asymptotic inclusion rate"),
-            list(name = "rep_est", type = "number", description = "Representativeness estimate"),
-            list(name = "is_rep", type = "boolean", description = "Whether this sample is representative")
-          )
-        )
-      )
-    )
-  )
-  writeLines(rjson::toJSON(dpkg), dpkg_path)
+  result <- compute_representative_assessment(KDE_surface, tracks, levelUD, n_iterations)
+  result$KDE_surface <- KDE_surface
+  saveRDS(result, options[["output-path"]])
 }
