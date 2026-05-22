@@ -33,7 +33,8 @@ render_potential_kba <- function(options) {
 render_representative_assessment <- function(options) {
   cache <- readRDS(options[["rds-path"]])
   assessment_detail <- cache$assessment_detail
-  plot <- plot_representative_assessment(assessment_detail)
+  assessment_summary <- cache$assessment_summary
+  plot <- plot_representative_assessment(assessment_detail, assessment_summary)
   ggplot2::ggsave(filename = options[["output-path"]], plot = plot, device = "png")
 }
 

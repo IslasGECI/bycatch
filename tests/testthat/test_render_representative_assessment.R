@@ -6,7 +6,7 @@ describe("render representative assessment", {
     # Build a cache file from the existing fixture
     assessment_detail <- readRDS("/workdir/tests/data/assessment_detail.rds")
     cache <- list(
-      assessment_summary = data.frame(out = NA),
+      assessment_summary = data.frame(out = 50, est_asym = 0.75),
       assessment_detail = assessment_detail
     )
     saveRDS(cache, rds_path)
