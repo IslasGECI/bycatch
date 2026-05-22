@@ -11,10 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (none)
 
 ### Changed
-- `render_representative_assessment()` output visualization now includes confidence bands (meanPred ± est_asym × sdInclude), fitted regression curve, and representativeness percentage label. Previously showed only a scatter plot of raw observations.
+- (none)
 
 ### Fixed
 - (none)
+
+## [0.10.1] - 2026-05-21
+
+### Changed
+- `render_representative_assessment()` output visualization now includes confidence bands (meanPred ± est_asym × sdInclude), fitted regression curve, and representativeness percentage label. Previously showed only a scatter plot of raw observations.
 
 ## [0.10.0] - 2026-05-20
 
@@ -104,7 +109,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-10-03
 
 
-[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.0...HEAD
+[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.1...HEAD
+[0.10.1]: https://github.com/IslasGECI/bycatch/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/IslasGECI/bycatch/compare/v0.9.1...v0.10.0
 [0.9.1]: https://github.com/IslasGECI/bycatch/compare/v0.9.0...v0.9.1
 [0.9.0]: https://github.com/IslasGECI/bycatch/compare/v0.8.0...v0.9.0
