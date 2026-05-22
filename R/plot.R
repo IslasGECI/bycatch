@@ -30,7 +30,5 @@ plot_potential_kba <- function(site) {
 #' @return A ggplot object mapping the individual KDE polygons.
 #' @noRd
 plot_individual_kde <- function(UDPolygons) {
-  ggplot2::ggplot(UDPolygons) +
-    ggplot2::geom_sf() +
-    ggplot2::labs(x = "Longitude", y = "Latitude")
+  track2KBA::mapKDE(KDE = UDPolygons, colony = NULL, show = FALSE)
 }
