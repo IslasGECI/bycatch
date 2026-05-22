@@ -6,9 +6,9 @@ A codebase where the **Layer ownership rule** is fully enforced — no redundant
 
 ## Next steps
 
-### v0.9.2 cleanup
+### Current status
 
-All 9 TDD cycles and "Outside the Plan" refactoring are complete. The changes have been documented, the version bumped, and a release tag is pending.
+All plot visualization functions have been replaced with proper track2KBA implementations (v0.10.1 pending release). Documentation and CHANGELOG updated to reflect visualization enhancements.
 
 ### Future work
 

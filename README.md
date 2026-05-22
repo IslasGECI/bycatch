@@ -43,19 +43,24 @@ Rscript -e "bycatch::create_representative_assessment(bycatch::get_domain_specif
   --percentage-distribution 50 \
   --n-iterations 100
 
-# 3. Identify potential KBAs from the cached assessment
+# 3. Render the assessment diagnostic plot
+Rscript -e "bycatch::render_representative_assessment(bycatch::get_domain_specific_options())" \
+  --rds-path /workdir/output/assessment.rds \
+  --output-path /workdir/output/assessment.png
+
+# 4. Identify potential KBAs from the cached assessment
 Rscript -e "bycatch::create_potential_kba(bycatch::get_domain_specific_options())" \
   --rds-path /workdir/output/assessment.rds \
   --output-path /workdir/output/kba.gpkg \
   --percentage-distribution 50 \
   --population-size 10
 
-# 4. Render a KBA map from the pre-computed GeoPackage
+# 5. Render a KBA map from the pre-computed GeoPackage
 Rscript -e "bycatch::render_potential_kba(bycatch::get_domain_specific_options())" \
   --gpkg-path /workdir/output/kba.gpkg \
   --output-path /workdir/output/kba.png
 
-# 5. Render an individual KDE map from the cached RDS
+# 6. Render an individual KDE map from the cached RDS
 Rscript -e "bycatch::render_individual_kde(bycatch::get_domain_specific_options())" \
   --rds-path /workdir/output/individual_kde.rds \
   --output-path /workdir/output/individual_kde.png

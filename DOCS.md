@@ -16,15 +16,15 @@ saves the resulting map as a PNG file.
 
 ### `render_representative_assessment(options)`
 
-Reads a cached RDS file (assessment_detail) and saves the representative
-assessment scatterplot as a PNG file.
+Reads a cached RDS file and saves a diagnostic scatterplot with confidence bands
+and fitted curve as a PNG file.
 
 - **Parameters:**
   - `options`: named list
     - `rds-path` (character) — path to the cached RDS file with `assessment_summary` and `assessment_detail`.
     - `output-path` (character) — path where the output PNG plot is saved.
 - **Returns:** None. Side effect: writes a PNG file to `output-path`.
-- **Notes:** The input `.rds` file is produced by `create_representative_assessment`. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
+- **Notes:** The input `.rds` file is produced by `create_representative_assessment`. The output plot shows inclusion rate vs sample size with a confidence band (meanPred ± est_asym × sdInclude), fitted regression curve, scatter points for individual replicates, and representativeness percentage label. This function never calls `compute_*` — it reads the pre-computed artifact, plots, and saves.
 
 ### `render_individual_kde(options)`
 
