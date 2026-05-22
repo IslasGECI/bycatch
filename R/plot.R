@@ -56,6 +56,8 @@ plot_representative_assessment <- function(assessment_detail, assessment_summary
 #' @return A ggplot object mapping the potential KBA polygons.
 #' @noRd
 plot_potential_kba <- function(site) {
+  s2_was_true <- sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(s2_was_true))
   track2KBA::mapSite(Site = site, show = FALSE)
 }
 
@@ -67,5 +69,7 @@ plot_potential_kba <- function(site) {
 #' @return A ggplot object mapping the individual KDE polygons.
 #' @noRd
 plot_individual_kde <- function(UDPolygons) {
+  s2_was_true <- sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(s2_was_true))
   track2KBA::mapKDE(KDE = UDPolygons, colony = NULL, show = FALSE)
 }

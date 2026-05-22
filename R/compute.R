@@ -67,6 +67,8 @@ compute_project_returning_tracks <- function(data) {
 }
 
 compute_individual_kde <- function(tracks, levelUD, scale) {
+  s2_was_true <- sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(s2_was_true))
   KDE <- track2KBA::estSpaceUse(
     tracks = tracks,
     scale = scale,
@@ -81,6 +83,8 @@ compute_individual_kde <- function(tracks, levelUD, scale) {
 }
 
 compute_representative_assessment <- function(KDE_surface, tracks, levelUD, n_iterations) {
+  s2_was_true <- sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(s2_was_true))
   seed <- 2
   grDevices::png(tempfile())
   result <- withr::with_seed(
@@ -101,6 +105,8 @@ compute_representative_assessment <- function(KDE_surface, tracks, levelUD, n_it
 }
 
 compute_potential_kba <- function(KDE_surface, represent, popSize, levelUD) {
+  s2_was_true <- sf::sf_use_s2(FALSE)
+  on.exit(sf::sf_use_s2(s2_was_true))
   track2KBA::findSite(
     KDE = KDE_surface,
     represent = represent,
