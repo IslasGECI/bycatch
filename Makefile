@@ -49,9 +49,6 @@ init_git:
 mutants:
 	@echo "En espera del doctorado de Evaristo 👾🎉🎓"
 
-
-setup: clean install
-
 red: format
 	Rscript -e "devtools::test(stop_on_failure = TRUE)" \
 	&& git restore . \
