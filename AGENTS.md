@@ -1,6 +1,6 @@
 # AGENTS.md — bycatch
 
-R package `bycatch` (v0.10.1) — seabird bycatch risk assessment.
+R package `bycatch` (v0.10.2) — seabird bycatch risk assessment.
 Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 
 ## Commands
@@ -96,7 +96,7 @@ Each commit: **Gitmoji** + imperative verb + under-72-char summary. Blank line. 
 - Bug-scope investigation: cross-reference ALL Level 2 functions against `get_domain_specific_options()` — missing flags often affect more functions than reported. Use `grep('options\\[\\[', R/cli.R)` to find all consumed keys.
 - Cache design: individual_kde.rds (KDE_surface, UDPolygons, tracks) and assessment.rds (assessment_summary, assessment_detail, KDE_surface).
 - Colony is kept only in `compute_*` calls to `track2KBA` algorithms (`tripSplit`, `tripSummary`). `plot_*` and `render_*` never receive or use colony.
-- `sf_use_s2(FALSE)` save/restore should live in `compute_*` but is not yet implemented — fixture scripts handle S2 externally.
+- `sf_use_s2(FALSE)` save/restore lives in every `compute_*` and `plot_*` function that directly calls track2KBA (estSpaceUse, repAssess, findSite, mapSite, mapKDE). Uses save/restore pattern: `s2_was_true <- sf::sf_use_s2(FALSE); on.exit(sf::sf_use_s2(s2_was_true))`. Not needed in `create_*`/`render_*` — they delegate to the leaf functions. No test file should call `sf_use_s2(FALSE)` externally.
 - `--smoothing-method` (`-z`) is defined in `get_domain_specific_options()` but no Level 2 function consumes it anymore (deprecated). All functions that previously used it now call `compute_scale_parameters` → `track2KBA::findScale` directly.
 - `create_processed_data` was removed in v0.10.0. Its role (composing `compute_individual_kde` + `compute_representative_assessment`) is now embedded in `create_representative_assessment`.
 - **CHANGELOG strategy**: Document only exported (Level 2) functions (`create_*`, `render_*`, `get_domain_specific_options`). Level 1 internal functions (`compute_*`, `import_*`, `plot_*`) are implementation details and excluded. This keeps the user-facing API changelog clean and separates public contract from internal refactoring.
