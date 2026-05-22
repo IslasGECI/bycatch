@@ -1,6 +1,5 @@
 describe("create_potential_kba", {
   it("writes a valid GeoPackage file from cached assessment data", {
-    sf::sf_use_s2(FALSE)
     kde_path <- "/workdir/tests/test_individual_kde.rds"
     cache_path <- "/workdir/tests/test_potential_kba_cache.rds"
     output_path <- "/workdir/tests/test_potential_kba.gpkg"

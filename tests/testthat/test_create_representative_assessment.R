@@ -1,6 +1,5 @@
 describe("create_representative_assessment", {
   it("writes an RDS file with assessment_summary, assessment_detail, and KDE_surface", {
-    sf::sf_use_s2(FALSE)
     kde_path <- "/workdir/tests/test_individual_kde.rds"
     output_path <- "/workdir/tests/test_assessment.rds"
     returning_trips <- import_trips("/workdir/tests/data/trips_5_ids.csv", filter_returning = TRUE)

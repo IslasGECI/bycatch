@@ -1,6 +1,5 @@
 describe("compute_individual_kde", {
   it("returns list with KDE_surface, UDPolygons, and tracks", {
-    sf::sf_use_s2(FALSE)
     returning_trips <- import_trips("/workdir/tests/data/trips_5_ids.csv", filter_returning = TRUE)
     tracks <- compute_project_returning_tracks(returning_trips)
     sum_trips <- readr::read_csv("/workdir/tests/data/trips_summary.csv", show_col_types = FALSE)

@@ -1,6 +1,5 @@
 describe("compute_representative_assessment", {
   it("returns list with assessment_summary and assessment_detail", {
-    sf::sf_use_s2(FALSE)
     kde_data <- readRDS("/workdir/tests/data/kde_20percent_sample.rds")
     tracks <- readRDS("/workdir/tests/data/tracks_20percent_sample.rds")
 
