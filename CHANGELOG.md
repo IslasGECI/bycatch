@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (none)
 
 ### Changed
-- (none)
+- `render_representative_assessment()` output visualization now includes confidence bands (meanPred ± est_asym × sdInclude), fitted regression curve, and representativeness percentage label. Previously showed only a scatter plot of raw observations.
 
 ### Fixed
 - (none)
