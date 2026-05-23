@@ -216,6 +216,7 @@ assessment. Wraps `track2KBA::findSite`.
   - `popSize` (numeric) — population size for the KBA criterion.
   - `levelUD` (numeric) — percentage contour level.
 - **Returns:** An sf object with polygon data (columns `N_IND`, `N_animals`, `potentialSite`).
+- **Notes:** Returns valid geometries — `sf::st_make_valid` is applied after `findSite`. This prevents `TopologyException` crashes downstream in `render_potential_kba`.
 
 ### `compute_project_returning_tracks(data)`
 
