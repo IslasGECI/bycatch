@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (none)
 
 ### Fixed
-- (none)
+- `render_potential_kba()` no longer crashes with a GEOS `TopologyException` when KBA polygons produced by `findSite` contain self-intersections. Invalid geometries are now repaired via `sf::st_make_valid` before reaching `track2KBA::mapSite`.
 
 ## [0.10.2] - 2026-05-21
 
@@ -114,7 +114,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-10-03
 
 
-[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.2...HEAD
+[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.3...HEAD
+[0.10.3]: https://github.com/IslasGECI/bycatch/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/IslasGECI/bycatch/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/IslasGECI/bycatch/compare/v0.10.0...v0.10.1
 [0.10.0]: https://github.com/IslasGECI/bycatch/compare/v0.9.1...v0.10.0
