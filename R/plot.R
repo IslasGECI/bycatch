@@ -58,7 +58,6 @@ plot_representative_assessment <- function(assessment_detail, assessment_summary
 plot_potential_kba <- function(site) {
   s2_was_true <- sf::sf_use_s2(FALSE)
   on.exit(sf::sf_use_s2(s2_was_true))
-  site <- sf::st_make_valid(site)
   track2KBA::mapSite(Site = site, show = FALSE)
 }
 

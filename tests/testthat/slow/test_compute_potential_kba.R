@@ -11,5 +11,6 @@ describe("compute_potential_kba", {
 
     expect_true(inherits(result, "sf"))
     expect_true(all(c("N_IND", "N_animals", "potentialSite") %in% colnames(result)))
+    expect_true(all(sf::st_is_valid(result)))
   })
 })
