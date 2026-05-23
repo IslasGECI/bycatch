@@ -2,13 +2,6 @@
 
 ## The Gold
 
-- **Geometry validity guard in `plot_potential_kba`**: `track2KBA::mapSite()` internally calls `st_union()` via `dplyr::summarise()`, which fails with a GEOS `TopologyException` when KBA polygons have self-intersections.
-  `findSite` can produce invalid geometries on real data (e.g., Clarion+Guadalupe combined albatross dataset — self-intersection at `-148, 50.24`).
-  The test fixture `kba_polygons.rds` is clean, so the test passes.
-  The error message was doubly confusing because `sf`'s `.stop_geos()` handler fires a `scan()` parse failure *before* the real `TopologyException` (upstream `sf` bug, tracked in `ISSUE.md`).
-  **Fix**: call `sf::st_make_valid(site)` in `plot_potential_kba` before passing to `mapSite`.
-  Also validates through to test fixture or adds a test with known-bad geometry.
-
 
 ## Future work
 
