@@ -16,6 +16,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - (none)
 
+## [0.10.4] - 2026-05-31
+
+### Fixed
+- `create_individual_kde()` now uses the Area-Restricted Search scale (`scaleARS`) from First Passage Time analysis as the KDE smoothing parameter, instead of the log of the median foraging range (`mag`). The `--smoothing-method` CLI flag was never consumed by any function and has been removed from `get_domain_specific_options()`. Passing it now fails with "long flag is invalid".
+
 ## [0.10.3] - 2026-05-22
 
 ### Fixed
@@ -119,7 +124,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.1.0] - 2024-10-03
 
 
-[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.3...HEAD
+[unreleased]: https://github.com/IslasGECI/bycatch/compare/v0.10.4...HEAD
+[0.10.4]: https://github.com/IslasGECI/bycatch/compare/v0.10.3...v0.10.4
 [0.10.3]: https://github.com/IslasGECI/bycatch/compare/v0.10.2...v0.10.3
 [0.10.2]: https://github.com/IslasGECI/bycatch/compare/v0.10.1...v0.10.2
 [0.10.1]: https://github.com/IslasGECI/bycatch/compare/v0.10.0...v0.10.1

@@ -143,7 +143,7 @@ as an RDS file.
 Defines and returns a named list of command-line options for use in CLI tools.
 
 - **Parameters:** None.
-- **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `gpkg-path`, `rds-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `smoothing-method`, `date-column-name`, `trips-summary-path`.
+- **Returns:** A named list of command-line options. Names: `data-path`, `config-path`, `output-path`, `gpkg-path`, `rds-path`, `percentage-distribution`, `n-iterations`, `start`, `end`, `lat-min`, `lat-max`, `lon-min`, `lon-max`, `population-size`, `date-column-name`, `trips-summary-path`.
 
 ---
 
@@ -189,7 +189,7 @@ Wraps `track2KBA::estSpaceUse` with `polyOut=TRUE`.
 - **Parameters:**
   - `tracks` (SpatialPointsDataFrame) — projected tracking data (from `compute_project_returning_tracks`).
   - `levelUD` (numeric) — percentage contour level for KDE polygons.
-  - `scale` (numeric) — smoothing parameter value (e.g. `scale_params$mag` from `compute_scale_parameters`).
+  - `scale` (numeric) — smoothing parameter value (Area-Restricted Search scale from `compute_scale_parameters`).
 - **Returns:** A list with elements `KDE_surface` (estUDm), `UDPolygons` (sf), and `tracks` (SpatialPointsDataFrame).
 
 ### `compute_representative_assessment(KDE_surface, tracks, levelUD, n_iterations)`
@@ -292,7 +292,7 @@ Wraps `track2KBA::findScale`.
 - **Parameters:**
   - `tracks` (SpatialPointsDataFrame) — projected tracking data.
   - `trips_summary` (data.frame) — trip summary from `tripSummary`.
-- **Returns:** A data.frame with 5 columns of scale parameters. Column `mag` contains the log-median scale estimate.
+- **Returns:** A data.frame with candidate smoothing parameter values including `scaleARS` (Area-Restricted Search scale from First Passage Time analysis), `mag` (log of median foraging range), `href` (reference bandwidth), and movement summary columns.
 
 ---
 

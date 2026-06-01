@@ -1,6 +1,6 @@
 # AGENTS.md — bycatch
 
-R package `bycatch` (v0.10.3) — seabird bycatch risk assessment.
+R package `bycatch` (v0.10.4) — seabird bycatch risk assessment.
 Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 
 ## Commands
@@ -22,7 +22,7 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 > Each test file contains exactly one `describe()` block.
 > `make tests_file` does not work for files in `slow/`; use `testthat::test_file()` directly.
 >
-> Fast suite (~52s, 44 tests): 21 files. Slow suite (~6.5min, 2 tests): 2 files.
+> Fast suite (~52s, 45 tests): 21 files. Slow suite (~6.5min, 2 tests): 2 files.
 > Bottleneck: `slow/test_create_potential_kba.R` (166s) and `slow/test_compute_potential_kba.R` (222s), both call `track2KBA::findSite`.
 >
 > TDD commits use emoji convention: 🛑🧪 for Red (failing tests), ✅🧪 for Green (passing implementation), ♻️ for refactor, 📝 for documentation.
@@ -106,7 +106,7 @@ Each commit: **Gitmoji** + imperative verb + under-72-char summary. Blank line. 
 - Cache design: individual_kde.rds (KDE_surface, UDPolygons, tracks) and assessment.rds (assessment_summary, assessment_detail, KDE_surface).
 - Colony is kept only in `compute_*` calls to `track2KBA` algorithms (`tripSplit`, `tripSummary`). `plot_*` and `render_*` never receive or use colony.
 - `sf_use_s2(FALSE)` save/restore lives in every `compute_*` and `plot_*` function that directly calls track2KBA (estSpaceUse, repAssess, findSite, mapSite, mapKDE). Uses save/restore pattern: `s2_was_true <- sf::sf_use_s2(FALSE); on.exit(sf::sf_use_s2(s2_was_true))`. Not needed in `create_*`/`render_*` — they delegate to the leaf functions. No test file should call `sf_use_s2(FALSE)` externally.
-- `--smoothing-method` (`-z`) is defined in `get_domain_specific_options()` but no Level 2 function consumes it anymore (deprecated). All functions that previously used it now call `compute_scale_parameters` → `track2KBA::findScale` directly.
+- `--smoothing-method` (`-z`) was removed in v0.10.4. `create_individual_kde` now always uses `scaleARS` (Area-Restricted Search scale from First Passage Time analysis) via `compute_scale_parameters` → `track2KBA::findScale`.
 - `create_processed_data` was removed in v0.10.0. Its role (composing `compute_individual_kde` + `compute_representative_assessment`) is now embedded in `create_representative_assessment`.
 - **Geometry validity contract**: `compute_potential_kba` applies `sf::st_make_valid` to the output of `track2KBA::findSite` before returning. This guarantees that KBA polygons written to GeoPackage by `create_potential_kba` are valid, preventing `TopologyException` crashes in `render_potential_kba` → `track2KBA::mapSite` → `st_union`. If the fix is needed elsewhere, it should live in a `compute_*` function (computation, not visualization).
 - **CHANGELOG strategy**: Document only exported (Level 2) functions (`create_*`, `render_*`, `get_domain_specific_options`). Level 1 internal functions (`compute_*`, `import_*`, `plot_*`) are implementation details and excluded. This keeps the user-facing API changelog clean and separates public contract from internal refactoring.
