@@ -187,7 +187,7 @@ create_individual_kde <- function(options) {
   tracks <- compute_project_returning_tracks(returning_trips)
   sum_trips <- import_trips_summary(options[["trips-summary-path"]])
   scale_params <- compute_scale_parameters(tracks, sum_trips)
-  scale <- scale_params$mag
+  scale <- scale_params$scaleARS
   levelUD <- options[["percentage-distribution"]]
 
   kde <- compute_individual_kde(tracks, levelUD, scale)

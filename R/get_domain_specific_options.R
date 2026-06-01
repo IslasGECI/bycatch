@@ -22,9 +22,8 @@ get_domain_specific_options <- function() {
   lon_min <- gecioptparse::double_option(c("-m", "--lon-min"), default = 0, help = "Minimum longitude for filtering fisheries data")
   lon_max <- gecioptparse::double_option(c("-x", "--lon-max"), default = 0, help = "Maximum longitude for filtering fisheries data")
   population_size <- gecioptparse::integer_option(c("-p", "--population-size"), default = 1551)
-  smoothing_method <- gecioptparse::character_option(c("-z", "--smoothing-method"), default = "log_median", help = "Method to compute the smoothing parameter h")
   column_name <- gecioptparse::character_option(c("-t", "--date-column-name"), default = "Fecha", help = "Name of date column to filter")
   trips_summary_path <- gecioptparse::character_option(c("-y", "--trips-summary-path"), default = "", help = "Path to trips summary CSV")
-  option_names <- c(data_path, config_path, output_path, gpkg_path, rds_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max, population_size, smoothing_method, column_name, trips_summary_path)
+  option_names <- c(data_path, config_path, output_path, gpkg_path, rds_path, percentage_distribution, n_iterations, start, end, lat_min, lat_max, lon_min, lon_max, population_size, column_name, trips_summary_path)
   gecioptparse::get_options_from_vec(option_names)
 }

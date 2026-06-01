@@ -14,8 +14,6 @@ describe("Define domain specific options", {
     "output-path",
     "percentage-distribution",
     "population-size",
-    "rds-path",
-    "smoothing-method",
     "start",
     "trips-summary-path"
   )
