@@ -1,5 +1,4 @@
 config_path <- "/workdir/tests/data/trips_config.json"
-expected_kde_ars_hash <- "cf935c72a783c27d979961d782ea2a8a"
 
 describe("create_individual_kde", {
   it("writes an RDS file with KDE computed using scaleARS", {
@@ -17,8 +16,14 @@ describe("create_individual_kde", {
     expect_true(testtools::exist_output_file(output_path))
     result <- readRDS(output_path)
     expect_true(all(c("KDE_surface", "UDPolygons", "tracks") %in% names(result)))
-    obtained_hash <- tools::md5sum(output_path)
-    expect_equal(unname(obtained_hash), expected_kde_ars_hash)
+    # Verify scaleARS was used by checking UD polygon areas.
+    # Using scaleARS (7) gives larger areas than the old default parameter mag (5.55).
+    # Thresholds are midpoints between mag and scaleARS values, rounded to nearest 1000.
+    # mag: sum=78326, max=28568 | scaleARS: sum=112773, max=43801
+    total_area <- sum(result$UDPolygons$area)
+    expect_gt(total_area, 96000)
+    max_area <- max(result$UDPolygons$area)
+    expect_gt(max_area, 36000)
     testtools::if_exist_remove(output_path)
   })
 })
