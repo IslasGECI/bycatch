@@ -18,7 +18,7 @@ Maintainer: [IslasGECI](https://github.com/IslasGECI/bycatch).
 | `make coverage` | Run tests + generate HTML coverage report |
 | `make red/green/refactor` | TDD phase targets with auto-commit/restore |
 
-> `devtools` is only available inside Docker. Run tests via `docker exec bycatch_code_ci make tests`.
+> `devtools` is only available inside Docker. Run tests via `docker exec bycatch_ci make tests`.
 > Each test file contains exactly one `describe()` block.
 > `make tests_file` does not work for files in `slow/`; use `testthat::test_file()` directly.
 >
@@ -91,7 +91,7 @@ Level 2 functions accept a single `options` list via `get_domain_specific_option
 
 - `covr::package_coverage()` runs only the fast suite — `render_*` bodies show as uncovered (exercised only by slow tests).
 - Coverage script: `tests/testthat/coverage.R`. HTML report → `tests/coverage-report.html`.
-- Fixture regeneration: `docker exec bycatch_code_ci Rscript tests/src/create_test_fixtures.R`.
+- Fixture regeneration: `docker exec bycatch_ci Rscript tests/src/create_test_fixtures.R`.
 - Fixture scripts access internal `compute_*` via `bycatch:::` (they are never exported).
 
 ## CI
@@ -114,7 +114,7 @@ Each commit: **Gitmoji** + imperative verb + under-72-char summary. Blank line. 
 - `create_processed_data` was removed in v0.10.0. Its role (composing `compute_individual_kde` + `compute_representative_assessment`) is now embedded in `create_representative_assessment`.
 - **Geometry validity contract**: `compute_potential_kba` applies `sf::st_make_valid` to the output of `track2KBA::findSite` before returning. This guarantees that KBA polygons written to GeoPackage by `create_potential_kba` are valid, preventing `TopologyException` crashes in `render_potential_kba` → `track2KBA::mapSite` → `st_union`. If the fix is needed elsewhere, it should live in a `compute_*` function (computation, not visualization).
 - **CHANGELOG strategy**: Document only exported (Level 2) functions (`create_*`, `render_*`, `get_domain_specific_options`). Level 1 internal functions (`compute_*`, `import_*`, `plot_*`) are implementation details and excluded. This keeps the user-facing API changelog clean and separates public contract from internal refactoring.
-- **Cross-repo validation**: When updating CLI signatures or exported functions, audit all downstream consumers (e.g., `../bycatch_thesis/Makefile`) — verify every `bycatch::` call references an `@export` function. Stale function calls can silently break dependency workflows.
+- **Cross-repo validation**: When updating CLI signatures or exported functions, audit all downstream consumers (e.g., `../albatross-bycatch-mexico/Makefile`) — verify every `bycatch::` call references an `@export` function. Stale function calls can silently break dependency workflows.
 - **Documentation sync**: After renaming or changing signatures, verify all references in `DOCS.md`, `README.md`, roxygen `@param` tags, and test files. Stale docs in roxygen tags cause CLI failures ("long flag is invalid").
 - **`plot_*()` delegation pattern**: `plot_potential_kba()` and `plot_individual_kde()` delegate to `track2KBA::mapSite()` and `track2KBA::mapKDE()` respectively (no custom ggplot2 code). `plot_representative_assessment()` clones track2KBA's `repAssess()` plotting logic (confidence band formula: meanPred ± est_asym × sdInclude). Internal functions; changes require test fixture updates but do NOT appear in CHANGELOG (per documentation strategy).
 - **Cache structure expectations**: `render_representative_assessment()` expects cache RDS with BOTH `$assessment_detail` AND `$assessment_summary` (including `est_asym` field). Old caches without `est_asym` will cause failures.
